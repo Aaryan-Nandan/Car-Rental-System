@@ -1,6 +1,8 @@
 # 🚗 Car Rental System
 
-A Full Stack Car Rental System developed using **Spring Boot**, **React.js**, and **MySQL**.
+A Full Stack Car Rental System developed using **Spring Boot**, **React.js**, and **MySQL**. The application allows customers to browse available cars, book vehicles online, and enables administrators to manage cars and bookings.
+
+---
 
 ## 📂 Project Structure
 
@@ -10,34 +12,45 @@ Car-Rental-System
 ├── backend
 │   ├── src
 │   ├── pom.xml
-│   └── mvnw
+│   ├── mvnw
+│   └── ...
 │
 ├── frontend
 │   ├── src
 │   ├── public
 │   ├── package.json
-│   └── package-lock.json
+│   └── ...
 │
 └── README.md
 ```
 
 ---
 
-## 🚀 Features
+## ✨ Features
 
-- ✅ User Registration & Login
-- ✅ JWT Authentication
-- ✅ Browse Car Variants
-- ✅ Book Cars
-- ✅ Upload Driving License
-- ✅ Admin Dashboard
-- ✅ Approve / Reject Booking
-- ✅ MySQL Database
-- ✅ Responsive UI
+### 👤 Customer
+
+- User Registration
+- User Login (JWT Authentication)
+- View Available Cars
+- Book Cars
+- Select Pickup and Return Date
+- Upload Driving License
+- View Booking Details
+
+### 👨‍💼 Admin
+
+- Admin Login
+- Add Car Companies
+- Add Car Variants
+- Add Cars
+- Manage Customers
+- Approve or Reject Bookings
+- Assign Cars to Customers
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠 Tech Stack
 
 ### Frontend
 - React.js
@@ -45,20 +58,48 @@ Car-Rental-System
 - CSS3
 - JavaScript
 - Bootstrap
+- Axios
 
 ### Backend
 - Spring Boot
 - Spring Security
 - Spring Data JPA
-- REST API
+- REST APIs
 - JWT Authentication
+- Maven
 
 ### Database
 - MySQL
 
 ---
 
-## 📁 Frontend Setup
+## 🚀 Getting Started
+
+### Clone Repository
+
+```bash
+git clone https://github.com/Aaryan-Nandan/Car-Rental-System.git
+```
+
+---
+
+## ▶️ Run Backend
+
+```bash
+cd backend
+```
+
+Open the project in IntelliJ IDEA and run the Spring Boot application.
+
+Backend URL:
+
+```
+http://localhost:8081
+```
+
+---
+
+## ▶️ Run Frontend
 
 ```bash
 cd frontend
@@ -66,7 +107,7 @@ npm install
 npm start
 ```
 
-Application runs at:
+Frontend URL:
 
 ```
 http://localhost:3000
@@ -74,34 +115,9 @@ http://localhost:3000
 
 ---
 
-## 📁 Backend Setup
+## 🗄 Database Configuration
 
-```bash
-cd backend
-```
-
-Run the Spring Boot application from IntelliJ IDEA
-
-or
-
-```bash
-mvn spring-boot:run
-```
-
-Backend runs at:
-
-```
-http://localhost:8080
-```
-
----
-
-## 🗄️ Database
-
-- MySQL
-- Database Name: car_rental
-
-Update the following file:
+Configure MySQL in:
 
 ```
 backend/src/main/resources/application.properties
@@ -118,9 +134,30 @@ spring.jpa.hibernate.ddl-auto=update
 
 ---
 
+## 📸 Project Modules
+
+- Authentication
+- Customer Management
+- Car Company Management
+- Car Variant Management
+- Car Booking
+- Admin Dashboard
+- Booking Approval
+
+---
+
+## 📌 Future Improvements
+
+- Online Payment Integration
+- Email Notifications
+- Booking History
+- User Profile Management
+- Responsive Mobile Design
+
+---
+
 ## 👨‍💻 Author
 
 **Aaryan Nandan**
 
-GitHub:
-https://github.com/Aaryan-Nandan
+GitHub: https://github.com/Aaryan-Nandan
