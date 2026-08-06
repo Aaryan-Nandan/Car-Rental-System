@@ -46,7 +46,10 @@ public class SecurityConfig {
 
                                 "/car/**",
 
-                                "/payment/**"
+                                "/payment/**",
+
+                                "/review/add",
+                                "/review/all"
 
                         ).permitAll()
 

@@ -35,6 +35,24 @@ public class AdminService {
         response.setTotalPayments(
                 paymentRepository.count());
 
+        response.setApprovedBookings(
+                bookingRepository.countByBookingStatus(
+                        "APPROVED"
+                )
+        );
+
+        response.setPendingBookings(
+                bookingRepository.countByBookingStatus(
+                        "PENDING"
+                )
+        );
+
+        response.setRejectedBookings(
+                bookingRepository.countByBookingStatus(
+                        "REJECTED"
+                )
+        );
+
         return response;
     }
 

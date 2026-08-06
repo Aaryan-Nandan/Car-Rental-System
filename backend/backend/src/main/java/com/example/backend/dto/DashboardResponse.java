@@ -10,7 +10,15 @@ public class DashboardResponse {
 
     private long totalPayments;
 
+    private long approvedBookings;
+
+    private long pendingBookings;
+
+    private long rejectedBookings;
+
+    // ==========================
     // GETTERS AND SETTERS
+    // ==========================
 
     public long getTotalCustomers() {
         return totalCustomers;
@@ -42,5 +50,29 @@ public class DashboardResponse {
 
     public void setTotalPayments(long totalPayments) {
         this.totalPayments = totalPayments;
+    }
+
+    public long getApprovedBookings() {
+        return approvedBookings;
+    }
+
+    public void setApprovedBookings(long approvedBookings) {
+        this.approvedBookings = approvedBookings;
+    }
+
+    public long getPendingBookings() {
+        return pendingBookings;
+    }
+
+    public void setPendingBookings(long pendingBookings) {
+        this.pendingBookings = pendingBookings;
+    }
+
+    public long getRejectedBookings() {
+        return rejectedBookings;
+    }
+
+    public void setRejectedBookings(long rejectedBookings) {
+        this.rejectedBookings = rejectedBookings;
     }
 }
