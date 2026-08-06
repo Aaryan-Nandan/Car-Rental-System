@@ -35,8 +35,14 @@ from "./pages/ProfilePage";
 import ManageCars
 from "./pages/ManageCars";
 
+import ManageReviews
+from "./pages/ManageReviews";
+
 import PaymentPage
 from "./pages/PaymentPage";
+
+import ReviewPage
+from "./pages/ReviewPage";
 
 import Navbar
 from "./components/Navbar";
@@ -125,6 +131,15 @@ function App() {
                 />
 
                 <Route
+                    path="/review/:variantId"
+                    element={
+                        <ProtectedRoute>
+                            <ReviewPage />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
                     path="/admin-dashboard"
                     element={
                         <AdminProtectedRoute>
@@ -138,6 +153,15 @@ function App() {
                     element={
                         <AdminProtectedRoute>
                             <ManageCars />
+                        </AdminProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/manage-reviews"
+                    element={
+                        <AdminProtectedRoute>
+                            <ManageReviews />
                         </AdminProtectedRoute>
                     }
                 />

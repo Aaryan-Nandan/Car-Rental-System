@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 function MyPayments() {
 
@@ -26,15 +28,150 @@ function MyPayments() {
 
                             payment.booking &&
                             payment.booking.customer &&
-                            payment.booking.customer.id === Number(customerId)
+                            payment.booking.customer.id ===
+                            Number(customerId)
                     );
 
                 setPayments(
                     filteredPayments
                 );
+
+            })
+
+            .catch((error) => {
+
+                console.log(error);
+
             });
 
     }, []);
+
+    // DOWNLOAD PDF INVOICE
+
+    const downloadInvoice = (payment) => {
+
+        const doc =
+            new jsPDF();
+
+        doc.setFontSize(22);
+
+        doc.text(
+            "CAR RENTAL SYSTEM",
+            55,
+            20
+        );
+
+        doc.setFontSize(14);
+
+        doc.text(
+            "Payment Invoice",
+            72,
+            30
+        );
+
+        autoTable(doc, {
+
+            startY: 40,
+
+            head: [
+
+                [
+                    "Field",
+                    "Value"
+                ]
+
+            ],
+
+            body: [
+
+                [
+                    "Invoice No",
+                    "INV-" +
+                    payment.id
+                ],
+
+                [
+                    "Payment ID",
+                    payment.id
+                ],
+
+                [
+                    "Customer",
+                    payment.booking
+                        .customer
+                        ?.name
+                ],
+
+                [
+                    "Car",
+                    payment.booking
+                        .carVariant
+                        ?.variantName
+                ],
+
+                [
+                    "Fuel Type",
+                    payment.booking
+                        .carVariant
+                        ?.fuelType
+                ],
+
+                [
+                    "Booking ID",
+                    payment.booking.id
+                ],
+
+                [
+                    "From Date",
+                    payment.booking
+                        .fromDate
+                ],
+
+                [
+                    "To Date",
+                    payment.booking
+                        .toDate
+                ],
+
+                [
+    "Amount",
+    "Rs. " +
+    Number(payment.amount).toLocaleString("en-IN")
+],
+
+                [
+                    "Payment Status",
+                    payment.paymentStatus
+                ],
+
+                [
+                    "Payment Date",
+                    payment.paymentDate
+                ]
+
+            ]
+
+        });
+
+        doc.text(
+
+            "Thank You For Choosing Car Rental System!",
+
+            20,
+
+            doc.lastAutoTable.finalY + 20
+
+        );
+
+        doc.save(
+
+            "Invoice_" +
+            payment.id +
+            ".pdf"
+
+        );
+
+    };
 
     return (
 
@@ -53,119 +190,209 @@ function MyPayments() {
             <br />
 
             {
-                payments.map((payment) => (
 
-                    <div
+                payments.length === 0 ?
 
-                        key={payment.id}
+                    (
 
-                        style={{
-                            border:
-                                "1px solid lightgray",
+                        <h3>
 
-                            padding:
-                                "20px",
+                            No Payments Found
 
-                            marginBottom:
-                                "20px",
+                        </h3>
 
-                            borderRadius:
-                                "10px",
+                    )
 
-                            boxShadow:
-                                "0px 0px 10px lightgray"
-                        }}
-                    >
+                    :
 
-                        <h2>
+                    (
 
-                            Payment ID :
-                            {" "}
-                            {payment.id}
+                        payments.map((payment) => (
 
-                        </h2>
+                            <div
 
-                        <p>
+                                key={payment.id}
 
-                            <b>
-                                Car:
-                            </b>
-
-                            {" "}
-
-                            {
-                                payment.booking
-                                    .carVariant
-                                    ?.variantName
-                            }
-
-                            {" - "}
-
-                            {
-                                payment.booking
-                                    .carVariant
-                                    ?.fuelType
-                            }
-
-                        </p>
-
-                        <p>
-
-                            <b>
-                                Amount:
-                            </b>
-
-                            {" "}
-
-                            ₹ {payment.amount}
-
-                        </p>
-
-                        <p>
-
-                            <b>
-                                Payment Status:
-                            </b>
-
-                            {" "}
-
-                            <span
                                 style={{
-                                    color:
-                                        "green",
-                                    fontWeight:
-                                        "bold"
+
+                                    border:
+                                        "1px solid lightgray",
+
+                                    padding:
+                                        "20px",
+
+                                    marginBottom:
+                                        "20px",
+
+                                    borderRadius:
+                                        "10px",
+
+                                    boxShadow:
+                                        "0px 0px 10px lightgray"
+
                                 }}
+
                             >
 
-                                {
-                                    payment.paymentStatus
-                                }
+                                <h2>
 
-                            </span>
+                                    Payment ID :
+                                    {" "}
+                                    {payment.id}
 
-                        </p>
+                                </h2>
 
-                        <p>
+                                <p>
 
-                            <b>
-                                Payment Date:
-                            </b>
+                                    <b>
 
-                            {" "}
+                                        Car :
 
-                            {
-                                payment.paymentDate
-                            }
+                                    </b>
 
-                        </p>
+                                    {" "}
 
-                    </div>
-                ))
+                                    {
+
+                                        payment.booking
+                                            .carVariant
+                                            ?.variantName
+
+                                    }
+
+                                    {" - "}
+
+                                    {
+
+                                        payment.booking
+                                            .carVariant
+                                            ?.fuelType
+
+                                    }
+
+                                </p>
+
+                                <p>
+
+                                    <b>
+
+                                        Amount :
+
+                                    </b>
+
+                                    {" "}
+
+                                    ₹ {payment.amount}
+
+                                </p>
+
+                                <p>
+
+                                    <b>
+
+                                        Payment Status :
+
+                                    </b>
+
+                                    {" "}
+
+                                    <span
+                                        style={{
+
+                                            color:
+                                                "green",
+
+                                            fontWeight:
+                                                "bold"
+
+                                        }}
+                                    >
+
+                                        {
+
+                                            payment.paymentStatus
+
+                                        }
+
+                                    </span>
+
+                                </p>
+
+                                <p>
+
+                                    <b>
+
+                                        Payment Date :
+
+                                    </b>
+
+                                    {" "}
+
+                                    {
+
+                                        payment.paymentDate
+
+                                    }
+
+                                </p>
+
+                                <button
+
+                                    onClick={() =>
+                                        downloadInvoice(
+                                            payment
+                                        )
+                                    }
+
+                                    style={{
+
+                                        backgroundColor:
+                                            "#1976d2",
+
+                                        color:
+                                            "white",
+
+                                        border:
+                                            "none",
+
+                                        padding:
+                                            "12px",
+
+                                        width:
+                                            "100%",
+
+                                        borderRadius:
+                                            "5px",
+
+                                        cursor:
+                                            "pointer",
+
+                                        marginTop:
+                                            "15px",
+
+                                        fontWeight:
+                                            "bold"
+
+                                    }}
+
+                                >
+
+                                    📄 Download Invoice
+
+                                </button>
+
+                            </div>
+
+                        ))
+
+                    )
+
             }
 
         </div>
+
     );
+
 }
 
 export default MyPayments;

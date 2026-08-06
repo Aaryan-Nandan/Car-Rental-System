@@ -8,6 +8,9 @@ from "react-router-dom";
 
 import axios from "axios";
 
+import DashboardCharts
+from "../components/charts/DashboardCharts";
+
 function AdminDashboard() {
 
     const navigate =
@@ -112,39 +115,59 @@ function AdminDashboard() {
 
             <br />
 
-            <button
+            <div
+    style={{
+        display: "flex",
+        gap: "15px",
+        marginBottom: "25px"
+    }}
+>
 
-                onClick={() =>
-                    navigate(
-                        "/manage-cars"
-                    )
-                }
+    <button
 
-                style={{
-                    backgroundColor:
-                        "black",
+        onClick={() =>
+            navigate(
+                "/manage-cars"
+            )
+        }
 
-                    color: "white",
+        style={{
+            backgroundColor: "black",
+            color: "white",
+            border: "none",
+            padding: "12px 20px",
+            borderRadius: "5px",
+            cursor: "pointer"
+        }}
+    >
 
-                    border: "none",
+        🚗 Manage Cars
 
-                    padding:
-                        "12px 20px",
+    </button>
 
-                    borderRadius:
-                        "5px",
+    <button
 
-                    cursor:
-                        "pointer"
-                }}
-            >
+        onClick={() =>
+            navigate(
+                "/manage-reviews"
+            )
+        }
 
-                Manage Cars
+        style={{
+            backgroundColor: "#ff9800",
+            color: "white",
+            border: "none",
+            padding: "12px 20px",
+            borderRadius: "5px",
+            cursor: "pointer"
+        }}
+    >
 
-           </button>
+           Manage Reviews
 
-            <r />
-            <br />
+    </button>
+
+</div>
 
             <input
                 type="text"
@@ -307,10 +330,16 @@ function AdminDashboard() {
 
                 </div>
 
-            </div>
+</div>
 
-            {
-                bookings
+<DashboardCharts
+    dashboardData={
+        dashboardData
+    }
+/>
+
+{
+    bookings
 
                 .filter((booking) =>
 

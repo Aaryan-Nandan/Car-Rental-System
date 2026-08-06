@@ -75,15 +75,22 @@ function MyBookings() {
 
     const isPaid = (bookingId) => {
 
-        return payments.some(
+    console.log("Booking ID :", bookingId);
 
-            (payment) =>
+    console.log("Payments :", payments);
 
-                payment.booking &&
-                payment.booking.id ===
-                bookingId
-        );
-    };
+    const paid = payments.some(
+
+        (payment) =>
+
+            payment.booking &&
+            payment.booking.id === bookingId
+    );
+
+    console.log("Paid :", paid);
+
+    return paid;
+};
 
     return (
 
@@ -311,79 +318,119 @@ function MyBookings() {
 
                             </p>
 
-                            {
-                                isPaid(
-                                    booking.id
-                                ) ? (
+                           {
+    isPaid(
+        booking.id
+    ) ? (
 
-                                    <button
+        <>
 
-                                        disabled
+            <button
 
-                                        style={{
-                                            backgroundColor:
-                                                "green",
+                disabled
 
-                                            color:
-                                                "white",
+                style={{
+                    backgroundColor:
+                        "green",
 
-                                            border:
-                                                "none",
+                    color:
+                        "white",
 
-                                            padding:
-                                                "10px 20px",
+                    border:
+                        "none",
 
-                                            borderRadius:
-                                                "5px",
+                    padding:
+                        "10px 20px",
 
-                                            opacity:
-                                                "0.8"
-                                        }}
-                                    >
+                    borderRadius:
+                        "5px",
 
-                                        PAID ✅
+                    opacity:
+                        "0.8",
 
-                                    </button>
+                    marginRight:
+                        "10px"
+                }}
+            >
 
-                                ) :
+                PAID 
 
-                                    booking.bookingStatus ===
-                                    "APPROVED" && (
+            </button>
 
-                                        <button
+            <button
 
-                                            onClick={() =>
-                                                navigate(
-                                                    `/payment/${booking.id}/${booking.totalAmount}`
-                                                )
-                                            }
+                onClick={() =>
+                    navigate(
+                        `/review/${booking.carVariant.id}`
+                    )
+                }
 
-                                            style={{
-                                                backgroundColor:
-                                                    "green",
+                style={{
+                    backgroundColor:
+                        "#ff9800",
 
-                                                color:
-                                                    "white",
+                    color:
+                        "white",
 
-                                                border:
-                                                    "none",
+                    border:
+                        "none",
 
-                                                padding:
-                                                    "10px 20px",
+                    padding:
+                        "10px 20px",
 
-                                                borderRadius:
-                                                    "5px",
+                    borderRadius:
+                        "5px",
 
-                                                cursor:
-                                                    "pointer"
-                                            }}
-                                        >
+                    cursor:
+                        "pointer"
+                }}
+            >
 
-                                            Pay Now
+                 Write Review
 
-                                        </button>
-                                    )
-                            }
+            </button>
+
+        </>
+
+    ) :
+
+        booking.bookingStatus ===
+        "APPROVED" && (
+
+            <button
+
+                onClick={() =>
+                    navigate(
+                        `/payment/${booking.id}/${booking.totalAmount}`
+                    )
+                }
+
+                style={{
+                    backgroundColor:
+                        "green",
+
+                    color:
+                        "white",
+
+                    border:
+                        "none",
+
+                    padding:
+                        "10px 20px",
+
+                    borderRadius:
+                        "5px",
+
+                    cursor:
+                        "pointer"
+                }}
+            >
+
+                Pay Now
+
+            </button>
+        )
+}
 
                         </div>
                     ))
