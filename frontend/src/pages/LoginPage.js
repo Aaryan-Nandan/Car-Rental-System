@@ -1,13 +1,12 @@
 import {
     useState
 }
-
 from "react";
 
 import {
-    useNavigate
+    useNavigate,
+    Link
 }
-
 from "react-router-dom";
 
 import axios from "axios";
@@ -55,9 +54,11 @@ function LoginPage() {
         axios
 
             .post(
+
                 "http://localhost:8081/customer/login",
 
                 loginData
+
             )
 
             .then((response) => {
@@ -71,9 +72,8 @@ function LoginPage() {
                     "token",
 
                     response.data.token
-                );
 
-                // SAVE CUSTOMER ID
+                );
 
                 if (
                     response.data.customer
@@ -83,10 +83,8 @@ function LoginPage() {
 
                         "customerId",
 
-                        response
-                        .data
-                        .customer
-                        .id
+                        response.data.customer.id
+
                     );
                 }
 
@@ -97,6 +95,7 @@ function LoginPage() {
                 navigate(
                     "/my-bookings"
                 );
+
             })
 
             .catch((error) => {
@@ -106,18 +105,29 @@ function LoginPage() {
                 alert(
                     "Invalid Email or Password"
                 );
+
             });
+
     };
 
     return (
 
         <div
             style={{
-                padding: "30px"
+                padding: "30px",
+                maxWidth: "400px",
+                margin: "40px auto",
+                boxShadow: "0 0 10px lightgray",
+                borderRadius: "10px",
+                backgroundColor: "white"
             }}
         >
 
-            <h1>
+            <h1
+                style={{
+                    textAlign: "center"
+                }}
+            >
 
                 Customer Login
 
@@ -136,6 +146,7 @@ function LoginPage() {
                 <br />
 
                 <input
+
                     type="email"
 
                     value={email}
@@ -148,9 +159,9 @@ function LoginPage() {
 
                     style={{
                         padding: "10px",
-
-                        width: "300px"
+                        width: "100%"
                     }}
+
                 />
 
             </div>
@@ -168,6 +179,7 @@ function LoginPage() {
                 <br />
 
                 <input
+
                     type="password"
 
                     value={password}
@@ -180,10 +192,35 @@ function LoginPage() {
 
                     style={{
                         padding: "10px",
-
-                        width: "300px"
+                        width: "100%"
                     }}
+
                 />
+
+            </div>
+
+            <div
+                style={{
+                    textAlign: "right",
+                    marginTop: "10px"
+                }}
+            >
+
+                <Link
+
+                    to="/forgot-password"
+
+                    style={{
+                        color: "#1976d2",
+                        textDecoration: "none",
+                        fontSize: "14px"
+                    }}
+
+                >
+
+                    Forgot Password?
+
+                </Link>
 
             </div>
 
@@ -195,20 +232,30 @@ function LoginPage() {
 
                 style={{
 
+                    width: "100%",
+
                     padding: "12px",
 
                     backgroundColor:
                         "black",
 
-                    color: "white",
+                    color:
+                        "white",
 
-                    border: "none",
+                    border:
+                        "none",
 
                     borderRadius:
                         "5px",
 
-                    cursor: "pointer"
+                    cursor:
+                        "pointer",
+
+                    fontSize:
+                        "16px"
+
                 }}
+
             >
 
                 Login
@@ -216,7 +263,9 @@ function LoginPage() {
             </button>
 
         </div>
+
     );
+
 }
 
 export default LoginPage;

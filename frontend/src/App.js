@@ -53,6 +53,12 @@ from "./components/ProtectedRoute";
 import AdminProtectedRoute
 from "./components/AdminProtectedRoute";
 
+import ForgotPasswordPage
+from "./pages/ForgotPasswordPage";
+
+import SuccessRegistration
+from "./pages/SuccessRegistration";
+
 import "./App.css";
 
 function App() {
@@ -81,8 +87,18 @@ function App() {
                 />
 
                 <Route
+                    path="/forgot-password"
+                    element={<ForgotPasswordPage />}
+                />
+
+                <Route
                     path="/admin-login"
                     element={<AdminLogin />}
+                />
+
+                <Route
+                    path="/registration-success"
+                    element={<SuccessRegistration />}
                 />
 
                 <Route
