@@ -12,52 +12,39 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/customer")
-
+@CrossOrigin(origins = "http://localhost:3000")
 public class CustomerController {
 
     @Autowired
     private CustomerService customerService;
 
-    // REGISTER CUSTOMER
-
-    @PostMapping("/register")
-
-    public Object registerCustomer(
-            @RequestBody Customer customer) {
-
-        return customerService
-                .registerCustomer(customer);
-    }
-
     // GET ALL CUSTOMERS
 
     @GetMapping("/all")
-
     public List<Customer> getAllCustomers() {
 
-        return customerService
-                .getAllCustomers();
+        return customerService.getAllCustomers();
+
     }
 
     // GET CUSTOMER BY ID
 
     @GetMapping("/{id}")
-
     public Customer getCustomerById(
             @PathVariable Long id) {
 
-        return customerService
-                .getCustomerById(id);
+        return customerService.getCustomerById(id);
+
     }
 
     // LOGIN CUSTOMER
 
     @PostMapping("/login")
-
     public AuthResponse loginCustomer(
             @RequestBody LoginRequest loginRequest) {
 
-        return customerService
-                .loginCustomer(loginRequest);
+        return customerService.loginCustomer(loginRequest);
+
     }
+
 }

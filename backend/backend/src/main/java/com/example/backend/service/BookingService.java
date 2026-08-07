@@ -29,6 +29,9 @@ public class BookingService {
     @Autowired
     private CarRepository carRepository;
 
+    @Autowired
+    private MailService mailService;
+
     // ADD BOOKING
     public Booking addBooking(Booking booking) {
 
@@ -77,26 +80,75 @@ public class BookingService {
 
         carRepository.save(car);
 
-        return bookingRepository.save(
-                booking
-        );
+        Booking savedBooking =
+                bookingRepository.save(
+                        booking
+                );
+
+        // SEND EMAIL TO CUSTOMER
+
+        if (customer != null) {
+
+            mailService.sendMail(
+
+                    customer.getEmail(),
+
+                    "Booking Request Received - Car Rental System",
+
+                    "Hello "
+                            + customer.getName()
+
+                            + "\n\nYour booking request has been submitted successfully."
+
+                            + "\n\nBooking Status : PENDING"
+
+                            + "\n\nCar : "
+                            + carVariant.getVariantName()
+
+                            + "\nFuel Type : "
+                            + carVariant.getFuelType()
+
+                            + "\nFrom Date : "
+                            + booking.getFromDate()
+
+                            + "\nTo Date : "
+                            + booking.getToDate()
+
+                            + "\nTotal Amount : Rs. "
+                            + booking.getTotalAmount()
+
+                            + "\n\nYour booking is waiting for Admin Approval."
+
+                            + "\n\nThank you for choosing Car Rental System."
+
+            );
+
+        }
+
+        return savedBooking;
+
     }
 
     // GET ALL BOOKINGS
+
     public List<Booking> getAllBookings() {
 
         return bookingRepository.findAll();
+
     }
 
     // DELETE BOOKING
+
     public String deleteBooking(Long id) {
 
         bookingRepository.deleteById(id);
 
         return "Booking Deleted Successfully";
+
     }
 
     // APPROVE BOOKING
+
     public Booking approveBooking(Long id) {
 
         Booking booking =
@@ -113,12 +165,57 @@ public class BookingService {
                 "APPROVED"
         );
 
-        return bookingRepository.save(
-                booking
-        );
+        Booking updatedBooking =
+                bookingRepository.save(
+                        booking
+                );
+
+        // SEND APPROVAL EMAIL
+
+        if (booking.getCustomer() != null) {
+
+            mailService.sendMail(
+
+                    booking.getCustomer().getEmail(),
+
+                    "Booking Approved - Car Rental System",
+
+                    "Hello "
+                            + booking.getCustomer().getName()
+
+                            + "\n\nCongratulations!"
+
+                            + "\n\nYour booking has been APPROVED."
+
+                            + "\n\nBooking ID : "
+                            + booking.getId()
+
+                            + "\nCar : "
+                            + booking.getCarVariant().getVariantName()
+
+                            + "\nFrom Date : "
+                            + booking.getFromDate()
+
+                            + "\nTo Date : "
+                            + booking.getToDate()
+
+                            + "\nAmount : Rs. "
+                            + booking.getTotalAmount()
+
+                            + "\n\nPlease login and complete your payment."
+
+                            + "\n\nThank you for choosing Car Rental System."
+
+            );
+
+        }
+
+        return updatedBooking;
+
     }
 
     // REJECT BOOKING
+
     public Booking rejectBooking(Long id) {
 
         Booking booking =
@@ -143,10 +240,47 @@ public class BookingService {
             car.setAvailable(true);
 
             carRepository.save(car);
+
         }
 
-        return bookingRepository.save(
-                booking
-        );
+        Booking updatedBooking =
+                bookingRepository.save(
+                        booking
+                );
+
+        // SEND REJECTION EMAIL
+
+        if (booking.getCustomer() != null) {
+
+            mailService.sendMail(
+
+                    booking.getCustomer().getEmail(),
+
+                    "Booking Rejected - Car Rental System",
+
+                    "Hello "
+                            + booking.getCustomer().getName()
+
+                            + "\n\nWe are sorry."
+
+                            + "\n\nYour booking request has been REJECTED."
+
+                            + "\n\nBooking ID : "
+                            + booking.getId()
+
+                            + "\nCar : "
+                            + booking.getCarVariant().getVariantName()
+
+                            + "\n\nPlease try booking another available vehicle."
+
+                            + "\n\nThank you for choosing Car Rental System."
+
+            );
+
+        }
+
+        return updatedBooking;
+
     }
+
 }

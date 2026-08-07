@@ -49,7 +49,16 @@ public class SecurityConfig {
                                 "/payment/**",
 
                                 "/review/add",
-                                "/review/all"
+
+                                "/review/all",
+
+                                "/forgot-password/**",
+
+                                "/customer/send-registration-otp",
+
+                                "/customer/verify-registration-otp",
+
+                                "/customer/register-with-otp"
 
                         ).permitAll()
 

@@ -4,6 +4,7 @@ import com.example.backend.entity.Booking;
 import com.example.backend.entity.Payment;
 import com.example.backend.repository.BookingRepository;
 import com.example.backend.repository.PaymentRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,9 @@ public class PaymentService {
 
     @Autowired
     private BookingRepository bookingRepository;
+
+    @Autowired
+    private MailService mailService;
 
     // ADD PAYMENT
     public Payment addPayment(Payment payment) {
@@ -65,9 +69,60 @@ public class PaymentService {
                 LocalDate.now()
         );
 
-        return paymentRepository.save(
-                payment
-        );
+        Payment savedPayment =
+                paymentRepository.save(
+                        payment
+                );
+
+        // SEND PAYMENT SUCCESS EMAIL
+
+        if (booking.getCustomer() != null) {
+
+            mailService.sendMail(
+
+                    booking.getCustomer().getEmail(),
+
+                    "Payment Successful - Car Rental System",
+
+                    "Hello "
+                            + booking.getCustomer().getName()
+
+                            + "\n\nYour payment has been received successfully."
+
+                            + "\n\nPayment ID : "
+                            + savedPayment.getId()
+
+                            + "\nBooking ID : "
+                            + booking.getId()
+
+                            + "\nCar : "
+                            + booking.getCarVariant().getVariantName()
+
+                            + "\nFuel Type : "
+                            + booking.getCarVariant().getFuelType()
+
+                            + "\nFrom Date : "
+                            + booking.getFromDate()
+
+                            + "\nTo Date : "
+                            + booking.getToDate()
+
+                            + "\nAmount : Rs. "
+                            + booking.getTotalAmount()
+
+                            + "\nPayment Status : "
+                            + savedPayment.getPaymentStatus()
+
+                            + "\nPayment Date : "
+                            + savedPayment.getPaymentDate()
+
+                            + "\n\nThank you for choosing Car Rental System."
+
+            );
+
+        }
+
+        return savedPayment;
     }
 
     // GET ALL PAYMENTS
