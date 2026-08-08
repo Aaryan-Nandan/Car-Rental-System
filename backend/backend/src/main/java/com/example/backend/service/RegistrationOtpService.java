@@ -3,7 +3,9 @@ package com.example.backend.service;
 import com.example.backend.dto.ApiResponse;
 import com.example.backend.entity.Customer;
 import com.example.backend.repository.CustomerRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Random;
@@ -20,7 +22,14 @@ public class RegistrationOtpService {
     @Autowired
     private MailService mailService;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+
+    // ==========================================
     // SEND OTP
+    // ==========================================
+
     public ApiResponse sendOtp(String email) {
 
         Customer customer =
@@ -35,7 +44,6 @@ public class RegistrationOtpService {
                     "Email Already Registered"
 
             );
-
         }
 
         String otp =
@@ -94,10 +102,13 @@ public class RegistrationOtpService {
                 "OTP Sent Successfully"
 
         );
-
     }
 
+
+    // ==========================================
     // VERIFY OTP
+    // ==========================================
+
     public ApiResponse verifyOtp(
 
             String email,
@@ -125,7 +136,6 @@ public class RegistrationOtpService {
                     "Invalid Or Expired OTP"
 
             );
-
         }
 
         return new ApiResponse(
@@ -135,10 +145,13 @@ public class RegistrationOtpService {
                 "OTP Verified"
 
         );
-
     }
 
+
+    // ==========================================
     // REGISTER CUSTOMER
+    // ==========================================
+
     public ApiResponse registerCustomer(
 
             Customer customer,
@@ -164,8 +177,9 @@ public class RegistrationOtpService {
                     "Email Already Registered"
 
             );
-
         }
+
+        // VERIFY OTP
 
         boolean verified =
 
@@ -186,14 +200,31 @@ public class RegistrationOtpService {
                     "Invalid Or Expired OTP"
 
             );
-
         }
+
+        // ==========================================
+        // ENCRYPT PASSWORD
+        // ==========================================
+
+        customer.setPassword(
+
+                passwordEncoder.encode(
+
+                        customer.getPassword()
+
+                )
+
+        );
+
+        // SAVE CUSTOMER
 
         customerRepository.save(
 
                 customer
 
         );
+
+        // REMOVE USED OTP
 
         otpStorage.removeOtp(
 
@@ -208,7 +239,6 @@ public class RegistrationOtpService {
                 "Registration Successful"
 
         );
-
     }
 
 }

@@ -5,7 +5,9 @@ import com.example.backend.dto.LoginRequest;
 import com.example.backend.entity.Customer;
 import com.example.backend.repository.CustomerRepository;
 import com.example.backend.security.JwtUtil;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,23 +21,46 @@ public class CustomerService {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+
+    // ==========================================
     // REGISTER CUSTOMER
-    public Object registerCustomer(Customer customer) {
+    // ==========================================
+
+    public Object registerCustomer(
+            Customer customer) {
 
         Customer existingCustomer =
-                customerRepository.findByEmail(customer.getEmail());
+                customerRepository.findByEmail(
+                        customer.getEmail()
+                );
 
         if (existingCustomer != null) {
 
             return "Email Already Exists";
         }
 
-        return customerRepository.save(customer);
+        // ENCRYPT PASSWORD
+
+        customer.setPassword(
+
+                passwordEncoder.encode(
+                        customer.getPassword()
+                )
+
+        );
+
+        return customerRepository.save(
+                customer
+        );
     }
 
-    // GET ALL CUSTOMERS
 
+    // ==========================================
     // GET CUSTOMER BY ID
+    // ==========================================
 
     public Customer getCustomerById(
             Long id) {
@@ -44,13 +69,24 @@ public class CustomerService {
                 .findById(id)
                 .orElse(null);
     }
+
+
+    // ==========================================
+    // GET ALL CUSTOMERS
+    // ==========================================
+
     public List<Customer> getAllCustomers() {
 
         return customerRepository.findAll();
     }
 
+
+    // ==========================================
     // LOGIN CUSTOMER
-    public AuthResponse loginCustomer(LoginRequest loginRequest) {
+    // ==========================================
+
+    public AuthResponse loginCustomer(
+            LoginRequest loginRequest) {
 
         Customer customer =
                 customerRepository.findByEmail(
@@ -58,8 +94,13 @@ public class CustomerService {
                 );
 
         if (customer != null &&
-                customer.getPassword().equals(
-                        loginRequest.getPassword()
+
+                passwordEncoder.matches(
+
+                        loginRequest.getPassword(),
+
+                        customer.getPassword()
+
                 )) {
 
             String token =
@@ -68,10 +109,15 @@ public class CustomerService {
                     );
 
             return new AuthResponse(
+
                     token,
+
                     customer
+
             );
         }
+
         return null;
     }
+
 }

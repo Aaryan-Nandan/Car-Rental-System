@@ -12,6 +12,7 @@ import com.example.backend.repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -32,8 +33,24 @@ public class BookingService {
     @Autowired
     private MailService mailService;
 
+
+    // =========================================================
     // ADD BOOKING
+    // =========================================================
+
     public Booking addBooking(Booking booking) {
+
+        // =====================================================
+        // CUSTOMER VALIDATION
+        // =====================================================
+
+        if (booking.getCustomer() == null ||
+                booking.getCustomer().getId() == null) {
+
+            throw new RuntimeException(
+                    "Customer is required"
+            );
+        }
 
         Long customerId =
                 booking.getCustomer().getId();
@@ -43,6 +60,26 @@ public class BookingService {
                         .findById(customerId)
                         .orElse(null);
 
+        if (customer == null) {
+
+            throw new RuntimeException(
+                    "Customer Not Found"
+            );
+        }
+
+
+        // =====================================================
+        // CAR VARIANT VALIDATION
+        // =====================================================
+
+        if (booking.getCarVariant() == null ||
+                booking.getCarVariant().getId() == null) {
+
+            throw new RuntimeException(
+                    "Car Variant is required"
+            );
+        }
+
         Long variantId =
                 booking.getCarVariant().getId();
 
@@ -51,15 +88,81 @@ public class BookingService {
                         .findById(variantId)
                         .orElse(null);
 
-        booking.setCustomer(customer);
+        if (carVariant == null) {
 
-        booking.setCarVariant(carVariant);
+            throw new RuntimeException(
+                    "Car Variant Not Found"
+            );
+        }
 
-        booking.setBookingStatus("PENDING");
 
-        booking.setLicenseFileName(
-                "license.jpg"
+        // =====================================================
+        // DATE VALIDATION
+        // =====================================================
+
+        if (booking.getFromDate() == null ||
+                booking.getToDate() == null) {
+
+            throw new RuntimeException(
+                    "From Date and To Date are required"
+            );
+        }
+
+        if (booking.getToDate()
+                .isBefore(
+                        booking.getFromDate()
+                )) {
+
+            throw new RuntimeException(
+                    "To Date cannot be before From Date"
+            );
+        }
+
+
+        // =====================================================
+        // CALCULATE RENTAL DAYS
+        // =====================================================
+
+        long days =
+                ChronoUnit.DAYS.between(
+                        booking.getFromDate(),
+                        booking.getToDate()
+                ) + 1;
+
+
+        // =====================================================
+        // CALCULATE TOTAL AMOUNT
+        // =====================================================
+
+        double totalAmount =
+                days *
+                        carVariant.getPricePerDay();
+
+        booking.setTotalAmount(
+                totalAmount
         );
+
+
+        // =====================================================
+        // SET DATABASE OBJECTS
+        // =====================================================
+
+        booking.setCustomer(
+                customer
+        );
+
+        booking.setCarVariant(
+                carVariant
+        );
+
+        booking.setBookingStatus(
+                "PENDING"
+        );
+
+
+        // =====================================================
+        // FIND AVAILABLE CAR
+        // =====================================================
 
         Car car =
                 carRepository
@@ -74,20 +177,58 @@ public class BookingService {
             );
         }
 
-        booking.setCar(car);
 
-        car.setAvailable(false);
+        // =====================================================
+        // ASSIGN CAR TO BOOKING
+        // =====================================================
 
-        carRepository.save(car);
+        booking.setCar(
+                car
+        );
+
+
+        // =====================================================
+        // LICENSE
+        // =====================================================
+
+        /*
+         * Currently we are not uploading the actual file.
+         * We will implement MultipartFile upload separately.
+         */
+
+        booking.setLicenseFileName(
+                "license.jpg"
+        );
+
+
+        // =====================================================
+        // MAKE CAR UNAVAILABLE
+        // =====================================================
+
+        car.setAvailable(
+                false
+        );
+
+        carRepository.save(
+                car
+        );
+
+
+        // =====================================================
+        // SAVE BOOKING
+        // =====================================================
 
         Booking savedBooking =
                 bookingRepository.save(
                         booking
                 );
 
-        // SEND EMAIL TO CUSTOMER
 
-        if (customer != null) {
+        // =====================================================
+        // SEND BOOKING EMAIL
+        // =====================================================
+
+        if (customer.getEmail() != null) {
 
             mailService.sendMail(
 
@@ -101,6 +242,9 @@ public class BookingService {
                             + "\n\nYour booking request has been submitted successfully."
 
                             + "\n\nBooking Status : PENDING"
+
+                            + "\n\nBooking ID : "
+                            + savedBooking.getId()
 
                             + "\n\nCar : "
                             + carVariant.getVariantName()
@@ -122,34 +266,76 @@ public class BookingService {
                             + "\n\nThank you for choosing Car Rental System."
 
             );
-
         }
 
-        return savedBooking;
 
+        return savedBooking;
     }
 
+
+    // =========================================================
     // GET ALL BOOKINGS
+    // =========================================================
 
     public List<Booking> getAllBookings() {
 
         return bookingRepository.findAll();
-
     }
 
+
+    // =========================================================
     // DELETE BOOKING
+    // =========================================================
 
-    public String deleteBooking(Long id) {
+    public String deleteBooking(
+            Long id) {
 
-        bookingRepository.deleteById(id);
+        Booking booking =
+                bookingRepository
+                        .findById(id)
+                        .orElse(null);
+
+        if (booking == null) {
+
+            return "Booking Not Found";
+        }
+
+
+        // -----------------------------------------------------
+        // If car was assigned to this booking,
+        // make it available again.
+        // -----------------------------------------------------
+
+        if (booking.getCar() != null) {
+
+            Car car =
+                    booking.getCar();
+
+            car.setAvailable(
+                    true
+            );
+
+            carRepository.save(
+                    car
+            );
+        }
+
+
+        bookingRepository.deleteById(
+                id
+        );
+
 
         return "Booking Deleted Successfully";
-
     }
 
-    // APPROVE BOOKING
 
-    public Booking approveBooking(Long id) {
+    // =========================================================
+    // APPROVE BOOKING
+    // =========================================================
+
+    public Booking approveBooking(
+            Long id) {
 
         Booking booking =
                 bookingRepository
@@ -161,18 +347,32 @@ public class BookingService {
             return null;
         }
 
+
+        // -----------------------------------------------------
+        // Change status
+        // -----------------------------------------------------
+
         booking.setBookingStatus(
                 "APPROVED"
         );
+
+
+        // -----------------------------------------------------
+        // Save booking
+        // -----------------------------------------------------
 
         Booking updatedBooking =
                 bookingRepository.save(
                         booking
                 );
 
-        // SEND APPROVAL EMAIL
 
-        if (booking.getCustomer() != null) {
+        // -----------------------------------------------------
+        // SEND APPROVAL EMAIL
+        // -----------------------------------------------------
+
+        if (booking.getCustomer() != null &&
+                booking.getCustomer().getEmail() != null) {
 
             mailService.sendMail(
 
@@ -191,7 +391,8 @@ public class BookingService {
                             + booking.getId()
 
                             + "\nCar : "
-                            + booking.getCarVariant().getVariantName()
+                            + booking.getCarVariant()
+                            .getVariantName()
 
                             + "\nFrom Date : "
                             + booking.getFromDate()
@@ -207,16 +408,19 @@ public class BookingService {
                             + "\n\nThank you for choosing Car Rental System."
 
             );
-
         }
 
-        return updatedBooking;
 
+        return updatedBooking;
     }
 
-    // REJECT BOOKING
 
-    public Booking rejectBooking(Long id) {
+    // =========================================================
+    // REJECT BOOKING
+    // =========================================================
+
+    public Booking rejectBooking(
+            Long id) {
 
         Booking booking =
                 bookingRepository
@@ -228,29 +432,51 @@ public class BookingService {
             return null;
         }
 
+
+        // -----------------------------------------------------
+        // Change status
+        // -----------------------------------------------------
+
         booking.setBookingStatus(
                 "REJECTED"
         );
+
+
+        // -----------------------------------------------------
+        // Make assigned car available again
+        // -----------------------------------------------------
 
         if (booking.getCar() != null) {
 
             Car car =
                     booking.getCar();
 
-            car.setAvailable(true);
+            car.setAvailable(
+                    true
+            );
 
-            carRepository.save(car);
-
+            carRepository.save(
+                    car
+            );
         }
+
+
+        // -----------------------------------------------------
+        // Save booking
+        // -----------------------------------------------------
 
         Booking updatedBooking =
                 bookingRepository.save(
                         booking
                 );
 
-        // SEND REJECTION EMAIL
 
-        if (booking.getCustomer() != null) {
+        // -----------------------------------------------------
+        // SEND REJECTION EMAIL
+        // -----------------------------------------------------
+
+        if (booking.getCustomer() != null &&
+                booking.getCustomer().getEmail() != null) {
 
             mailService.sendMail(
 
@@ -269,18 +495,17 @@ public class BookingService {
                             + booking.getId()
 
                             + "\nCar : "
-                            + booking.getCarVariant().getVariantName()
+                            + booking.getCarVariant()
+                            .getVariantName()
 
                             + "\n\nPlease try booking another available vehicle."
 
                             + "\n\nThank you for choosing Car Rental System."
 
             );
-
         }
 
+
         return updatedBooking;
-
     }
-
 }
