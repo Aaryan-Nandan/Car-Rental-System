@@ -2,103 +2,308 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+
 function MyBookings() {
+
 
     const [bookings, setBookings] =
         useState([]);
 
+
     const [payments, setPayments] =
         useState([]);
 
-    const [searchText,
-        setSearchText] =
-            useState("");
 
-    const [statusFilter,
-        setStatusFilter] =
-            useState("ALL");
+    const [searchText, setSearchText] =
+        useState("");
+
+
+    const [statusFilter, setStatusFilter] =
+        useState("ALL");
+
 
     const navigate =
         useNavigate();
 
+
+    // ==========================================
+    // GET JWT TOKEN
+    // ==========================================
+
+    const token =
+        localStorage.getItem("token");
+
+
+    // ==========================================
+    // LOAD DATA
+    // ==========================================
+
     useEffect(() => {
+
+        if (!token) {
+
+            alert(
+                "Please login first."
+            );
+
+            navigate("/login");
+
+            return;
+        }
+
 
         loadBookings();
 
         loadPayments();
 
-    }, []);
+
+    }, [token, navigate]);
+
+
+    // ==========================================
+    // LOAD BOOKINGS
+    // ==========================================
 
     const loadBookings = () => {
 
+
         axios
+
             .get(
-                "http://localhost:8081/booking/all"
+
+                "http://localhost:8081/booking/all",
+
+                {
+
+                    headers: {
+
+                        Authorization:
+                            `Bearer ${token}`
+
+                    }
+
+                }
+
             )
 
             .then((response) => {
+
 
                 const customerId =
                     localStorage.getItem(
                         "customerId"
                     );
 
+
                 const filteredBookings =
                     response.data.filter(
+
                         (booking) =>
 
                             booking.customer &&
 
-                            booking.customer.id === Number(customerId)
+                            booking.customer.id ===
+                            Number(customerId)
+
                     );
+
 
                 setBookings(
                     filteredBookings
                 );
+
+            })
+
+            .catch((error) => {
+
+
+                console.error(
+                    "Booking Error:",
+                    error
+                );
+
+
+                if (
+
+                    error.response &&
+
+                    (
+                        error.response.status ===
+                        401 ||
+
+                        error.response.status ===
+                        403
+                    )
+
+                ) {
+
+                    localStorage.removeItem(
+                        "token"
+                    );
+
+                    localStorage.removeItem(
+                        "customerId"
+                    );
+
+
+                    alert(
+                        "Session expired. Please login again."
+                    );
+
+
+                    navigate(
+                        "/login"
+                    );
+
+                }
+
             });
+
     };
+
+
+    // ==========================================
+    // LOAD PAYMENTS
+    // ==========================================
 
     const loadPayments = () => {
 
+
         axios
+
             .get(
-                "http://localhost:8081/payment/all"
+
+                "http://localhost:8081/payment/all",
+
+                {
+
+                    headers: {
+
+                        Authorization:
+                            `Bearer ${token}`
+
+                    }
+
+                }
+
             )
 
             .then((response) => {
 
+
                 setPayments(
                     response.data
                 );
+
+            })
+
+            .catch((error) => {
+
+
+                console.error(
+                    "Payment Error:",
+                    error
+                );
+
+
+                if (
+
+                    error.response &&
+
+                    (
+                        error.response.status ===
+                        401 ||
+
+                        error.response.status ===
+                        403
+                    )
+
+                ) {
+
+                    localStorage.removeItem(
+                        "token"
+                    );
+
+                    localStorage.removeItem(
+                        "customerId"
+                    );
+
+
+                    alert(
+                        "Session expired. Please login again."
+                    );
+
+
+                    navigate(
+                        "/login"
+                    );
+
+                }
+
             });
+
     };
+
+
+    // ==========================================
+    // CHECK PAYMENT
+    // ==========================================
 
     const isPaid = (bookingId) => {
 
-    console.log("Booking ID :", bookingId);
 
-    console.log("Payments :", payments);
+        console.log(
+            "Booking ID :",
+            bookingId
+        );
 
-    const paid = payments.some(
 
-        (payment) =>
+        console.log(
+            "Payments :",
+            payments
+        );
 
-            payment.booking &&
-            payment.booking.id === bookingId
-    );
 
-    console.log("Paid :", paid);
+        const paid =
+            payments.some(
 
-    return paid;
-};
+                (payment) =>
+
+                    payment.booking &&
+
+                    payment.booking.id ===
+                    bookingId
+
+            );
+
+
+        console.log(
+            "Paid :",
+            paid
+        );
+
+
+        return paid;
+
+    };
+
+
+    // ==========================================
+    // PAGE
+    // ==========================================
 
     return (
 
         <div
+
             style={{
+
                 padding: "30px"
+
             }}
+
         >
+
 
             <h1>
 
@@ -106,10 +311,18 @@ function MyBookings() {
 
             </h1>
 
+
             <br />
 
+
+            {/* ==================================
+                SEARCH
+            ================================== */}
+
             <input
+
                 type="text"
+
                 placeholder="Search Car"
 
                 value={searchText}
@@ -121,11 +334,21 @@ function MyBookings() {
                 }
 
                 style={{
+
                     padding: "10px",
+
                     width: "250px",
+
                     marginRight: "10px"
+
                 }}
+
             />
+
+
+            {/* ==================================
+                STATUS FILTER
+            ================================== */}
 
             <select
 
@@ -138,306 +361,447 @@ function MyBookings() {
                 }
 
                 style={{
+
                     padding: "10px"
+
                 }}
+
             >
 
                 <option value="ALL">
+
                     All
+
                 </option>
+
 
                 <option value="PENDING">
+
                     Pending
+
                 </option>
+
 
                 <option value="APPROVED">
+
                     Approved
+
                 </option>
 
+
                 <option value="REJECTED">
+
                     Rejected
+
                 </option>
 
             </select>
 
+
+            {/* ==================================
+                TOTAL BOOKINGS
+            ================================== */}
+
             <h3>
 
-                Total Bookings :
-                {" "}
+                Total Bookings :{" "}
+
                 {bookings.length}
 
             </h3>
 
+
             <br />
 
+
+            {/* ==================================
+                BOOKINGS
+            ================================== */}
+
             {
+
                 bookings
 
-                    .filter((booking) =>
+                    .filter(
 
-                        booking.carVariant
-                            ?.variantName
-                            .toLowerCase()
-                            .includes(
-                                searchText.toLowerCase()
-                            )
+                        (booking) =>
+
+                            booking.carVariant
+                                ?.variantName
+                                .toLowerCase()
+                                .includes(
+                                    searchText.toLowerCase()
+                                )
+
                     )
 
-                    .filter((booking) =>
+                    .filter(
 
-                        statusFilter === "ALL"
+                        (booking) =>
 
-                            ? true
+                            statusFilter ===
+                            "ALL"
 
-                            : booking.bookingStatus ===
-                            statusFilter
+                                ? true
+
+                                : booking.bookingStatus ===
+                                  statusFilter
+
                     )
 
-                    .map((booking) => (
+                    .map(
 
-                        <div
+                        (booking) => (
 
-                            key={booking.id}
+                            <div
 
-                            style={{
-                                border:
-                                    "1px solid lightgray",
-
-                                padding: "20px",
-
-                                marginBottom: "20px",
-
-                                borderRadius: "10px",
-
-                                boxShadow:
-                                    "0px 0px 10px lightgray"
-                            }}
-                        >
-
-                            <h2>
-
-                                {
-                                    booking.carVariant
-                                        ?.variantName
+                                key={
+                                    booking.id
                                 }
 
-                                {" - "}
+                                style={{
 
-                                {
-                                    booking.carVariant
-                                        ?.fuelType
-                                }
+                                    border:
+                                        "1px solid lightgray",
 
-                            </h2>
+                                    padding:
+                                        "20px",
 
-                            <p>
+                                    marginBottom:
+                                        "20px",
 
-                                <b>
-                                    From Date:
-                                </b>
+                                    borderRadius:
+                                        "10px",
 
-                                {" "}
+                                    boxShadow:
+                                        "0px 0px 10px lightgray"
 
-                                {booking.fromDate}
+                                }}
 
-                            </p>
+                            >
 
-                            <p>
 
-                                <b>
-                                    To Date:
-                                </b>
+                                {/* ==========================
+                                    CAR NAME
+                                ========================== */}
 
-                                {" "}
-
-                                {booking.toDate}
-
-                            </p>
-
-                            <p>
-
-                                <b>
-                                    Total Amount:
-                                </b>
-
-                                {" "}
-
-                                ₹ {booking.totalAmount}
-
-                            </p>
-
-                            <p>
-
-                                <b>
-                                    Status:
-                                </b>
-
-                                {" "}
-
-                                <span
-                                    style={{
-                                        color:
-
-                                            booking.bookingStatus
-                                                === "APPROVED"
-
-                                                ? "green"
-
-                                                : booking.bookingStatus
-                                                    === "REJECTED"
-
-                                                    ? "red"
-
-                                                    : "orange",
-
-                                        fontWeight:
-                                            "bold"
-                                    }}
-                                >
+                                <h2>
 
                                     {
-                                        booking.bookingStatus
+
+                                        booking
+                                            .carVariant
+                                            ?.variantName
+
                                     }
 
-                                </span>
+                                    {" - "}
 
-                            </p>
+                                    {
 
-                            <p>
+                                        booking
+                                            .carVariant
+                                            ?.fuelType
 
-                                <b>
-                                    Assigned Car:
-                                </b>
+                                    }
 
-                                {" "}
+                                </h2>
+
+
+                                {/* ==========================
+                                    FROM DATE
+                                ========================== */}
+
+                                <p>
+
+                                    <b>
+
+                                        From Date:
+
+                                    </b>
+
+                                    {" "}
+
+                                    {
+                                        booking.fromDate
+                                    }
+
+                                </p>
+
+
+                                {/* ==========================
+                                    TO DATE
+                                ========================== */}
+
+                                <p>
+
+                                    <b>
+
+                                        To Date:
+
+                                    </b>
+
+                                    {" "}
+
+                                    {
+                                        booking.toDate
+                                    }
+
+                                </p>
+
+
+                                {/* ==========================
+                                    TOTAL AMOUNT
+                                ========================== */}
+
+                                <p>
+
+                                    <b>
+
+                                        Total Amount:
+
+                                    </b>
+
+                                    {" "}
+
+                                    ₹ {booking.totalAmount}
+
+                                </p>
+
+
+                                {/* ==========================
+                                    STATUS
+                                ========================== */}
+
+                                <p>
+
+                                    <b>
+
+                                        Status:
+
+                                    </b>
+
+                                    {" "}
+
+
+                                    <span
+
+                                        style={{
+
+                                            color:
+
+                                                booking.bookingStatus ===
+                                                "APPROVED"
+
+                                                    ? "green"
+
+                                                    : booking.bookingStatus ===
+                                                      "REJECTED"
+
+                                                        ? "red"
+
+                                                        : "orange",
+
+                                            fontWeight:
+                                                "bold"
+
+                                        }}
+
+                                    >
+
+                                        {
+                                            booking.bookingStatus
+                                        }
+
+                                    </span>
+
+                                </p>
+
+
+                                {/* ==========================
+                                    ASSIGNED CAR
+                                ========================== */}
+
+                                <p>
+
+                                    <b>
+
+                                        Assigned Car:
+
+                                    </b>
+
+                                    {" "}
+
+                                    {
+
+                                        booking.car
+                                            ?.registrationNumber
+
+                                    }
+
+                                </p>
+
+
+                                {/* ==========================
+                                    PAYMENT / REVIEW
+                                ========================== */}
 
                                 {
-                                    booking.car
-                                        ?.registrationNumber
+
+                                    isPaid(
+                                        booking.id
+                                    )
+
+                                        ? (
+
+                                            <>
+
+                                                <button
+
+                                                    disabled
+
+                                                    style={{
+
+                                                        backgroundColor:
+                                                            "green",
+
+                                                        color:
+                                                            "white",
+
+                                                        border:
+                                                            "none",
+
+                                                        padding:
+                                                            "10px 20px",
+
+                                                        borderRadius:
+                                                            "5px",
+
+                                                        opacity:
+                                                            "0.8",
+
+                                                        marginRight:
+                                                            "10px"
+
+                                                    }}
+
+                                                >
+
+                                                    PAID
+
+                                                </button>
+
+
+                                                <button
+
+                                                    onClick={() =>
+
+                                                        navigate(
+
+                                                            `/review/${booking.carVariant.id}`
+
+                                                        )
+
+                                                    }
+
+                                                    style={{
+
+                                                        backgroundColor:
+                                                            "#ff9800",
+
+                                                        color:
+                                                            "white",
+
+                                                        border:
+                                                            "none",
+
+                                                        padding:
+                                                            "10px 20px",
+
+                                                        borderRadius:
+                                                            "5px",
+
+                                                        cursor:
+                                                            "pointer"
+
+                                                    }}
+
+                                                >
+
+                                                    Write Review
+
+                                                </button>
+
+                                            </>
+
+                                        )
+
+                                        :
+
+                                        booking.bookingStatus ===
+                                        "APPROVED"
+
+                                            && (
+
+                                                <button
+
+                                                    onClick={() =>
+
+                                                        navigate(
+
+                                                            `/payment/${booking.id}/${booking.totalAmount}`
+
+                                                        )
+
+                                                    }
+
+                                                    style={{
+
+                                                        backgroundColor:
+                                                            "green",
+
+                                                        color:
+                                                            "white",
+
+                                                        border:
+                                                            "none",
+
+                                                        padding:
+                                                            "10px 20px",
+
+                                                        borderRadius:
+                                                            "5px",
+
+                                                        cursor:
+                                                            "pointer"
+
+                                                    }}
+
+                                                >
+
+                                                    Pay Now
+
+                                                </button>
+
+                                            )
+
                                 }
 
-                            </p>
 
-                           {
-    isPaid(
-        booking.id
-    ) ? (
+                            </div>
 
-        <>
+                        )
 
-            <button
-
-                disabled
-
-                style={{
-                    backgroundColor:
-                        "green",
-
-                    color:
-                        "white",
-
-                    border:
-                        "none",
-
-                    padding:
-                        "10px 20px",
-
-                    borderRadius:
-                        "5px",
-
-                    opacity:
-                        "0.8",
-
-                    marginRight:
-                        "10px"
-                }}
-            >
-
-                PAID 
-
-            </button>
-
-            <button
-
-                onClick={() =>
-                    navigate(
-                        `/review/${booking.carVariant.id}`
                     )
-                }
 
-                style={{
-                    backgroundColor:
-                        "#ff9800",
-
-                    color:
-                        "white",
-
-                    border:
-                        "none",
-
-                    padding:
-                        "10px 20px",
-
-                    borderRadius:
-                        "5px",
-
-                    cursor:
-                        "pointer"
-                }}
-            >
-
-                 Write Review
-
-            </button>
-
-        </>
-
-    ) :
-
-        booking.bookingStatus ===
-        "APPROVED" && (
-
-            <button
-
-                onClick={() =>
-                    navigate(
-                        `/payment/${booking.id}/${booking.totalAmount}`
-                    )
-                }
-
-                style={{
-                    backgroundColor:
-                        "green",
-
-                    color:
-                        "white",
-
-                    border:
-                        "none",
-
-                    padding:
-                        "10px 20px",
-
-                    borderRadius:
-                        "5px",
-
-                    cursor:
-                        "pointer"
-                }}
-            >
-
-                Pay Now
-
-            </button>
-        )
-}
-
-                        </div>
-                    ))
             }
 
+
         </div>
+
     );
+
 }
+
 
 export default MyBookings;

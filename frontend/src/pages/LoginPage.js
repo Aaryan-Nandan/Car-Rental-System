@@ -11,22 +11,38 @@ from "react-router-dom";
 
 import axios from "axios";
 
+
 function LoginPage() {
+
 
     const navigate =
         useNavigate();
 
-    const [email,
-        setEmail] =
-            useState("");
 
-    const [password,
-        setPassword] =
-            useState("");
+    const [email, setEmail] =
+        useState("");
+
+
+    const [password, setPassword] =
+        useState("");
+
+
+    const [loading, setLoading] =
+        useState(false);
+
+
+    // ==========================================
+    // LOGIN
+    // ==========================================
 
     const handleLogin = () => {
 
-        if (!email) {
+
+        // ======================================
+        // EMAIL VALIDATION
+        // ======================================
+
+        if (!email.trim()) {
 
             alert(
                 "Please enter email"
@@ -34,6 +50,11 @@ function LoginPage() {
 
             return;
         }
+
+
+        // ======================================
+        // PASSWORD VALIDATION
+        // ======================================
 
         if (!password) {
 
@@ -44,12 +65,45 @@ function LoginPage() {
             return;
         }
 
+
+        // ======================================
+        // PREVENT DOUBLE CLICK
+        // ======================================
+
+        if (loading) {
+
+            return;
+        }
+
+
+        setLoading(true);
+
+
+        // ======================================
+        // REMOVE OLD LOGIN DATA
+        // ======================================
+
+        localStorage.removeItem(
+            "token"
+        );
+
+        localStorage.removeItem(
+            "customerId"
+        );
+
+
         const loginData = {
 
-            email: email,
+            email: email.trim(),
 
             password: password
+
         };
+
+
+        // ======================================
+        // LOGIN REQUEST
+        // ======================================
 
         axios
 
@@ -61,79 +115,230 @@ function LoginPage() {
 
             )
 
-            .then((response) => {
+            .then(
 
-                console.log(
-                    response.data
-                );
+                (response) => {
 
-                localStorage.setItem(
 
-                    "token",
+                    console.log(
+                        "Login Response:",
+                        response.data
+                    );
 
-                    response.data.token
 
-                );
+                    // ==================================
+                    // CHECK RESPONSE
+                    // ==================================
 
-                if (
-                    response.data.customer
-                ) {
+                    if (
+
+                        !response.data
+
+                        ||
+
+                        !response.data.token
+
+                    ) {
+
+                        alert(
+                            "Invalid Email or Password"
+                        );
+
+                        return;
+                    }
+
+
+                    // ==================================
+                    // SAVE JWT TOKEN
+                    // ==================================
 
                     localStorage.setItem(
 
-                        "customerId",
+                        "token",
+
+                        response.data.token
+
+                    );
+
+
+                    // ==================================
+                    // SAVE CUSTOMER ID
+                    // ==================================
+
+                    if (
+
+                        response.data.customer
+
+                        &&
 
                         response.data.customer.id
 
+                    ) {
+
+                        localStorage.setItem(
+
+                            "customerId",
+
+                            response.data.customer.id
+
+                        );
+
+                    }
+
+
+                    // ==================================
+                    // LOGIN SUCCESS
+                    // ==================================
+
+                    alert(
+                        "Login Successful"
                     );
+
+
+                    navigate(
+                        "/my-bookings"
+                    );
+
                 }
 
-                alert(
-                    "Login Successful"
-                );
+            )
 
-                navigate(
-                    "/my-bookings"
-                );
+            .catch(
 
-            })
+                (error) => {
 
-            .catch((error) => {
 
-                console.log(error);
+                    console.log(
+                        "Login Error:",
+                        error
+                    );
 
-                alert(
-                    "Invalid Email or Password"
-                );
 
-            });
+                    // ==================================
+                    // REMOVE AUTH DATA
+                    // ==================================
+
+                    localStorage.removeItem(
+                        "token"
+                    );
+
+                    localStorage.removeItem(
+                        "customerId"
+                    );
+
+
+                    // ==================================
+                    // SHOW CORRECT ERROR
+                    // ==================================
+
+                    if (
+
+                        error.response
+
+                        &&
+
+                        error.response.status === 401
+
+                    ) {
+
+                        alert(
+                            "Invalid Email or Password"
+                        );
+
+                    }
+
+                    else if (
+
+                        error.response
+
+                        &&
+
+                        error.response.status === 403
+
+                    ) {
+
+                        alert(
+                            "Login Access Denied"
+                        );
+
+                    }
+
+                    else {
+
+                        alert(
+                            "Unable To Login. Please try again."
+                        );
+
+                    }
+
+                }
+
+            )
+
+            .finally(
+
+                () => {
+
+                    setLoading(false);
+
+                }
+
+            );
 
     };
+
+
+    // ==========================================
+    // PAGE
+    // ==========================================
 
     return (
 
         <div
+
             style={{
+
                 padding: "30px",
+
                 maxWidth: "400px",
+
                 margin: "40px auto",
-                boxShadow: "0 0 10px lightgray",
+
+                boxShadow:
+                    "0 0 10px lightgray",
+
                 borderRadius: "10px",
-                backgroundColor: "white"
+
+                backgroundColor:
+                    "white"
+
             }}
+
         >
 
+
             <h1
+
                 style={{
-                    textAlign: "center"
+
+                    textAlign:
+                        "center"
+
                 }}
+
             >
 
                 Customer Login
 
             </h1>
 
+
             <br />
+
+
+            {/* ==================================
+                EMAIL
+            ================================== */}
 
             <div>
 
@@ -143,7 +348,9 @@ function LoginPage() {
 
                 </label>
 
+
                 <br />
+
 
                 <input
 
@@ -158,15 +365,29 @@ function LoginPage() {
                     }
 
                     style={{
-                        padding: "10px",
-                        width: "100%"
+
+                        padding:
+                            "10px",
+
+                        width:
+                            "100%",
+
+                        boxSizing:
+                            "border-box"
+
                     }}
 
                 />
 
             </div>
 
+
             <br />
+
+
+            {/* ==================================
+                PASSWORD
+            ================================== */}
 
             <div>
 
@@ -176,7 +397,9 @@ function LoginPage() {
 
                 </label>
 
+
                 <br />
+
 
                 <input
 
@@ -190,20 +413,52 @@ function LoginPage() {
                         )
                     }
 
+                    onKeyDown={(e) => {
+
+                        if (
+                            e.key === "Enter"
+                        ) {
+
+                            handleLogin();
+
+                        }
+
+                    }}
+
                     style={{
-                        padding: "10px",
-                        width: "100%"
+
+                        padding:
+                            "10px",
+
+                        width:
+                            "100%",
+
+                        boxSizing:
+                            "border-box"
+
                     }}
 
                 />
 
             </div>
 
+
+            {/* ==================================
+                FORGOT PASSWORD
+            ================================== */}
+
             <div
+
                 style={{
-                    textAlign: "right",
-                    marginTop: "10px"
+
+                    textAlign:
+                        "right",
+
+                    marginTop:
+                        "10px"
+
                 }}
+
             >
 
                 <Link
@@ -211,9 +466,16 @@ function LoginPage() {
                     to="/forgot-password"
 
                     style={{
-                        color: "#1976d2",
-                        textDecoration: "none",
-                        fontSize: "14px"
+
+                        color:
+                            "#1976d2",
+
+                        textDecoration:
+                            "none",
+
+                        fontSize:
+                            "14px"
+
                     }}
 
                 >
@@ -224,20 +486,36 @@ function LoginPage() {
 
             </div>
 
+
             <br />
+
+
+            {/* ==================================
+                LOGIN BUTTON
+            ================================== */}
 
             <button
 
-                onClick={handleLogin}
+                onClick={
+                    handleLogin
+                }
+
+                disabled={
+                    loading
+                }
 
                 style={{
 
-                    width: "100%",
+                    width:
+                        "100%",
 
-                    padding: "12px",
+                    padding:
+                        "12px",
 
                     backgroundColor:
-                        "black",
+                        loading
+                            ? "gray"
+                            : "black",
 
                     color:
                         "white",
@@ -249,7 +527,9 @@ function LoginPage() {
                         "5px",
 
                     cursor:
-                        "pointer",
+                        loading
+                            ? "not-allowed"
+                            : "pointer",
 
                     fontSize:
                         "16px"
@@ -258,14 +538,20 @@ function LoginPage() {
 
             >
 
-                Login
+                {
+                    loading
+                        ? "Logging In..."
+                        : "Login"
+                }
 
             </button>
+
 
         </div>
 
     );
 
 }
+
 
 export default LoginPage;

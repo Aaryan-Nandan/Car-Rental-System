@@ -1,37 +1,43 @@
 import { useEffect, useState } from "react";
-
 import axios from "axios";
-
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 function BookingPage() {
 
     const { id } = useParams();
+    const navigate = useNavigate();
 
-    const [fromDate, setFromDate] =
-        useState("");
+    const [fromDate, setFromDate] = useState("");
+    const [toDate, setToDate] = useState("");
+    const [license, setLicense] = useState(null);
 
-    const [toDate, setToDate] =
-        useState("");
+    const [totalAmount, setTotalAmount] = useState(0);
+    const [carVariant, setCarVariant] = useState(null);
 
-    const [license, setLicense] =
-        useState(null);
+    const [loading, setLoading] = useState(true);
+    const [bookingLoading, setBookingLoading] = useState(false);
 
-    const [totalAmount, setTotalAmount] =
-        useState(0);
+    // ==========================================
+    // GET TODAY'S DATE
+    // ==========================================
 
-    const [carVariant, setCarVariant] =
-        useState(null);
+    const today = new Date()
+        .toISOString()
+        .split("T")[0];
 
-    // FETCH SELECTED CAR VARIANT
+
+    // ==========================================
+    // FETCH SELECTED CAR
+    // ==========================================
 
     useEffect(() => {
+
+        setLoading(true);
 
         axios
             .get(
                 "http://localhost:8081/variant/all"
             )
-
             .then((response) => {
 
                 const selectedVariant =
@@ -40,63 +46,317 @@ function BookingPage() {
                             variant.id === Number(id)
                     );
 
-                setCarVariant(selectedVariant);
+                if (!selectedVariant) {
+
+                    alert(
+                        "Car variant not found"
+                    );
+
+                    navigate("/");
+                    return;
+                }
+
+                setCarVariant(
+                    selectedVariant
+                );
+
+            })
+            .catch((error) => {
+
+                console.error(
+                    "Error loading car:",
+                    error
+                );
+
+                alert(
+                    "Unable to load car details"
+                );
+
+            })
+            .finally(() => {
+
+                setLoading(false);
+
             });
 
-    }, [id]);
+    }, [id, navigate]);
 
+
+    // ==========================================
     // CALCULATE TOTAL AMOUNT
+    // ==========================================
 
     useEffect(() => {
 
-        if (fromDate && toDate && carVariant) {
+        if (
+            !fromDate ||
+            !toDate ||
+            !carVariant
+        ) {
 
-            const startDate =
-                new Date(fromDate);
-
-            const endDate =
-                new Date(toDate);
-
-            const differenceInTime =
-                endDate - startDate;
-
-            const days =
-                differenceInTime /
-                (1000 * 60 * 60 * 24) + 1;
-
-            const amount =
-                days *
-                carVariant.pricePerDay;
-
-            setTotalAmount(amount);
+            setTotalAmount(0);
+            return;
         }
 
-    }, [fromDate, toDate, carVariant]);
+        const startDate =
+            new Date(fromDate);
 
+        const endDate =
+            new Date(toDate);
+
+        const differenceInTime =
+            endDate - startDate;
+
+        if (differenceInTime < 0) {
+
+            setTotalAmount(0);
+            return;
+        }
+
+        const days =
+            Math.floor(
+                differenceInTime /
+                (1000 * 60 * 60 * 24)
+            ) + 1;
+
+        const amount =
+            days *
+            carVariant.pricePerDay;
+
+        setTotalAmount(amount);
+
+    }, [
+        fromDate,
+        toDate,
+        carVariant
+    ]);
+
+
+    // ==========================================
+    // HANDLE FROM DATE
+    // ==========================================
+
+    const handleFromDateChange = (e) => {
+
+        const selectedDate =
+            e.target.value;
+
+        setFromDate(selectedDate);
+
+        // Clear To Date if it becomes invalid
+        if (
+            toDate &&
+            selectedDate > toDate
+        ) {
+
+            setToDate("");
+        }
+    };
+
+
+    // ==========================================
+    // HANDLE TO DATE
+    // ==========================================
+
+    const handleToDateChange = (e) => {
+
+        const selectedDate =
+            e.target.value;
+
+        if (
+            fromDate &&
+            selectedDate < fromDate
+        ) {
+
+            alert(
+                "To Date cannot be before From Date"
+            );
+
+            return;
+        }
+
+        setToDate(selectedDate);
+    };
+
+
+    // ==========================================
+    // HANDLE LICENSE
+    // ==========================================
+
+    const handleLicenseChange = (e) => {
+
+        const file =
+            e.target.files[0];
+
+        if (!file) {
+
+            setLicense(null);
+            return;
+        }
+
+        // Allow common image/PDF formats
+        const allowedTypes = [
+            "image/jpeg",
+            "image/png",
+            "application/pdf"
+        ];
+
+        if (
+            !allowedTypes.includes(
+                file.type
+            )
+        ) {
+
+            alert(
+                "Please upload JPG, PNG or PDF file"
+            );
+
+            e.target.value = "";
+            setLicense(null);
+
+            return;
+        }
+
+        // Maximum 5 MB
+        if (
+            file.size >
+            5 * 1024 * 1024
+        ) {
+
+            alert(
+                "Driving License file must be less than 5 MB"
+            );
+
+            e.target.value = "";
+            setLicense(null);
+
+            return;
+        }
+
+        setLicense(file);
+    };
+
+
+    // ==========================================
     // HANDLE BOOKING
+    // ==========================================
 
-    const handleBooking = () => {
+    const handleBooking = async () => {
+
+        // --------------------------------------
+        // LOGIN CHECK
+        // --------------------------------------
+
+        const token =
+            localStorage.getItem(
+                "token"
+            );
+
+        const customerId =
+            localStorage.getItem(
+                "customerId"
+            );
+
+        if (!token || !customerId) {
+
+            alert(
+                "Please login before booking"
+            );
+
+            navigate("/login");
+
+            return;
+        }
+
+
+        // --------------------------------------
+        // CAR CHECK
+        // --------------------------------------
+
+        if (!carVariant) {
+
+            alert(
+                "Car information is not available"
+            );
+
+            return;
+        }
+
+
+        // --------------------------------------
+        // DATE VALIDATION
+        // --------------------------------------
 
         if (!fromDate) {
 
-            alert("Please select From Date");
+            alert(
+                "Please select From Date"
+            );
 
             return;
         }
 
         if (!toDate) {
 
-            alert("Please select To Date");
+            alert(
+                "Please select To Date"
+            );
 
             return;
         }
+
+        if (fromDate < today) {
+
+            alert(
+                "From Date cannot be in the past"
+            );
+
+            return;
+        }
+
+        if (toDate < fromDate) {
+
+            alert(
+                "To Date cannot be before From Date"
+            );
+
+            return;
+        }
+
+
+        // --------------------------------------
+        // LICENSE VALIDATION
+        // --------------------------------------
 
         if (!license) {
 
-            alert("Please upload Driving License");
+            alert(
+                "Please upload Driving License"
+            );
 
             return;
         }
+
+
+        // --------------------------------------
+        // AVAILABILITY CHECK
+        // --------------------------------------
+
+        if (
+            carVariant.availableCars <= 0
+        ) {
+
+            alert(
+                "No Cars Available"
+            );
+
+            return;
+        }
+
+
+        // --------------------------------------
+        // BOOKING DATA
+        // --------------------------------------
 
         const bookingData = {
 
@@ -109,219 +369,494 @@ function BookingPage() {
             bookingStatus: "PENDING",
 
             customer: {
-                id: localStorage.getItem(
-            "customerId"
-        )
+
+                id: Number(
+                    customerId
+                )
+
             },
 
             carVariant: {
+
                 id: carVariant.id
+
             }
+
         };
 
-        axios
-    .post(
-        "http://localhost:8081/booking/add",
-        bookingData
-    )
 
-    .then((response) => {
+        // --------------------------------------
+        // SEND BOOKING
+        // --------------------------------------
 
-        if (
-            response.data === 
-            "No Cars Available"
-        ) {
+        setBookingLoading(true);
+
+        try {
+
+            const response =
+                await axios.post(
+
+                    "http://localhost:8081/booking/add",
+
+                    bookingData,
+
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`
+                        }
+                    }
+
+                );
+
+
+            // ----------------------------------
+            // BACKEND RESPONSE
+            // ----------------------------------
+
+            if (
+                typeof response.data ===
+                "string"
+            ) {
+
+                if (
+                    response.data ===
+                    "No Cars Available"
+                ) {
+
+                    alert(
+                        "No Cars Available"
+                    );
+
+                    return;
+                }
+
+                alert(
+                    response.data
+                );
+
+                return;
+            }
+
+
+            // ----------------------------------
+            // SUCCESS
+            // ----------------------------------
 
             alert(
-                "No Cars Available"
+                "Booking Submitted Successfully"
             );
 
-            return;
+            navigate(
+                "/my-bookings"
+            );
+
         }
+        catch (error) {
 
-        alert(
-            "Booking Submitted Successfully"
-        );
-    })
+            console.error(
+                "Booking Error:",
+                error
+            );
 
-    .catch(() => {
+            if (
+                error.response
+            ) {
 
-        alert(
-            "Something Went Wrong"
-        );
-    });
-    
+                console.error(
+                    "Backend Response:",
+                    error.response.data
+                );
+
+                if (
+                    error.response.status ===
+                    401
+                ) {
+
+                    alert(
+                        "Session expired. Please login again."
+                    );
+
+                    localStorage.removeItem(
+                        "token"
+                    );
+
+                    localStorage.removeItem(
+                        "customerId"
+                    );
+
+                    navigate(
+                        "/login"
+                    );
+
+                    return;
+                }
+
+                if (
+                    error.response.status ===
+                    403
+                ) {
+
+                    alert(
+                        "You are not authorized to make this booking."
+                    );
+
+                    return;
+                }
+            }
+
+            alert(
+                "Something went wrong while booking"
+            );
+
+        }
+        finally {
+
+            setBookingLoading(false);
+
+        }
     };
+
+
+    // ==========================================
+    // LOADING
+    // ==========================================
+
+    if (loading) {
+
+        return (
+
+            <div
+                style={{
+                    textAlign: "center",
+                    marginTop: "80px"
+                }}
+            >
+
+                <h2>
+                    Loading Car Details...
+                </h2>
+
+            </div>
+
+        );
+    }
+
+
+    // ==========================================
+    // PAGE
+    // ==========================================
 
     return (
 
         <div
             style={{
-                padding: "30px"
+                maxWidth: "700px",
+                margin: "40px auto",
+                padding: "30px",
+                backgroundColor: "white",
+                borderRadius: "12px",
+                boxShadow:
+                    "0 0 15px lightgray"
             }}
         >
 
-            {
-                carVariant && (
+            {/* CAR DETAILS */}
 
-                    <div>
+            {carVariant && (
 
-                        <h2>
+                <div
+                    style={{
+                        textAlign: "center",
+                        marginBottom: "30px"
+                    }}
+                >
 
-                            {carVariant.variantName}
+                    <img
+                        src={
+                            carVariant.imageUrl
+                        }
+                        alt={
+                            carVariant.variantName
+                        }
+                        style={{
+                            width: "100%",
+                            maxHeight: "300px",
+                            objectFit: "cover",
+                            borderRadius: "10px"
+                        }}
+                    />
 
-                        </h2>
+                    <h2>
+                        🚗{" "}
+                        {
+                            carVariant.variantName
+                        }
+                    </h2>
 
-                        <h3>
+                    <p>
+                        <strong>
+                            Company:
+                        </strong>{" "}
+                        {
+                            carVariant.carCompany
+                                ?.companyName
+                        }
+                    </p>
 
-                            ₹ {carVariant.pricePerDay}
-                            / day
+                    <p>
+                        <strong>
+                            Fuel:
+                        </strong>{" "}
+                        {
+                            carVariant.fuelType
+                        }
+                    </p>
 
-                        </h3>
+                    <p>
+                        <strong>
+                            Price:
+                        </strong>{" "}
+                        ₹{" "}
+                        {
+                            carVariant.pricePerDay
+                        }{" "}
+                        / Day
+                    </p>
 
-                    </div>
-                )
-            }
+                    <p>
+                        <strong>
+                            Available:
+                        </strong>{" "}
+                        {
+                            carVariant.availableCars
+                        }
+                    </p>
 
-            <h1>
+                </div>
 
-                Car Booking Page
+            )}
 
+
+            <h1
+                style={{
+                    textAlign: "center"
+                }}
+            >
+                Car Booking
             </h1>
 
-            <br />
 
-            <div>
+            {/* FROM DATE */}
+
+            <div
+                style={{
+                    marginTop: "25px"
+                }}
+            >
 
                 <label>
-
-                    From Date
+                    <strong>
+                        From Date
+                    </strong>
 
                     <span
                         style={{
                             color: "red"
                         }}
                     >
-                        *
+                        {" "}*
                     </span>
-
                 </label>
 
                 <br />
 
                 <input
                     type="date"
-
+                    min={today}
                     value={fromDate}
-
-                    onChange={(e) =>
-                        setFromDate(e.target.value)
+                    onChange={
+                        handleFromDateChange
                     }
-
                     style={{
-                        padding: "10px",
-                        width: "300px"
+                        width: "100%",
+                        padding: "12px",
+                        marginTop: "8px",
+                        boxSizing:
+                            "border-box"
                     }}
                 />
 
             </div>
 
-            <br />
 
-            <div>
+            {/* TO DATE */}
+
+            <div
+                style={{
+                    marginTop: "20px"
+                }}
+            >
 
                 <label>
-
-                    To Date
+                    <strong>
+                        To Date
+                    </strong>
 
                     <span
                         style={{
                             color: "red"
                         }}
                     >
-                        *
+                        {" "}*
                     </span>
-
                 </label>
 
                 <br />
 
                 <input
                     type="date"
-
-                    value={toDate}
-
-                    onChange={(e) =>
-                        setToDate(e.target.value)
+                    min={
+                        fromDate || today
                     }
-
+                    value={toDate}
+                    onChange={
+                        handleToDateChange
+                    }
                     style={{
-                        padding: "10px",
-                        width: "300px"
+                        width: "100%",
+                        padding: "12px",
+                        marginTop: "8px",
+                        boxSizing:
+                            "border-box"
                     }}
                 />
 
             </div>
 
-            <br />
 
-            <div>
+            {/* LICENSE */}
+
+            <div
+                style={{
+                    marginTop: "20px"
+                }}
+            >
 
                 <label>
-
-                    Upload Driving License
+                    <strong>
+                        Driving License
+                    </strong>
 
                     <span
                         style={{
                             color: "red"
                         }}
                     >
-                        *
+                        {" "}*
                     </span>
-
                 </label>
 
                 <br />
 
                 <input
                     type="file"
-
-                    onChange={(e) =>
-                        setLicense(
-                            e.target.files[0]
-                        )
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    onChange={
+                        handleLicenseChange
                     }
+                    style={{
+                        marginTop: "10px"
+                    }}
                 />
+
+                {license && (
+
+                    <p
+                        style={{
+                            color: "green",
+                            fontWeight: "bold"
+                        }}
+                    >
+
+                        ✅{" "}
+                        {license.name}
+
+                    </p>
+
+                )}
 
             </div>
 
-            <br />
 
-            <h2>
+            {/* TOTAL */}
 
-                Total Amount : ₹ {totalAmount}
-
-            </h2>
-
-            <button
-
-                onClick={handleBooking}
-
+            <div
                 style={{
-                    padding: "12px",
-                    backgroundColor: "black",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "5px",
-                    cursor: "pointer"
+                    marginTop: "30px",
+                    padding: "20px",
+                    backgroundColor: "#f5f5f5",
+                    borderRadius: "10px",
+                    textAlign: "center"
                 }}
             >
 
-                Confirm Booking
+                <h2>
+                    Total Amount
+                </h2>
+
+                <h1
+                    style={{
+                        color: "#1976D2"
+                    }}
+                >
+                    ₹ {totalAmount}
+                </h1>
+
+            </div>
+
+
+            {/* BOOKING BUTTON */}
+
+            <button
+                onClick={
+                    handleBooking
+                }
+                disabled={
+                    bookingLoading ||
+                    !carVariant ||
+                    carVariant.availableCars <= 0
+                }
+                style={{
+                    width: "100%",
+                    padding: "15px",
+                    marginTop: "25px",
+                    backgroundColor:
+                        bookingLoading ||
+                        !carVariant ||
+                        carVariant.availableCars <= 0
+                            ? "gray"
+                            : "black",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor:
+                        bookingLoading
+                            ? "not-allowed"
+                            : "pointer",
+                    fontSize: "17px",
+                    fontWeight: "bold"
+                }}
+            >
+
+                {bookingLoading
+                    ? "Submitting..."
+                    : "Confirm Booking"}
 
             </button>
 
         </div>
+
     );
 }
 
