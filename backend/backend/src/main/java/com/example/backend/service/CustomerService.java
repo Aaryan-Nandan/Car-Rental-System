@@ -30,7 +30,8 @@ public class CustomerService {
     // ==========================================
 
     public Object registerCustomer(
-            Customer customer) {
+            Customer customer
+    ) {
 
         Customer existingCustomer =
                 customerRepository.findByEmail(
@@ -42,7 +43,10 @@ public class CustomerService {
             return "Email Already Exists";
         }
 
+
+        // ==========================================
         // ENCRYPT PASSWORD
+        // ==========================================
 
         customer.setPassword(
 
@@ -51,6 +55,11 @@ public class CustomerService {
                 )
 
         );
+
+
+        // ==========================================
+        // SAVE CUSTOMER
+        // ==========================================
 
         return customerRepository.save(
                 customer
@@ -63,7 +72,8 @@ public class CustomerService {
     // ==========================================
 
     public Customer getCustomerById(
-            Long id) {
+            Long id
+    ) {
 
         return customerRepository
                 .findById(id)
@@ -86,38 +96,75 @@ public class CustomerService {
     // ==========================================
 
     public AuthResponse loginCustomer(
-            LoginRequest loginRequest) {
+            LoginRequest loginRequest
+    ) {
+
+        // ==========================================
+        // FIND CUSTOMER BY EMAIL
+        // ==========================================
 
         Customer customer =
                 customerRepository.findByEmail(
                         loginRequest.getEmail()
                 );
 
-        if (customer != null &&
 
+        // ==========================================
+        // CUSTOMER NOT FOUND
+        // ==========================================
+
+        if (customer == null) {
+
+            return null;
+        }
+
+
+        // ==========================================
+        // CHECK PASSWORD
+        // ==========================================
+
+        boolean passwordMatches =
                 passwordEncoder.matches(
 
                         loginRequest.getPassword(),
 
                         customer.getPassword()
 
-                )) {
+                );
 
-            String token =
-                    jwtUtil.generateToken(
-                            customer.getEmail()
-                    );
 
-            return new AuthResponse(
+        // ==========================================
+        // INVALID PASSWORD
+        // ==========================================
 
-                    token,
+        if (!passwordMatches) {
 
-                    customer
-
-            );
+            return null;
         }
 
-        return null;
-    }
 
+        // ==========================================
+        // GENERATE JWT TOKEN
+        // ==========================================
+
+        String token =
+                jwtUtil.generateToken(
+                        customer.getEmail()
+                );
+
+
+        // ==========================================
+        // RETURN CUSTOMER LOGIN RESPONSE
+        // ==========================================
+
+        return new AuthResponse(
+
+                token,
+
+                customer.getId(),
+
+                customer.getEmail()
+
+        );
+    }
 }

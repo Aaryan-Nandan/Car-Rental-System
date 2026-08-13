@@ -18,33 +18,42 @@ public class CustomerController {
     @Autowired
     private CustomerService customerService;
 
+
+    // ==========================================
     // GET ALL CUSTOMERS
+    // ==========================================
 
     @GetMapping("/all")
     public List<Customer> getAllCustomers() {
 
         return customerService.getAllCustomers();
-
     }
 
+
+    // ==========================================
     // GET CUSTOMER BY ID
+    // ==========================================
 
     @GetMapping("/{id}")
     public Customer getCustomerById(
-            @PathVariable Long id) {
+            @PathVariable Long id
+    ) {
 
         return customerService.getCustomerById(id);
-
     }
 
+
+    // ==========================================
     // LOGIN CUSTOMER
+    // ==========================================
 
     @PostMapping("/login")
     public AuthResponse loginCustomer(
-            @RequestBody LoginRequest loginRequest) {
+            @RequestBody LoginRequest loginRequest
+    ) {
 
-        return customerService.loginCustomer(loginRequest);
-
+        return customerService.loginCustomer(
+                loginRequest
+        );
     }
-
 }
