@@ -1,17 +1,10 @@
-import { useState }
-
-from "react";
-
+import { useState } from "react";
 import axios from "axios";
-
-import { useNavigate }
-
-from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function AdminLogin() {
 
-    const navigate =
-        useNavigate();
+    const navigate = useNavigate();
 
     const [email, setEmail] =
         useState("");
@@ -19,7 +12,10 @@ function AdminLogin() {
     const [password, setPassword] =
         useState("");
 
-    const handleLogin = () => {
+
+    const handleLogin = (e) => {
+
+        e.preventDefault();
 
         const loginData = {
 
@@ -36,118 +32,254 @@ function AdminLogin() {
 
             .then((response) => {
 
-    console.log(response.data);
+                console.log(response.data);
 
-    if (!response.data) {
+                if (!response.data) {
 
-        alert(
-            "Invalid Admin Credentials"
-        );
+                    alert(
+                        "Invalid Admin Credentials"
+                    );
 
-        return;
-    }
+                    return;
+                }
 
-    localStorage.setItem(
-        "adminToken",
-        response.data.token
-    );
+                localStorage.setItem(
+                    "adminToken",
+                    response.data.token
+                );
 
-    alert(
-        "Admin Login Successful"
-    );
+                alert(
+                    "Admin Login Successful"
+                );
 
-    navigate(
-        "/admin-dashboard"
-    );
-})
+                navigate(
+                    "/admin-dashboard"
+                );
+
+            })
 
             .catch(() => {
 
                 alert(
                     "Invalid Admin Credentials"
                 );
+
             });
     };
+
 
     return (
 
         <div
             style={{
-                padding: "30px"
+                minHeight: "calc(100vh - 90px)",
+
+                backgroundColor: "#f5f5f5",
+
+                display: "flex",
+
+                justifyContent: "center",
+
+                alignItems: "flex-start",
+
+                paddingTop: "55px",
+
+                paddingLeft: "20px",
+
+                paddingRight: "20px",
+
+                boxSizing: "border-box"
             }}
         >
 
-            <h1>
-
-                Admin Login
-
-            </h1>
-
-            <br />
-
-            <input
-                type="email"
-
-                placeholder="Enter Email"
-
-                value={email}
-
-                onChange={(e) =>
-                    setEmail(
-                        e.target.value
-                    )
-                }
-
+            <div
                 style={{
-                    padding: "10px",
-                    width: "300px"
-                }}
-            />
+                    width: "100%",
 
-            <br />
-            <br />
+                    maxWidth: "570px",
 
-            <input
-                type="password"
+                    backgroundColor: "white",
 
-                placeholder="Enter Password"
+                    borderRadius: "14px",
 
-                value={password}
+                    padding: "40px 42px",
 
-                onChange={(e) =>
-                    setPassword(
-                        e.target.value
-                    )
-                }
+                    boxSizing: "border-box",
 
-                style={{
-                    padding: "10px",
-                    width: "300px"
-                }}
-            />
-
-            <br />
-            <br />
-
-            <button
-
-                onClick={handleLogin}
-
-                style={{
-                    padding: "12px",
-
-                    backgroundColor:
-                        "black",
-
-                    color: "white",
-
-                    border: "none"
+                    boxShadow:
+                        "0 4px 18px rgba(0,0,0,0.12)"
                 }}
             >
 
-                Login
+                {/* ADMIN LOGIN HEADING */}
 
-            </button>
+                <h1
+                    style={{
+                        textAlign: "center",
+
+                        fontSize: "42px",
+
+                        color: "#333",
+
+                        marginTop: "0",
+
+                        marginBottom: "38px",
+
+                        fontWeight: "700"
+                    }}
+                >
+                    Admin Login
+                </h1>
+
+
+                <form
+                    onSubmit={handleLogin}
+                >
+
+                    {/* EMAIL */}
+
+                    <label
+                        style={{
+                            display: "block",
+
+                            fontSize: "19px",
+
+                            marginBottom: "9px",
+
+                            color: "#222"
+                        }}
+                    >
+                        Email
+                    </label>
+
+
+                    <input
+                        type="email"
+
+                        placeholder="Enter Email"
+
+                        value={email}
+
+                        onChange={(e) =>
+                            setEmail(
+                                e.target.value
+                            )
+                        }
+
+                        required
+
+                        style={{
+                            width: "100%",
+
+                            height: "54px",
+
+                            padding: "0 14px",
+
+                            fontSize: "17px",
+
+                            border:
+                                "1px solid #ccc",
+
+                            borderRadius: "7px",
+
+                            boxSizing:
+                                "border-box",
+
+                            outline: "none",
+
+                            marginBottom: "24px"
+                        }}
+                    />
+
+
+                    {/* PASSWORD */}
+
+                    <label
+                        style={{
+                            display: "block",
+
+                            fontSize: "19px",
+
+                            marginBottom: "9px",
+
+                            color: "#222"
+                        }}
+                    >
+                        Password
+                    </label>
+
+
+                    <input
+                        type="password"
+
+                        placeholder="Enter Password"
+
+                        value={password}
+
+                        onChange={(e) =>
+                            setPassword(
+                                e.target.value
+                            )
+                        }
+
+                        required
+
+                        style={{
+                            width: "100%",
+
+                            height: "54px",
+
+                            padding: "0 14px",
+
+                            fontSize: "17px",
+
+                            border:
+                                "1px solid #ccc",
+
+                            borderRadius: "7px",
+
+                            boxSizing:
+                                "border-box",
+
+                            outline: "none",
+
+                            marginBottom: "30px"
+                        }}
+                    />
+
+
+                    {/* LOGIN BUTTON */}
+
+                    <button
+                        type="submit"
+
+                        style={{
+                            width: "100%",
+
+                            height: "60px",
+
+                            backgroundColor:
+                                "black",
+
+                            color: "white",
+
+                            border: "none",
+
+                            borderRadius: "7px",
+
+                            fontSize: "20px",
+
+                            fontWeight: "500",
+
+                            cursor: "pointer"
+                        }}
+                    >
+                        Login
+                    </button>
+
+                </form>
+
+            </div>
 
         </div>
     );
