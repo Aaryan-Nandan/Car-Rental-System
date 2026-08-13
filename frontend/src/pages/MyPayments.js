@@ -8,52 +8,127 @@ function MyPayments() {
     const [payments, setPayments] =
         useState([]);
 
+    const [loading, setLoading] =
+        useState(true);
+
+
+    // ==========================================
+    // LOAD PAYMENTS
+    // ==========================================
+
     useEffect(() => {
 
-        axios
-            .get(
-                "http://localhost:8081/payment/all"
-            )
-
-            .then((response) => {
-
-                const customerId =
-                    localStorage.getItem(
-                        "customerId"
-                    );
-
-                const filteredPayments =
-                    response.data.filter(
-                        (payment) =>
-
-                            payment.booking &&
-                            payment.booking.customer &&
-                            payment.booking.customer.id ===
-                            Number(customerId)
-                    );
-
-                setPayments(
-                    filteredPayments
-                );
-
-            })
-
-            .catch((error) => {
-
-                console.log(error);
-
-            });
+        loadPayments();
 
     }, []);
 
-    // DOWNLOAD PDF INVOICE
 
-    const downloadInvoice = (payment) => {
+    const loadPayments = async () => {
+
+        const customerId =
+            localStorage.getItem(
+                "customerId"
+            );
+
+        const token =
+            localStorage.getItem(
+                "token"
+            );
+
+
+        console.log(
+            "Payment Customer ID:",
+            customerId
+        );
+
+
+        if (!customerId || !token) {
+
+            setLoading(false);
+
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await axios.get(
+
+                    "http://localhost:8081/payment/all",
+
+                    {
+                        headers: {
+
+                            Authorization:
+                                `Bearer ${token}`
+
+                        }
+                    }
+
+                );
+
+
+            console.log(
+                "Payment Response:",
+                response.data
+            );
+
+
+            const filteredPayments =
+                response.data.filter(
+
+                    (payment) =>
+
+                        payment.booking &&
+
+                        payment.booking.customer &&
+
+                        payment.booking.customer.id ===
+                        Number(customerId)
+
+                );
+
+
+            setPayments(
+                filteredPayments
+            );
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Payment Error:",
+                error
+            );
+
+        }
+
+        finally {
+
+            setLoading(false);
+
+        }
+    };
+
+
+    // ==========================================
+    // DOWNLOAD INVOICE
+    // ==========================================
+
+    const downloadInvoice = (
+        payment
+    ) => {
 
         const doc =
             new jsPDF();
 
-        doc.setFontSize(22);
+
+        doc.setFontSize(
+            22
+        );
+
 
         doc.text(
             "CAR RENTAL SYSTEM",
@@ -61,7 +136,11 @@ function MyPayments() {
             20
         );
 
-        doc.setFontSize(14);
+
+        doc.setFontSize(
+            14
+        );
+
 
         doc.text(
             "Payment Invoice",
@@ -69,89 +148,106 @@ function MyPayments() {
             30
         );
 
-        autoTable(doc, {
 
-            startY: 40,
+        autoTable(
+            doc,
+            {
 
-            head: [
+                startY:
+                    40,
 
-                [
-                    "Field",
-                    "Value"
+                head: [
+
+                    [
+                        "Field",
+                        "Value"
+                    ]
+
+                ],
+
+                body: [
+
+                    [
+                        "Invoice No",
+                        "INV-" +
+                        payment.id
+                    ],
+
+                    [
+                        "Payment ID",
+                        payment.id
+                    ],
+
+                    [
+                        "Customer",
+                        payment.booking
+                            ?.customer
+                            ?.name ||
+                        "N/A"
+                    ],
+
+                    [
+                        "Car",
+                        payment.booking
+                            ?.carVariant
+                            ?.variantName ||
+                        "N/A"
+                    ],
+
+                    [
+                        "Fuel Type",
+                        payment.booking
+                            ?.carVariant
+                            ?.fuelType ||
+                        "N/A"
+                    ],
+
+                    [
+                        "Booking ID",
+                        payment.booking
+                            ?.id ||
+                        "N/A"
+                    ],
+
+                    [
+                        "From Date",
+                        payment.booking
+                            ?.fromDate ||
+                        "N/A"
+                    ],
+
+                    [
+                        "To Date",
+                        payment.booking
+                            ?.toDate ||
+                        "N/A"
+                    ],
+
+                    [
+                        "Amount",
+                        "Rs. " +
+                        Number(
+                            payment.amount
+                        ).toLocaleString(
+                            "en-IN"
+                        )
+                    ],
+
+                    [
+                        "Payment Status",
+                        payment.paymentStatus
+                    ],
+
+                    [
+                        "Payment Date",
+                        payment.paymentDate
+                    ]
+
                 ]
 
-            ],
+            }
+        );
 
-            body: [
-
-                [
-                    "Invoice No",
-                    "INV-" +
-                    payment.id
-                ],
-
-                [
-                    "Payment ID",
-                    payment.id
-                ],
-
-                [
-                    "Customer",
-                    payment.booking
-                        .customer
-                        ?.name
-                ],
-
-                [
-                    "Car",
-                    payment.booking
-                        .carVariant
-                        ?.variantName
-                ],
-
-                [
-                    "Fuel Type",
-                    payment.booking
-                        .carVariant
-                        ?.fuelType
-                ],
-
-                [
-                    "Booking ID",
-                    payment.booking.id
-                ],
-
-                [
-                    "From Date",
-                    payment.booking
-                        .fromDate
-                ],
-
-                [
-                    "To Date",
-                    payment.booking
-                        .toDate
-                ],
-
-                [
-    "Amount",
-    "Rs. " +
-    Number(payment.amount).toLocaleString("en-IN")
-],
-
-                [
-                    "Payment Status",
-                    payment.paymentStatus
-                ],
-
-                [
-                    "Payment Date",
-                    payment.paymentDate
-                ]
-
-            ]
-
-        });
 
         doc.text(
 
@@ -163,6 +259,7 @@ function MyPayments() {
 
         );
 
+
         doc.save(
 
             "Invoice_" +
@@ -170,68 +267,135 @@ function MyPayments() {
             ".pdf"
 
         );
-
     };
+
+
+    // ==========================================
+    // LOADING
+    // ==========================================
+
+    if (loading) {
+
+        return (
+
+            <div
+                style={{
+                    padding:
+                        "40px",
+
+                    textAlign:
+                        "center"
+                }}
+            >
+
+                <h2>
+                    Loading Payments...
+                </h2>
+
+            </div>
+
+        );
+    }
+
+
+    // ==========================================
+    // PAGE
+    // ==========================================
 
     return (
 
         <div
             style={{
-                padding: "30px"
+                minHeight:
+                    "calc(100vh - 80px)",
+
+                backgroundColor:
+                    "#f5f5f5",
+
+                padding:
+                    "40px 20px",
+
+                boxSizing:
+                    "border-box"
             }}
         >
 
-            <h1>
+            <div
+                style={{
+                    maxWidth:
+                        "850px",
 
-                My Payments
+                    margin:
+                        "0 auto"
+                }}
+            >
 
-            </h1>
+                <h1
+                    style={{
+                        textAlign:
+                            "center"
+                    }}
+                >
+                    My Payments
+                </h1>
 
-            <br />
 
-            {
+                <br />
 
-                payments.length === 0 ?
 
-                    (
+                {payments.length === 0 ? (
+
+                    <div
+                        style={{
+                            backgroundColor:
+                                "white",
+
+                            padding:
+                                "35px",
+
+                            borderRadius:
+                                "12px",
+
+                            textAlign:
+                                "center"
+                        }}
+                    >
 
                         <h3>
-
                             No Payments Found
-
                         </h3>
 
-                    )
+                    </div>
 
-                    :
+                ) : (
 
-                    (
-
-                        payments.map((payment) => (
+                    payments.map(
+                        (payment) => (
 
                             <div
-
-                                key={payment.id}
+                                key={
+                                    payment.id
+                                }
 
                                 style={{
+                                    backgroundColor:
+                                        "white",
 
                                     border:
-                                        "1px solid lightgray",
+                                        "1px solid #ddd",
 
                                     padding:
-                                        "20px",
+                                        "25px",
 
                                     marginBottom:
                                         "20px",
 
                                     borderRadius:
-                                        "10px",
+                                        "12px",
 
                                     boxShadow:
-                                        "0px 0px 10px lightgray"
-
+                                        "0 4px 12px rgba(0,0,0,0.08)"
                                 }}
-
                             >
 
                                 <h2>
@@ -242,102 +406,90 @@ function MyPayments() {
 
                                 </h2>
 
+
                                 <p>
 
                                     <b>
-
-                                        Car :
-
+                                        Car:
                                     </b>
 
                                     {" "}
 
                                     {
-
                                         payment.booking
-                                            .carVariant
-                                            ?.variantName
-
+                                            ?.carVariant
+                                            ?.variantName ||
+                                        "N/A"
                                     }
 
                                     {" - "}
 
                                     {
-
                                         payment.booking
-                                            .carVariant
-                                            ?.fuelType
-
+                                            ?.carVariant
+                                            ?.fuelType ||
+                                        "N/A"
                                     }
 
                                 </p>
 
+
                                 <p>
 
                                     <b>
-
-                                        Amount :
-
+                                        Amount:
                                     </b>
 
                                     {" "}
 
-                                    ₹ {payment.amount}
+                                    ₹
+                                    {" "}
+                                    {payment.amount}
 
                                 </p>
+
 
                                 <p>
 
                                     <b>
-
-                                        Payment Status :
-
+                                        Payment Status:
                                     </b>
 
                                     {" "}
 
                                     <span
                                         style={{
-
                                             color:
                                                 "green",
 
                                             fontWeight:
                                                 "bold"
-
                                         }}
                                     >
-
                                         {
-
                                             payment.paymentStatus
-
                                         }
-
                                     </span>
 
                                 </p>
 
+
                                 <p>
 
                                     <b>
-
-                                        Payment Date :
-
+                                        Payment Date:
                                     </b>
 
                                     {" "}
 
                                     {
-
                                         payment.paymentDate
-
                                     }
 
                                 </p>
 
-                                <button
 
+                                <button
                                     onClick={() =>
                                         downloadInvoice(
                                             payment
@@ -345,7 +497,6 @@ function MyPayments() {
                                     }
 
                                     style={{
-
                                         backgroundColor:
                                             "#1976d2",
 
@@ -372,27 +523,22 @@ function MyPayments() {
 
                                         fontWeight:
                                             "bold"
-
                                     }}
-
                                 >
-
                                     📄 Download Invoice
-
                                 </button>
 
                             </div>
 
-                        ))
-
+                        )
                     )
 
-            }
+                )}
+
+            </div>
 
         </div>
-
     );
-
 }
 
 export default MyPayments;

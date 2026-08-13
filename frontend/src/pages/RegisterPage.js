@@ -1,128 +1,227 @@
 import { useState, useEffect } from "react";
-
 import axios from "axios";
-
 import { useNavigate } from "react-router-dom";
+
+import OtpInput from "../components/OtpInput";
+import PasswordStrength from "../components/PasswordStrength";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 
 function RegisterPage() {
 
-    const navigate = useNavigate();
+    const navigate =
+        useNavigate();
 
 
-    // ==========================================
+    // =====================================================
     // USER INFORMATION
-    // ==========================================
+    // =====================================================
 
-    const [name, setName] =
-        useState("");
-
-    const [email, setEmail] =
-        useState("");
-
-    const [phone, setPhone] =
-        useState("");
-
-    const [password, setPassword] =
-        useState("");
+    const [
+        name,
+        setName
+    ] = useState("");
 
 
-    // ==========================================
+    const [
+        email,
+        setEmail
+    ] = useState("");
+
+
+    const [
+        phone,
+        setPhone
+    ] = useState("");
+
+
+    const [
+        alternatePhone,
+        setAlternatePhone
+    ] = useState("");
+
+
+    const [
+        bloodGroup,
+        setBloodGroup
+    ] = useState("");
+
+
+    const [
+        address,
+        setAddress
+    ] = useState("");
+
+
+    const [
+        password,
+        setPassword
+    ] = useState("");
+
+
+    // =====================================================
     // OTP
-    // ==========================================
+    // =====================================================
 
-    const [otp, setOtp] =
-        useState([
-            "",
-            "",
-            "",
-            "",
-            "",
-            ""
-        ]);
-
-    const [otpSent, setOtpSent] =
-        useState(false);
-
-    const [otpVerified, setOtpVerified] =
-        useState(false);
+    const [
+        otp,
+        setOtp
+    ] = useState([
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+    ]);
 
 
-    // ==========================================
+    const [
+        otpSent,
+        setOtpSent
+    ] = useState(false);
+
+
+    const [
+        otpVerified,
+        setOtpVerified
+    ] = useState(false);
+
+
+    // =====================================================
     // UI
-    // ==========================================
+    // =====================================================
 
-    const [loading, setLoading] =
-        useState(false);
+    const [
+        loading,
+        setLoading
+    ] = useState(false);
 
-    const [showPassword, setShowPassword] =
-        useState(false);
+
+    const [
+        showPassword,
+        setShowPassword
+    ] = useState(false);
 
 
-    // ==========================================
+    // =====================================================
     // TIMERS
-    // ==========================================
+    // =====================================================
 
-    const [resendTimer, setResendTimer] =
-        useState(60);
+    const [
+        resendTimer,
+        setResendTimer
+    ] = useState(60);
 
-    const [otpExpiryTimer, setOtpExpiryTimer] =
-        useState(300);
+
+    const [
+        otpExpiryTimer,
+        setOtpExpiryTimer
+    ] = useState(300);
 
 
-    // ==========================================
+    // =====================================================
     // VALIDATION
-    // ==========================================
+    // =====================================================
 
-    const [emailValid, setEmailValid] =
-        useState(false);
-
-    const [phoneValid, setPhoneValid] =
-        useState(false);
-
-
-    // ==========================================
-    // OTP INPUT REFERENCES
-    // ==========================================
-
-    const otpInputs = [];
+    const [
+        emailValid,
+        setEmailValid
+    ] = useState(false);
 
 
-    // ==========================================
+    const [
+        phoneValid,
+        setPhoneValid
+    ] = useState(false);
+
+
+    const [
+        alternatePhoneValid,
+        setAlternatePhoneValid
+    ] = useState(true);
+
+
+    // =====================================================
     // EMAIL VALIDATION
-    // ==========================================
+    // =====================================================
 
     useEffect(() => {
 
         const regex =
             /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+
         setEmailValid(
-            regex.test(email)
+            regex.test(
+                email
+            )
         );
 
-    }, [email]);
+    }, [
+        email
+    ]);
 
 
-    // ==========================================
-    // PHONE VALIDATION
-    // ==========================================
+    // =====================================================
+    // MOBILE VALIDATION
+    // =====================================================
 
     useEffect(() => {
 
         const regex =
             /^[6-9]\d{9}$/;
 
+
         setPhoneValid(
-            regex.test(phone)
+            regex.test(
+                phone
+            )
         );
 
-    }, [phone]);
+    }, [
+        phone
+    ]);
 
 
-    // ==========================================
+    // =====================================================
+    // ALTERNATE PHONE VALIDATION
+    // OPTIONAL
+    // =====================================================
+
+    useEffect(() => {
+
+        if (
+            alternatePhone.trim() === ""
+        ) {
+
+            setAlternatePhoneValid(
+                true
+            );
+
+            return;
+
+        }
+
+
+        const regex =
+            /^[6-9]\d{9}$/;
+
+
+        setAlternatePhoneValid(
+            regex.test(
+                alternatePhone
+            )
+        );
+
+    }, [
+        alternatePhone
+    ]);
+
+
+    // =====================================================
     // OTP TIMER
-    // ==========================================
+    // =====================================================
 
     useEffect(() => {
 
@@ -131,9 +230,9 @@ function RegisterPage() {
         let expiryInterval;
 
 
-        // --------------------------------------
+        // -------------------------------------------------
         // RESEND TIMER
-        // --------------------------------------
+        // -------------------------------------------------
 
         if (
             otpSent &&
@@ -144,25 +243,18 @@ function RegisterPage() {
                 setInterval(() => {
 
                     setResendTimer(
-                        prev => {
-
-                            if (prev <= 1) {
-
-                                return 0;
-                            }
-
-                            return prev - 1;
-
-                        }
+                        previous =>
+                            previous - 1
                     );
 
                 }, 1000);
+
         }
 
 
-        // --------------------------------------
+        // -------------------------------------------------
         // OTP EXPIRY TIMER
-        // --------------------------------------
+        // -------------------------------------------------
 
         if (
             otpSent &&
@@ -173,21 +265,31 @@ function RegisterPage() {
                 setInterval(() => {
 
                     setOtpExpiryTimer(
-                        prev => {
+                        previous => {
 
-                            if (prev <= 1) {
+                            if (
+                                previous <= 1
+                            ) {
+
+                                clearInterval(
+                                    expiryInterval
+                                );
+
 
                                 alert(
-                                    "OTP expired. Please resend."
+                                    "OTP Expired. Please Resend OTP."
                                 );
+
+
+                                setOtpVerified(
+                                    false
+                                );
+
 
                                 setOtpSent(
                                     false
                                 );
 
-                                setOtpVerified(
-                                    false
-                                );
 
                                 setOtp([
                                     "",
@@ -198,40 +300,48 @@ function RegisterPage() {
                                     ""
                                 ]);
 
+
                                 setResendTimer(
                                     60
                                 );
 
-                                return 0;
+
+                                return 300;
+
                             }
 
-                            return prev - 1;
+
+                            return previous - 1;
 
                         }
                     );
 
                 }, 1000);
+
         }
 
 
-        // --------------------------------------
-        // CLEANUP
-        // --------------------------------------
-
         return () => {
 
-            if (resendInterval) {
+            if (
+                resendInterval
+            ) {
 
                 clearInterval(
                     resendInterval
                 );
+
             }
 
-            if (expiryInterval) {
+
+            if (
+                expiryInterval
+            ) {
 
                 clearInterval(
                     expiryInterval
                 );
+
             }
 
         };
@@ -243,205 +353,49 @@ function RegisterPage() {
     ]);
 
 
-    // ==========================================
-    // PASSWORD STRENGTH
-    // ==========================================
-
-    const hasUpperCase =
-        /[A-Z]/.test(password);
-
-    const hasLowerCase =
-        /[a-z]/.test(password);
-
-    const hasNumber =
-        /[0-9]/.test(password);
-
-    const hasSpecialCharacter =
-        /[!@#$%^&*(),.?":{}|<>]/.test(password);
-
-    const hasMinLength =
-        password.length >= 8;
-
-
-    let passwordScore = 0;
-
-
-    if (hasUpperCase) {
-
-        passwordScore++;
-    }
-
-
-    if (hasLowerCase) {
-
-        passwordScore++;
-    }
-
-
-    if (hasNumber) {
-
-        passwordScore++;
-    }
-
-
-    if (hasSpecialCharacter) {
-
-        passwordScore++;
-    }
-
-
-    if (hasMinLength) {
-
-        passwordScore++;
-    }
-
-
-    let passwordStrength = "";
-
-    let passwordColor = "";
-
-
-    if (passwordScore <= 2) {
-
-        passwordStrength =
-            "Weak";
-
-        passwordColor =
-            "red";
-
-    } else if (passwordScore <= 4) {
-
-        passwordStrength =
-            "Medium";
-
-        passwordColor =
-            "orange";
-
-    } else {
-
-        passwordStrength =
-            "Strong";
-
-        passwordColor =
-            "green";
-    }
-
-
-    // ==========================================
-    // OTP INPUT CHANGE
-    // ==========================================
-
-    const handleOtpChange = (
-        value,
-        index
-    ) => {
-
-        if (
-            !/^[0-9]?$/.test(value)
-        ) {
-
-            return;
-        }
-
-
-        const newOtp =
-            [...otp];
-
-        newOtp[index] =
-            value;
-
-        setOtp(
-            newOtp
-        );
-
-
-        // Move to next input
-        if (
-            value &&
-            index < 5
-        ) {
-
-            if (
-                otpInputs[index + 1]
-            ) {
-
-                otpInputs[
-                    index + 1
-                ].focus();
-            }
-        }
-    };
-
-
-    // ==========================================
-    // OTP BACKSPACE
-    // ==========================================
-
-    const handleOtpKeyDown = (
-        e,
-        index
-    ) => {
-
-        if (
-            e.key === "Backspace" &&
-            !otp[index] &&
-            index > 0
-        ) {
-
-            if (
-                otpInputs[index - 1]
-            ) {
-
-                otpInputs[
-                    index - 1
-                ].focus();
-            }
-        }
-    };
-
-
-    // ==========================================
+    // =====================================================
     // SEND OTP
-    // ==========================================
+    // =====================================================
 
     const sendOtp = () => {
 
-
-        // --------------------------------------
-        // NAME VALIDATION
-        // --------------------------------------
+        // -------------------------------------------------
+        // NAME
+        // -------------------------------------------------
 
         if (
             !name.trim()
         ) {
 
             alert(
-                "Please enter your name."
+                "Please enter your full name."
             );
 
             return;
+
         }
 
 
-        // --------------------------------------
-        // EMAIL VALIDATION
-        // --------------------------------------
+        // -------------------------------------------------
+        // EMAIL
+        // -------------------------------------------------
 
         if (
             !emailValid
         ) {
 
             alert(
-                "Please enter a valid email."
+                "Please enter a valid email address."
             );
 
             return;
+
         }
 
 
-        // --------------------------------------
-        // PHONE VALIDATION
-        // --------------------------------------
+        // -------------------------------------------------
+        // MOBILE
+        // -------------------------------------------------
 
         if (
             !phoneValid
@@ -452,40 +406,82 @@ function RegisterPage() {
             );
 
             return;
+
         }
 
 
-        // --------------------------------------
-        // PASSWORD VALIDATION
-        // --------------------------------------
+        // -------------------------------------------------
+        // ALTERNATE PHONE
+        // OPTIONAL
+        // -------------------------------------------------
+
+        if (
+            !alternatePhoneValid
+        ) {
+
+            alert(
+                "Please enter a valid alternate phone number."
+            );
+
+            return;
+
+        }
+
+
+        // -------------------------------------------------
+        // BLOOD GROUP
+        // -------------------------------------------------
+
+        if (
+            !bloodGroup
+        ) {
+
+            alert(
+                "Please select your blood group."
+            );
+
+            return;
+
+        }
+
+
+        // -------------------------------------------------
+        // ADDRESS
+        // -------------------------------------------------
+
+        if (
+            !address.trim()
+        ) {
+
+            alert(
+                "Please enter your address."
+            );
+
+            return;
+
+        }
+
+
+        // -------------------------------------------------
+        // PASSWORD
+        // -------------------------------------------------
 
         if (
             !password
         ) {
 
             alert(
-                "Please enter a password."
+                "Please enter your password."
             );
 
             return;
+
         }
 
 
-        if (
-            password.length < 8
-        ) {
-
-            alert(
-                "Password must contain at least 8 characters."
-            );
-
-            return;
-        }
-
-
-        // --------------------------------------
-        // START LOADING
-        // --------------------------------------
+        // -------------------------------------------------
+        // SEND REQUEST
+        // -------------------------------------------------
 
         setLoading(
             true
@@ -494,13 +490,11 @@ function RegisterPage() {
 
         axios
             .post(
-
                 "http://localhost:8081/customer/send-registration-otp",
-
                 {
-                    email: email
+                    email:
+                        email
                 }
-
             )
 
             .then(
@@ -511,19 +505,14 @@ function RegisterPage() {
                     );
 
 
-                    // ----------------------------------
-                    // SUCCESS
-                    // ----------------------------------
+                    alert(
+                        response.data.message
+                    );
+
 
                     if (
-                        response.data &&
-                        response.data.success === true
+                        response.data.success
                     ) {
-
-                        alert(
-                            response.data.message
-                        );
-
 
                         setOtpSent(
                             true
@@ -544,32 +533,7 @@ function RegisterPage() {
                             300
                         );
 
-
-                        setOtp([
-                            "",
-                            "",
-                            "",
-                            "",
-                            "",
-                            ""
-                        ]);
-
-
-                        return;
                     }
-
-
-                    // ----------------------------------
-                    // BACKEND ERROR
-                    // ----------------------------------
-
-                    alert(
-
-                        response.data?.message ||
-
-                        "Unable to send OTP."
-
-                    );
 
                 }
             )
@@ -582,49 +546,39 @@ function RegisterPage() {
                     );
 
 
-                    // ----------------------------------
-                    // SERVER ERROR
-                    // ----------------------------------
-
                     if (
-                        error.response &&
-                        error.response.data
+                        error.response
                     ) {
 
                         alert(
-
-                            error.response.data.message ||
-
-                            "Unable to send OTP."
-
+                            error.response.data.message
                         );
 
-                    } else {
+                    }
+
+                    else {
 
                         alert(
-                            "Unable to connect to server."
+                            "Unable To Send OTP"
                         );
+
                     }
 
                 }
             );
+
     };
 
 
-    // ==========================================
+    // =====================================================
     // VERIFY OTP
-    // ==========================================
+    // =====================================================
 
     const verifyOtp = () => {
-
 
         const enteredOtp =
             otp.join("");
 
-
-        // --------------------------------------
-        // OTP LENGTH
-        // --------------------------------------
 
         if (
             enteredOtp.length !== 6
@@ -635,12 +589,9 @@ function RegisterPage() {
             );
 
             return;
+
         }
 
-
-        // --------------------------------------
-        // START LOADING
-        // --------------------------------------
 
         setLoading(
             true
@@ -649,15 +600,14 @@ function RegisterPage() {
 
         axios
             .post(
-
                 "http://localhost:8081/customer/verify-registration-otp",
-
                 {
-                    email: email,
+                    email:
+                        email,
 
-                    otp: enteredOtp
+                    otp:
+                        enteredOtp
                 }
-
             )
 
             .then(
@@ -668,40 +618,20 @@ function RegisterPage() {
                     );
 
 
-                    // ----------------------------------
-                    // OTP VERIFIED
-                    // ----------------------------------
+                    alert(
+                        response.data.message
+                    );
+
 
                     if (
-                        response.data &&
-                        response.data.success === true
+                        response.data.success
                     ) {
-
-                        alert(
-                            response.data.message
-                        );
-
 
                         setOtpVerified(
                             true
                         );
 
-
-                        return;
                     }
-
-
-                    // ----------------------------------
-                    // INVALID OTP
-                    // ----------------------------------
-
-                    alert(
-
-                        response.data?.message ||
-
-                        "Invalid or expired OTP."
-
-                    );
 
                 }
             )
@@ -715,59 +645,154 @@ function RegisterPage() {
 
 
                     if (
-                        error.response &&
-                        error.response.data
+                        error.response
                     ) {
 
                         alert(
-
-                            error.response.data.message ||
-
-                            "OTP verification failed."
-
+                            error.response.data.message
                         );
 
-                    } else {
+                    }
+
+                    else {
 
                         alert(
-                            "Unable to connect to server."
+                            "Invalid or expired OTP."
                         );
+
                     }
 
                 }
             );
+
     };
 
 
-    // ==========================================
+    // =====================================================
     // REGISTER CUSTOMER
-    // ==========================================
+    // =====================================================
 
     const registerCustomer = () => {
-
-
-        // --------------------------------------
-        // OTP CHECK
-        // --------------------------------------
 
         if (
             !otpVerified
         ) {
 
             alert(
-                "Please verify your email first."
+                "Please verify OTP first."
             );
 
             return;
+
         }
 
 
-        // --------------------------------------
-        // START LOADING
-        // --------------------------------------
+        if (
+            !name.trim()
+        ) {
+
+            alert(
+                "Please enter your full name."
+            );
+
+            return;
+
+        }
+
+
+        if (
+            !emailValid
+        ) {
+
+            alert(
+                "Please enter a valid email."
+            );
+
+            return;
+
+        }
+
+
+        if (
+            !phoneValid
+        ) {
+
+            alert(
+                "Please enter a valid mobile number."
+            );
+
+            return;
+
+        }
+
+
+        if (
+            !bloodGroup
+        ) {
+
+            alert(
+                "Please select blood group."
+            );
+
+            return;
+
+        }
+
+
+        if (
+            !address.trim()
+        ) {
+
+            alert(
+                "Please enter your address."
+            );
+
+            return;
+
+        }
+
 
         setLoading(
             true
+        );
+
+
+        // =================================================
+        // REGISTER DATA
+        // =================================================
+
+        const registrationData = {
+
+            name:
+                name.trim(),
+
+            email:
+                email.trim(),
+
+            phone:
+                phone.trim(),
+
+            alternatePhone:
+                alternatePhone.trim(),
+
+            bloodGroup:
+                bloodGroup,
+
+            address:
+                address.trim(),
+
+            password:
+                password,
+
+            otp:
+                otp.join("")
+
+        };
+
+
+        console.log(
+            "REGISTRATION DATA:",
+            registrationData
         );
 
 
@@ -776,17 +801,7 @@ function RegisterPage() {
 
                 "http://localhost:8081/customer/register-with-otp",
 
-                {
-                    name: name,
-
-                    email: email,
-
-                    phone: phone,
-
-                    password: password,
-
-                    otp: otp.join("")
-                }
+                registrationData
 
             )
 
@@ -798,40 +813,24 @@ function RegisterPage() {
                     );
 
 
-                    // ----------------------------------
-                    // REGISTRATION SUCCESS
-                    // ----------------------------------
+                    alert(
+                        response.data.message
+                    );
+
 
                     if (
-                        response.data &&
-                        response.data.success === true
+                        response.data.success
                     ) {
 
-                        alert(
-                            response.data.message
-                        );
-
+                        // =================================
+                        // GO DIRECTLY TO LOGIN PAGE
+                        // =================================
 
                         navigate(
-                            "/registration-success"
+                            "/login"
                         );
 
-
-                        return;
                     }
-
-
-                    // ----------------------------------
-                    // REGISTRATION ERROR
-                    // ----------------------------------
-
-                    alert(
-
-                        response.data?.message ||
-
-                        "Registration failed."
-
-                    );
 
                 }
             )
@@ -845,169 +844,126 @@ function RegisterPage() {
 
 
                     if (
-                        error.response &&
-                        error.response.data
+                        error.response
                     ) {
 
                         alert(
-
-                            error.response.data.message ||
-
-                            "Registration failed."
-
+                            error.response.data.message
                         );
 
-                    } else {
+                    }
+
+                    else {
 
                         alert(
-                            "Unable to connect to server."
+                            "Registration Failed"
                         );
+
                     }
 
                 }
             );
+
     };
 
 
-    // ==========================================
+    // =====================================================
     // RESEND OTP
-    // ==========================================
+    // =====================================================
 
     const resendOtp = () => {
-
 
         if (
             resendTimer > 0
         ) {
 
             return;
+
         }
 
 
-        // Reset expiry timer
-        setOtpExpiryTimer(
-            300
-        );
-
-
-        // Send OTP again
         sendOtp();
+
     };
 
 
-    // ==========================================
-    // LOADING SPINNER
-    // ==========================================
+    // =====================================================
+    // INPUT STYLE
+    // =====================================================
 
-    const LoadingSpinner = () => {
+    const inputStyle = {
 
-        return (
+        width:
+            "100%",
 
-            <div
-                style={{
-                    display: "flex",
+        height:
+            "43px",
 
-                    justifyContent:
-                        "center",
+        boxSizing:
+            "border-box",
 
-                    alignItems:
-                        "center",
+        padding:
+            "0 12px",
 
-                    flexDirection:
-                        "column",
+        border:
+            "1px solid #cbd5e1",
 
-                    marginTop:
-                        "20px",
+        borderRadius:
+            "8px",
 
-                    marginBottom:
-                        "20px"
-                }}
-            >
+        fontSize:
+            "14px",
 
-                <div
-                    style={{
-                        width:
-                            "45px",
+        outline:
+            "none",
 
-                        height:
-                            "45px",
+        background:
+            "white"
 
-                        border:
-                            "5px solid #ddd",
-
-                        borderTop:
-                            "5px solid #1976D2",
-
-                        borderRadius:
-                            "50%",
-
-                        animation:
-                            "spin 1s linear infinite"
-                    }}
-                />
-
-                <p
-                    style={{
-                        marginTop:
-                            "15px",
-
-                        color:
-                            "#1976D2",
-
-                        fontWeight:
-                            "bold"
-                    }}
-                >
-
-                    Please Wait...
-
-                </p>
-
-
-                <style>
-                    {`
-
-                        @keyframes spin {
-
-                            0% {
-
-                                transform:
-                                    rotate(0deg);
-
-                            }
-
-                            100% {
-
-                                transform:
-                                    rotate(360deg);
-
-                            }
-
-                        }
-
-                    `}
-                </style>
-
-            </div>
-
-        );
     };
 
 
-    // ==========================================
-    // PAGE UI
-    // ==========================================
+    // =====================================================
+    // LABEL STYLE
+    // =====================================================
+
+    const labelStyle = {
+
+        display:
+            "block",
+
+        fontSize:
+            "13px",
+
+        fontWeight:
+            "700",
+
+        color:
+            "#334155",
+
+        marginBottom:
+            "6px"
+
+    };
+
+
+    // =====================================================
+    // MAIN PAGE
+    // =====================================================
 
     return (
 
         <div
             style={{
 
-                backgroundColor:
-                    "#f5f5f5",
-
                 minHeight:
                     "100vh",
+
+                width:
+                    "100%",
+
+                background:
+                    "linear-gradient(135deg,#eff6ff,#f8fafc)",
 
                 display:
                     "flex",
@@ -1016,542 +972,838 @@ function RegisterPage() {
                     "center",
 
                 alignItems:
-                    "center",
+                    "flex-start",
 
                 padding:
-                    "30px"
+                    "25px 15px 45px",
+
+                boxSizing:
+                    "border-box"
 
             }}
         >
+
+            {/* =================================================
+                MEDIUM REGISTER CARD
+            ================================================= */}
 
             <div
                 style={{
 
                     width:
-                        "500px",
+                        "100%",
 
-                    backgroundColor:
+                    maxWidth:
+                        "680px",
+
+                    background:
                         "white",
 
-                    padding:
-                        "35px",
-
                     borderRadius:
-                        "15px",
+                        "18px",
+
+                    padding:
+                        "26px",
+
+                    boxSizing:
+                        "border-box",
 
                     boxShadow:
-                        "0px 0px 20px lightgray"
+                        "0 12px 35px rgba(15,23,42,0.10)",
+
+                    border:
+                        "1px solid #e2e8f0"
 
                 }}
             >
 
+                {/* =================================================
+                    HEADER
+                ================================================= */}
 
-                {/* ====================================
-                    TITLE
-                ==================================== */}
-
-                <h1
+                <div
                     style={{
 
                         textAlign:
                             "center",
 
                         marginBottom:
-                            "30px",
-
-                        color:
-                            "#1976D2"
+                            "22px"
 
                     }}
                 >
 
-                    Create Account
-
-                </h1>
-
-
-                {/* ====================================
-                    NAME
-                ==================================== */}
-
-                <label>
-
-                    Full Name
-
-                </label>
-
-
-                <input
-
-                    type="text"
-
-                    placeholder="Enter Full Name"
-
-                    value={name}
-
-                    onChange={(e) =>
-                        setName(
-                            e.target.value
-                        )
-                    }
-
-                    style={{
-
-                        width:
-                            "100%",
-
-                        padding:
-                            "12px",
-
-                        marginTop:
-                            "5px",
-
-                        marginBottom:
-                            "15px",
-
-                        boxSizing:
-                            "border-box"
-
-                    }}
-
-                />
-
-
-                {/* ====================================
-                    EMAIL
-                ==================================== */}
-
-                <label>
-
-                    Email Address
-
-                </label>
-
-
-                <input
-
-                    type="email"
-
-                    placeholder="Enter Email"
-
-                    disabled={
-                        otpSent
-                    }
-
-                    value={email}
-
-                    onChange={(e) =>
-                        setEmail(
-                            e.target.value
-                        )
-                    }
-
-                    style={{
-
-                        width:
-                            "100%",
-
-                        padding:
-                            "12px",
-
-                        marginTop:
-                            "5px",
-
-                        boxSizing:
-                            "border-box"
-
-                    }}
-
-                />
-
-
-                {
-                    email.length > 0 && (
-
-                        <p
-                            style={{
-
-                                color:
-
-                                    emailValid
-                                        ? "green"
-                                        : "red",
-
-                                fontWeight:
-                                    "bold",
-
-                                marginTop:
-                                    "5px"
-
-                            }}
-                        >
-
-                            {
-
-                                emailValid
-
-                                    ?
-
-                                    "✅ Valid Email"
-
-                                    :
-
-                                    "❌ Invalid Email"
-
-                            }
-
-                        </p>
-
-                    )
-                }
-
-
-                <br />
-
-
-                {/* ====================================
-                    PHONE
-                ==================================== */}
-
-                <label>
-
-                    Mobile Number
-
-                </label>
-
-
-                <input
-
-                    type="text"
-
-                    placeholder="Enter Mobile Number"
-
-                    value={phone}
-
-                    onChange={(e) =>
-                        setPhone(
-                            e.target.value
-                        )
-                    }
-
-                    maxLength="10"
-
-                    style={{
-
-                        width:
-                            "100%",
-
-                        padding:
-                            "12px",
-
-                        marginTop:
-                            "5px",
-
-                        boxSizing:
-                            "border-box"
-
-                    }}
-
-                />
-
-
-                {
-                    phone.length > 0 && (
-
-                        <p
-                            style={{
-
-                                color:
-
-                                    phoneValid
-                                        ? "green"
-                                        : "red",
-
-                                fontWeight:
-                                    "bold",
-
-                                marginTop:
-                                    "5px"
-
-                            }}
-                        >
-
-                            {
-
-                                phoneValid
-
-                                    ?
-
-                                    "✅ Valid Mobile Number"
-
-                                    :
-
-                                    "❌ Invalid Mobile Number"
-
-                            }
-
-                        </p>
-
-                    )
-                }
-
-
-                <br />
-
-
-                {/* ====================================
-                    PASSWORD
-                ==================================== */}
-
-                <label>
-
-                    Password
-
-                </label>
-
-
-                <div
-                    style={{
-
-                        display:
-                            "flex",
-
-                        alignItems:
-                            "center"
-
-                    }}
-                >
-
-                    <input
-
-                        type={
-
-                            showPassword
-
-                                ?
-
-                                "text"
-
-                                :
-
-                                "password"
-
-                        }
-
-                        placeholder="Enter Password"
-
-                        value={password}
-
-                        onChange={(e) =>
-                            setPassword(
-                                e.target.value
-                            )
-                        }
-
+                    <div
                         style={{
 
-                            flex:
-                                1,
+                            width:
+                                "52px",
 
-                            padding:
-                                "12px",
+                            height:
+                                "52px",
 
-                            boxSizing:
-                                "border-box"
+                            margin:
+                                "0 auto 8px",
 
-                        }}
+                            borderRadius:
+                                "50%",
 
-                    />
+                            background:
+                                "#eff6ff",
 
+                            display:
+                                "flex",
 
-                    <button
+                            alignItems:
+                                "center",
 
-                        type="button"
+                            justifyContent:
+                                "center",
 
-                        onClick={() =>
-                            setShowPassword(
-                                !showPassword
-                            )
-                        }
-
-                        style={{
-
-                            marginLeft:
-                                "10px",
-
-                            padding:
-                                "10px",
-
-                            cursor:
-                                "pointer"
+                            fontSize:
+                                "25px"
 
                         }}
                     >
 
-                        {
+                        🚗
 
-                            showPassword
+                    </div>
 
-                                ?
 
-                                "🙈"
+                    <h1
+                        style={{
 
-                                :
+                            margin:
+                                "0",
 
-                                "👁️"
+                            color:
+                                "#1976d2",
 
-                        }
+                            fontSize:
+                                "28px"
 
-                    </button>
+                        }}
+                    >
+
+                        Create Account
+
+                    </h1>
+
+
+                    <p
+                        style={{
+
+                            margin:
+                                "5px 0 0",
+
+                            color:
+                                "#64748b",
+
+                            fontSize:
+                                "12px"
+
+                        }}
+                    >
+
+                        Register to book your favourite car
+
+                    </p>
 
                 </div>
 
 
-                {/* ====================================
-                    PASSWORD STRENGTH
-                ==================================== */}
+                {/* =================================================
+                    PERSONAL INFORMATION
+                ================================================= */}
 
-                {
-                    password.length > 0 && (
+                <div
+                    style={sectionStyle}
+                >
 
-                        <div
-                            style={{
+                    <div
+                        style={sectionTitleStyle}
+                    >
 
-                                marginTop:
-                                    "10px",
+                        👤 Personal Information
 
-                                marginBottom:
-                                    "20px"
+                    </div>
 
-                            }}
+
+                    {/* FULL NAME */}
+
+                    <div
+                        style={{
+                            marginBottom:
+                                "13px"
+                        }}
+                    >
+
+                        <label
+                            style={
+                                labelStyle
+                            }
                         >
 
-                            <div
-                                style={{
-
-                                    height:
-                                        "10px",
-
-                                    width:
-                                        "100%",
-
-                                    backgroundColor:
-                                        "#ddd",
-
-                                    borderRadius:
-                                        "10px",
-
-                                    overflow:
-                                        "hidden"
-
-                                }}
+                            Full Name
+                            <span
+                                style={
+                                    requiredStyle
+                                }
                             >
+                                {" "}*
+                            </span>
+
+                        </label>
+
+
+                        <input
+
+                            type="text"
+
+                            placeholder="Enter Full Name"
+
+                            value={
+                                name
+                            }
+
+                            onChange={
+                                (e) =>
+                                    setName(
+                                        e.target.value
+                                    )
+                            }
+
+                            style={
+                                inputStyle
+                            }
+
+                        />
+
+                    </div>
+
+
+                    {/* EMAIL */}
+
+                    <div
+                        style={{
+                            marginBottom:
+                                "13px"
+                        }}
+                    >
+
+                        <label
+                            style={
+                                labelStyle
+                            }
+                        >
+
+                            Email Address
+                            <span
+                                style={
+                                    requiredStyle
+                                }
+                            >
+                                {" "}*
+                            </span>
+
+                        </label>
+
+
+                        <input
+
+                            type="email"
+
+                            placeholder="Enter Email"
+
+                            disabled={
+                                otpSent
+                            }
+
+                            value={
+                                email
+                            }
+
+                            onChange={
+                                (e) =>
+                                    setEmail(
+                                        e.target.value
+                                    )
+                            }
+
+                            style={{
+                                ...inputStyle,
+
+                                background:
+                                    otpSent
+                                        ? "#f1f5f9"
+                                        : "white"
+                            }}
+
+                        />
+
+
+                        {
+                            email.length > 0 && (
 
                                 <div
                                     style={{
 
-                                        width:
-                                            `${passwordScore * 20}%`,
+                                        marginTop:
+                                            "4px",
 
-                                        height:
-                                            "100%",
+                                        fontSize:
+                                            "11px",
 
-                                        backgroundColor:
-                                            passwordColor,
+                                        fontWeight:
+                                            "700",
 
-                                        transition:
-                                            "0.3s"
+                                        color:
+                                            emailValid
+                                                ? "#15803d"
+                                                : "#dc2626"
 
                                     }}
-                                />
+                                >
 
-                            </div>
+                                    {
+                                        emailValid
+                                            ? "✅ Valid Email"
+                                            : "❌ Invalid Email"
+                                    }
+
+                                </div>
+
+                            )
+                        }
+
+                    </div>
 
 
-                            <p
-                                style={{
+                    {/* MOBILE + ALTERNATE */}
 
-                                    color:
-                                        passwordColor,
+                    <div
+                        style={{
 
-                                    fontWeight:
-                                        "bold"
+                            display:
+                                "grid",
 
-                                }}
+                            gridTemplateColumns:
+                                "1fr 1fr",
+
+                            gap:
+                                "12px",
+
+                            marginBottom:
+                                "13px"
+
+                        }}
+                    >
+
+                        {/* MOBILE */}
+
+                        <div>
+
+                            <label
+                                style={
+                                    labelStyle
+                                }
                             >
 
-                                {
-                                    passwordStrength
+                                Mobile Number
+                                <span
+                                    style={
+                                        requiredStyle
+                                    }
+                                >
+                                    {" "}*
+                                </span>
+
+                            </label>
+
+
+                            <input
+
+                                type="text"
+
+                                maxLength="10"
+
+                                placeholder="10-digit mobile"
+
+                                value={
+                                    phone
                                 }
 
-                                {" Password"}
-
-                            </p>
-
-
-                            <p>
-
-                                {
-                                    hasUpperCase
-                                        ? "✅"
-                                        : "❌"
+                                onChange={
+                                    (e) =>
+                                        setPhone(
+                                            e.target.value.replace(
+                                                /\D/g,
+                                                ""
+                                            )
+                                        )
                                 }
 
-                                {" Uppercase Letter"}
-
-                            </p>
-
-
-                            <p>
-
-                                {
-                                    hasLowerCase
-                                        ? "✅"
-                                        : "❌"
+                                style={
+                                    inputStyle
                                 }
 
-                                {" Lowercase Letter"}
-
-                            </p>
+                            />
 
 
-                            <p>
+                            {
+                                phone.length > 0 && (
 
-                                {
-                                    hasNumber
-                                        ? "✅"
-                                        : "❌"
+                                    <div
+                                        style={{
+
+                                            marginTop:
+                                                "4px",
+
+                                            fontSize:
+                                                "10px",
+
+                                            fontWeight:
+                                                "700",
+
+                                            color:
+                                                phoneValid
+                                                    ? "#15803d"
+                                                    : "#dc2626"
+
+                                        }}
+                                    >
+
+                                        {
+                                            phoneValid
+                                                ? "✅ Valid"
+                                                : "❌ Invalid"
+                                        }
+
+                                    </div>
+
+                                )
+                            }
+
+                        </div>
+
+
+                        {/* ALTERNATE PHONE */}
+
+                        <div>
+
+                            <label
+                                style={
+                                    labelStyle
+                                }
+                            >
+
+                                Alternate Phone
+
+                                <span
+                                    style={{
+
+                                        color:
+                                            "#64748b",
+
+                                        fontWeight:
+                                            "500"
+
+                                    }}
+                                >
+                                    {" "}(Optional)
+                                </span>
+
+                            </label>
+
+
+                            <input
+
+                                type="text"
+
+                                maxLength="10"
+
+                                placeholder="Optional"
+
+                                value={
+                                    alternatePhone
                                 }
 
-                                {" Number"}
-
-                            </p>
-
-
-                            <p>
-
-                                {
-                                    hasSpecialCharacter
-                                        ? "✅"
-                                        : "❌"
+                                onChange={
+                                    (e) =>
+                                        setAlternatePhone(
+                                            e.target.value.replace(
+                                                /\D/g,
+                                                ""
+                                            )
+                                        )
                                 }
 
-                                {" Special Character"}
-
-                            </p>
-
-
-                            <p>
-
-                                {
-                                    hasMinLength
-                                        ? "✅"
-                                        : "❌"
+                                style={
+                                    inputStyle
                                 }
 
-                                {" Minimum 8 Characters"}
+                            />
 
-                            </p>
+
+                            {
+                                alternatePhone.length > 0 && (
+
+                                    <div
+                                        style={{
+
+                                            marginTop:
+                                                "4px",
+
+                                            fontSize:
+                                                "10px",
+
+                                            fontWeight:
+                                                "700",
+
+                                            color:
+                                                alternatePhoneValid
+                                                    ? "#15803d"
+                                                    : "#dc2626"
+
+                                        }}
+                                    >
+
+                                        {
+                                            alternatePhoneValid
+                                                ? "✅ Valid"
+                                                : "❌ Invalid"
+                                        }
+
+                                    </div>
+
+                                )
+                            }
+
+                        </div>
+
+                    </div>
+
+
+                    {/* BLOOD GROUP */}
+
+                    <div
+                        style={{
+
+                            marginBottom:
+                                "13px"
+
+                        }}
+                    >
+
+                        <label
+                            style={
+                                labelStyle
+                            }
+                        >
+
+                            Blood Group
+                            <span
+                                style={
+                                    requiredStyle
+                                }
+                            >
+                                {" "}*
+                            </span>
+
+                        </label>
+
+
+                        <select
+
+                            value={
+                                bloodGroup
+                            }
+
+                            onChange={
+                                (e) =>
+                                    setBloodGroup(
+                                        e.target.value
+                                    )
+                            }
+
+                            style={
+                                inputStyle
+                            }
+                        >
+
+                            <option value="">
+                                Select Blood Group
+                            </option>
+
+                            <option value="A+">
+                                A+
+                            </option>
+
+                            <option value="A-">
+                                A-
+                            </option>
+
+                            <option value="B+">
+                                B+
+                            </option>
+
+                            <option value="B-">
+                                B-
+                            </option>
+
+                            <option value="AB+">
+                                AB+
+                            </option>
+
+                            <option value="AB-">
+                                AB-
+                            </option>
+
+                            <option value="O+">
+                                O+
+                            </option>
+
+                            <option value="O-">
+                                O-
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    {/* ADDRESS */}
+
+                    <div>
+
+                        <label
+                            style={
+                                labelStyle
+                            }
+                        >
+
+                            Address
+                            <span
+                                style={
+                                    requiredStyle
+                                }
+                            >
+                                {" "}*
+                            </span>
+
+                        </label>
+
+
+                        <textarea
+
+                            placeholder="Enter your complete address"
+
+                            value={
+                                address
+                            }
+
+                            onChange={
+                                (e) =>
+                                    setAddress(
+                                        e.target.value
+                                    )
+                            }
+
+                            rows="3"
+
+                            style={{
+
+                                width:
+                                    "100%",
+
+                                boxSizing:
+                                    "border-box",
+
+                                padding:
+                                    "10px 12px",
+
+                                border:
+                                    "1px solid #cbd5e1",
+
+                                borderRadius:
+                                    "8px",
+
+                                fontSize:
+                                    "14px",
+
+                                resize:
+                                    "vertical",
+
+                                fontFamily:
+                                    "inherit",
+
+                                outline:
+                                    "none"
+
+                            }}
+
+                        />
+
+                    </div>
+
+                </div>
+
+
+                {/* =================================================
+                    PASSWORD
+                ================================================= */}
+
+                <div
+                    style={sectionStyle}
+                >
+
+                    <div
+                        style={sectionTitleStyle}
+                    >
+
+                        🔐 Account Security
+
+                    </div>
+
+
+                    <label
+                        style={
+                            labelStyle
+                        }
+                    >
+
+                        Password
+                        <span
+                            style={
+                                requiredStyle
+                            }
+                        >
+                            {" "}*
+                        </span>
+
+                    </label>
+
+
+                    <div
+                        style={{
+
+                            display:
+                                "flex",
+
+                            alignItems:
+                                "stretch",
+
+                            gap:
+                                "7px"
+
+                        }}
+                    >
+
+                        <input
+
+                            type={
+                                showPassword
+                                    ? "text"
+                                    : "password"
+                            }
+
+                            placeholder="Enter Password"
+
+                            value={
+                                password
+                            }
+
+                            onChange={
+                                (e) =>
+                                    setPassword(
+                                        e.target.value
+                                    )
+                            }
+
+                            style={{
+                                ...inputStyle,
+
+                                flex:
+                                    "1"
+                            }}
+
+                        />
+
+
+                        <button
+
+                            type="button"
+
+                            onClick={() =>
+                                setShowPassword(
+                                    !showPassword
+                                )
+                            }
+
+                            style={{
+
+                                width:
+                                    "45px",
+
+                                border:
+                                    "1px solid #cbd5e1",
+
+                                borderRadius:
+                                    "8px",
+
+                                background:
+                                    "#f8fafc",
+
+                                cursor:
+                                    "pointer",
+
+                                fontSize:
+                                    "17px"
+
+                            }}
+                        >
+
+                            {
+                                showPassword
+                                    ? "🙈"
+                                    : "👁️"
+                            }
+
+                        </button>
+
+                    </div>
+
+
+                    <PasswordStrength
+                        password={
+                            password
+                        }
+                    />
+
+                </div>
+
+
+                {/* =================================================
+                    LOADING
+                ================================================= */}
+
+                {
+                    loading && (
+
+                        <div
+                            style={{
+
+                                textAlign:
+                                    "center",
+
+                                margin:
+                                    "8px 0"
+
+                            }}
+                        >
+
+                            <LoadingSpinner />
 
                         </div>
 
@@ -1559,22 +1811,9 @@ function RegisterPage() {
                 }
 
 
-                {/* ====================================
-                    LOADING SPINNER
-                ==================================== */}
-
-                {
-                    loading && (
-
-                        <LoadingSpinner />
-
-                    )
-                }
-
-
-                {/* ====================================
+                {/* =================================================
                     SEND OTP
-                ==================================== */}
+                ================================================= */}
 
                 {
                     !otpSent && (
@@ -1594,13 +1833,21 @@ function RegisterPage() {
                             style={{
 
                                 width:
-                                    "100%",
+                                    "190px",
 
-                                padding:
-                                    "14px",
+                                height:
+                                    "43px",
 
-                                backgroundColor:
-                                    "#1976D2",
+                                display:
+                                    "block",
+
+                                margin:
+                                    "10px auto 0",
+
+                                background:
+                                    loading
+                                        ? "#94a3b8"
+                                        : "#1976d2",
 
                                 color:
                                     "white",
@@ -1617,10 +1864,13 @@ function RegisterPage() {
                                         : "pointer",
 
                                 fontSize:
-                                    "16px",
+                                    "14px",
 
-                                marginTop:
-                                    "10px"
+                                fontWeight:
+                                    "800",
+
+                                boxShadow:
+                                    "0 5px 12px rgba(25,118,210,0.20)"
 
                             }}
                         >
@@ -1633,128 +1883,72 @@ function RegisterPage() {
                 }
 
 
-                {/* ====================================
+                {/* =================================================
                     OTP SECTION
-                ==================================== */}
+                ================================================= */}
 
                 {
                     otpSent && (
 
-                        <>
+                        <div
+                            style={{
 
-                            <br />
+                                marginTop:
+                                    "20px",
 
-                            <br />
+                                padding:
+                                    "16px",
 
+                                background:
+                                    "#f8fafc",
 
-                            <label>
+                                border:
+                                    "1px solid #e2e8f0",
 
-                                Enter OTP
+                                borderRadius:
+                                    "12px"
 
-                            </label>
-
+                            }}
+                        >
 
                             <div
                                 style={{
 
-                                    display:
-                                        "flex",
+                                    textAlign:
+                                        "center",
 
-                                    justifyContent:
-                                        "space-between",
+                                    fontWeight:
+                                        "800",
+
+                                    color:
+                                        "#334155",
+
+                                    fontSize:
+                                        "14px",
 
                                     marginBottom:
-                                        "20px"
+                                        "10px"
 
                                 }}
                             >
 
-                                {
-                                    otp.map(
-                                        (
-                                            digit,
-                                            index
-                                        ) => (
-
-                                            <input
-
-                                                key={
-                                                    index
-                                                }
-
-                                                ref={(
-                                                    element
-                                                ) => {
-
-                                                    otpInputs[
-                                                        index
-                                                    ] =
-                                                        element;
-
-                                                }}
-
-                                                type="text"
-
-                                                value={
-                                                    digit
-                                                }
-
-                                                maxLength="1"
-
-                                                onChange={(e) =>
-                                                    handleOtpChange(
-
-                                                        e.target.value,
-
-                                                        index
-
-                                                    )
-                                                }
-
-                                                onKeyDown={(e) =>
-                                                    handleOtpKeyDown(
-
-                                                        e,
-
-                                                        index
-
-                                                    )
-                                                }
-
-                                                style={{
-
-                                                    width:
-                                                        "50px",
-
-                                                    height:
-                                                        "55px",
-
-                                                    textAlign:
-                                                        "center",
-
-                                                    fontSize:
-                                                        "22px",
-
-                                                    borderRadius:
-                                                        "10px",
-
-                                                    border:
-                                                        "2px solid #1976D2"
-
-                                                }}
-
-                                            />
-
-                                        )
-                                    )
-                                }
+                                📩 Enter OTP
 
                             </div>
 
 
-                            {/* ====================================
-                                VERIFY OTP
-                            ==================================== */}
+                            <OtpInput
+
+                                otp={
+                                    otp
+                                }
+
+                                setOtp={
+                                    setOtp
+                                }
+
+                            />
+
 
                             {
                                 !otpVerified && (
@@ -1774,13 +1968,19 @@ function RegisterPage() {
                                         style={{
 
                                             width:
-                                                "100%",
+                                                "160px",
 
-                                            padding:
-                                                "14px",
+                                            height:
+                                                "40px",
 
-                                            backgroundColor:
-                                                "#4CAF50",
+                                            display:
+                                                "block",
+
+                                            margin:
+                                                "12px auto 0",
+
+                                            background:
+                                                "#16a34a",
 
                                             color:
                                                 "white",
@@ -1789,15 +1989,16 @@ function RegisterPage() {
                                                 "none",
 
                                             borderRadius:
-                                                "8px",
+                                                "7px",
 
                                             cursor:
-                                                loading
-                                                    ? "not-allowed"
-                                                    : "pointer",
+                                                "pointer",
 
                                             fontSize:
-                                                "16px"
+                                                "13px",
+
+                                            fontWeight:
+                                                "800"
 
                                         }}
                                     >
@@ -1810,10 +2011,6 @@ function RegisterPage() {
                             }
 
 
-                            {/* ====================================
-                                VERIFIED MESSAGE
-                            ==================================== */}
-
                             {
                                 otpVerified && (
 
@@ -1824,16 +2021,16 @@ function RegisterPage() {
                                                 "center",
 
                                             marginTop:
-                                                "15px",
+                                                "12px",
 
                                             color:
-                                                "green",
+                                                "#15803d",
 
                                             fontWeight:
-                                                "bold",
+                                                "800",
 
                                             fontSize:
-                                                "18px"
+                                                "13px"
 
                                         }}
                                     >
@@ -1846,12 +2043,7 @@ function RegisterPage() {
                             }
 
 
-                            <br />
-
-
-                            {/* ====================================
-                                OTP TIMER
-                            ==================================== */}
+                            {/* OTP TIMER */}
 
                             <div
                                 style={{
@@ -1863,7 +2055,13 @@ function RegisterPage() {
                                         "space-between",
 
                                     alignItems:
-                                        "center"
+                                        "center",
+
+                                    marginTop:
+                                        "13px",
+
+                                    fontSize:
+                                        "11px"
 
                                 }}
                             >
@@ -1872,10 +2070,10 @@ function RegisterPage() {
                                     style={{
 
                                         color:
-                                            "red",
+                                            "#dc2626",
 
                                         fontWeight:
-                                            "bold"
+                                            "800"
 
                                     }}
                                 >
@@ -1883,45 +2081,31 @@ function RegisterPage() {
                                     OTP Expires In:{" "}
 
                                     {
-
                                         Math.floor(
-
                                             otpExpiryTimer /
                                             60
-
                                         )
-
                                     }
 
                                     :
 
                                     {
-
                                         String(
-
                                             otpExpiryTimer %
                                             60
-
                                         ).padStart(
-
                                             2,
-
                                             "0"
-
                                         )
-
                                     }
 
                                 </span>
 
 
                                 {
-
                                     resendTimer === 0
 
-                                        ?
-
-                                        (
+                                        ? (
 
                                             <button
 
@@ -1929,10 +2113,6 @@ function RegisterPage() {
 
                                                 onClick={
                                                     resendOtp
-                                                }
-
-                                                disabled={
-                                                    loading
                                                 }
 
                                                 style={{
@@ -1944,15 +2124,13 @@ function RegisterPage() {
                                                         "none",
 
                                                     color:
-                                                        "#1976D2",
+                                                        "#1976d2",
 
                                                     cursor:
-                                                        loading
-                                                            ? "not-allowed"
-                                                            : "pointer",
+                                                        "pointer",
 
                                                     fontWeight:
-                                                        "bold"
+                                                        "800"
 
                                                 }}
                                             >
@@ -1963,11 +2141,16 @@ function RegisterPage() {
 
                                         )
 
-                                        :
+                                        : (
 
-                                        (
+                                            <span
+                                                style={{
 
-                                            <span>
+                                                    color:
+                                                        "#64748b"
+
+                                                }}
+                                            >
 
                                                 Resend in{" "}
 
@@ -1980,31 +2163,27 @@ function RegisterPage() {
                                             </span>
 
                                         )
-
                                 }
 
                             </div>
 
-                        </>
+                        </div>
 
                     )
                 }
 
 
-                {/* ====================================
+                {/* =================================================
                     CREATE ACCOUNT
-                ==================================== */}
+                ================================================= */}
 
                 <button
 
                     type="button"
 
                     disabled={
-
                         !otpVerified ||
-
                         loading
-
                     }
 
                     onClick={
@@ -2016,14 +2195,19 @@ function RegisterPage() {
                         width:
                             "100%",
 
-                        padding:
-                            "15px",
+                        height:
+                            "46px",
 
-                        backgroundColor:
+                        marginTop:
+                            "18px",
 
-                            otpVerified
-                                ? "#000"
-                                : "gray",
+                        background:
+                            otpVerified &&
+                            !loading
+
+                                ? "#0f172a"
+
+                                : "#94a3b8",
 
                         color:
                             "white",
@@ -2035,37 +2219,158 @@ function RegisterPage() {
                             "8px",
 
                         cursor:
-
                             otpVerified &&
                             !loading
 
-                                ?
+                                ? "pointer"
 
-                                "pointer"
-
-                                :
-
-                                "not-allowed",
+                                : "not-allowed",
 
                         fontSize:
-                            "18px",
+                            "14px",
 
-                        marginTop:
-                            "20px"
+                        fontWeight:
+                            "900"
 
                     }}
                 >
 
-                    🚗 Create Account
+                    {
+                        loading
+                            ? "Creating Account..."
+                            : "🚗 Create Account"
+                    }
 
                 </button>
 
 
+                {/* =================================================
+                    LOGIN LINK
+                ================================================= */}
+
+                <div
+                    style={{
+
+                        textAlign:
+                            "center",
+
+                        marginTop:
+                            "14px",
+
+                        fontSize:
+                            "12px",
+
+                        color:
+                            "#64748b"
+
+                    }}
+                >
+
+                    Already have an account?
+
+                    {" "}
+
+                    <button
+
+                        type="button"
+
+                        onClick={() =>
+                            navigate(
+                                "/login"
+                            )
+                        }
+
+                        style={{
+
+                            border:
+                                "none",
+
+                            background:
+                                "none",
+
+                            color:
+                                "#1976d2",
+
+                            fontWeight:
+                                "800",
+
+                            cursor:
+                                "pointer"
+
+                        }}
+                    >
+
+                        Login
+
+                    </button>
+
+                </div>
+
             </div>
 
         </div>
+
     );
+
 }
+
+
+// =============================================================
+// STYLES
+// =============================================================
+
+const sectionStyle = {
+
+    background:
+        "#f8fafc",
+
+    border:
+        "1px solid #e2e8f0",
+
+    borderRadius:
+        "12px",
+
+    padding:
+        "16px",
+
+    marginBottom:
+        "15px"
+
+};
+
+
+const sectionTitleStyle = {
+
+    fontSize:
+        "14px",
+
+    fontWeight:
+        "900",
+
+    color:
+        "#0f172a",
+
+    marginBottom:
+        "14px",
+
+    paddingBottom:
+        "8px",
+
+    borderBottom:
+        "1px solid #e2e8f0"
+
+};
+
+
+const requiredStyle = {
+
+    color:
+        "#dc2626",
+
+    fontWeight:
+        "900"
+
+};
 
 
 export default RegisterPage;
