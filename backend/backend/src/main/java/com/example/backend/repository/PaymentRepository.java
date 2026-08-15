@@ -3,12 +3,27 @@ package com.example.backend.repository;
 import com.example.backend.entity.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 public interface PaymentRepository
         extends JpaRepository<Payment, Long> {
 
-    // Find payment using Booking ID
     Payment findByBookingId(Long bookingId);
 
-    // Find payment using UPI Transaction ID / UTR
-    Payment findByUpiTransactionId(String upiTransactionId);
+    Payment findByRazorpayOrderId(
+            String razorpayOrderId
+    );
+
+    Payment findByRazorpayPaymentId(
+            String razorpayPaymentId
+    );
+
+    // =========================================================
+    // CUSTOMER PAYMENT HISTORY
+    // =========================================================
+
+    List<Payment> findByBookingCustomerIdAndPaymentStatusIgnoreCaseOrderByPaymentDateDesc(
+            Long customerId,
+            String paymentStatus
+    );
 }

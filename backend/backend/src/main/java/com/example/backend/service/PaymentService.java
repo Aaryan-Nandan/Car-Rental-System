@@ -1,71 +1,379 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.RazorpayOrderResponse;
+import com.example.backend.dto.RazorpayVerifyRequest;
 import com.example.backend.entity.Booking;
 import com.example.backend.entity.Car;
 import com.example.backend.entity.Payment;
 import com.example.backend.repository.BookingRepository;
-import com.example.backend.repository.PaymentRepository;
 import com.example.backend.repository.CarRepository;
+import com.example.backend.repository.PaymentRepository;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.razorpay.Order;
+import com.razorpay.RazorpayClient;
+import com.razorpay.Utils;
+
+import org.json.JSONObject;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class PaymentService {
 
-    @Autowired
-    private PaymentRepository paymentRepository;
+    private final PaymentRepository paymentRepository;
 
-    @Autowired
-    private BookingRepository bookingRepository;
+    private final BookingRepository bookingRepository;
 
-    @Autowired
-    private CarRepository carRepository;
+    private final CarRepository carRepository;
 
-    @Autowired
-    private MailService mailService;
+
+    @Value("${razorpay.key.id}")
+    private String razorpayKeyId;
+
+
+    @Value("${razorpay.key.secret}")
+    private String razorpayKeySecret;
+
+
+    public PaymentService(
+            PaymentRepository paymentRepository,
+            BookingRepository bookingRepository,
+            CarRepository carRepository
+    ) {
+
+        this.paymentRepository =
+                paymentRepository;
+
+        this.bookingRepository =
+                bookingRepository;
+
+        this.carRepository =
+                carRepository;
+    }
 
 
     // =========================================================
-    // ADD PAYMENT
-    // CUSTOMER SUBMITS UPI PAYMENT
+    // CREATE RAZORPAY ORDER
     // =========================================================
 
-    public Payment addPayment(Payment payment) {
+    public RazorpayOrderResponse
+    createRazorpayOrder(
+            Long bookingId
+    ) throws Exception {
 
         // -----------------------------------------------------
-        // BOOKING CHECK
+        // GET BOOKING
         // -----------------------------------------------------
 
-        if (payment == null ||
-                payment.getBooking() == null ||
-                payment.getBooking().getId() == null) {
+        Booking booking =
+                bookingRepository
+                        .findById(
+                                bookingId
+                        )
+                        .orElseThrow(
+                                () ->
+                                        new RuntimeException(
+                                                "Booking Not Found"
+                                        )
+                        );
+
+
+        // -----------------------------------------------------
+        // PAYMENT STATUS CHECK
+        //
+        // Normal:
+        // PAYMENT_PENDING
+        //
+        // Old Admin approval:
+        // APPROVED
+        // -----------------------------------------------------
+
+        String bookingStatus =
+                booking.getBookingStatus();
+
+
+        boolean paymentAllowed =
+                "PAYMENT_PENDING"
+                        .equalsIgnoreCase(
+                                bookingStatus
+                        )
+
+                        ||
+
+                        "APPROVED"
+                                .equalsIgnoreCase(
+                                        bookingStatus
+                                );
+
+
+        if (!paymentAllowed) {
 
             throw new RuntimeException(
-                    "Booking is required"
+                    "Booking is not waiting for payment. Current status: "
+                            + bookingStatus
             );
         }
 
-        Long bookingId =
-                payment.getBooking().getId();
-
 
         // -----------------------------------------------------
-        // CHECK EXISTING PAYMENT FOR BOOKING
+        // CHECK EXISTING PAYMENT
         // -----------------------------------------------------
 
         Payment existingPayment =
-                paymentRepository.findByBookingId(
-                        bookingId
-                );
+                paymentRepository
+                        .findByBookingId(
+                                bookingId
+                        );
 
-        if (existingPayment != null) {
+
+        if (
+                existingPayment != null &&
+                        "PAID".equalsIgnoreCase(
+                                existingPayment
+                                        .getPaymentStatus()
+                        )
+        ) {
 
             throw new RuntimeException(
-                    "Payment Already Exists"
+                    "Payment already completed"
+            );
+        }
+
+
+        // -----------------------------------------------------
+        // AMOUNT
+        //
+        // IMPORTANT:
+        // Amount comes from DATABASE BOOKING.
+        //
+        // Frontend amount is NOT trusted.
+        // -----------------------------------------------------
+
+        Double bookingAmount =
+                booking.getTotalAmount();
+
+
+        if (
+                bookingAmount == null ||
+                        bookingAmount <= 0
+        ) {
+
+            throw new RuntimeException(
+                    "Invalid booking amount"
+            );
+        }
+
+
+        double amount =
+                bookingAmount;
+
+
+        // -----------------------------------------------------
+        // RAZORPAY CLIENT
+        // -----------------------------------------------------
+
+        RazorpayClient razorpayClient =
+                new RazorpayClient(
+                        razorpayKeyId,
+                        razorpayKeySecret
+                );
+
+
+        // -----------------------------------------------------
+        // RAZORPAY AMOUNT IS IN PAISE
+        // -----------------------------------------------------
+
+        int amountInPaise =
+                (int)
+                        Math.round(
+                                amount * 100
+                        );
+
+
+        // -----------------------------------------------------
+        // CREATE ORDER REQUEST
+        // -----------------------------------------------------
+
+        JSONObject orderRequest =
+                new JSONObject();
+
+
+        orderRequest.put(
+                "amount",
+                amountInPaise
+        );
+
+
+        orderRequest.put(
+                "currency",
+                "INR"
+        );
+
+
+        orderRequest.put(
+                "receipt",
+                "BOOKING_" + bookingId
+        );
+
+
+        // -----------------------------------------------------
+        // NOTES
+        // -----------------------------------------------------
+
+        JSONObject notes =
+                new JSONObject();
+
+
+        notes.put(
+                "bookingId",
+                bookingId
+        );
+
+
+        orderRequest.put(
+                "notes",
+                notes
+        );
+
+
+        // -----------------------------------------------------
+        // CREATE RAZORPAY ORDER
+        // -----------------------------------------------------
+
+        Order razorpayOrder =
+                razorpayClient.orders.create(
+                        orderRequest
+                );
+
+
+        String orderId =
+                razorpayOrder.get(
+                        "id"
+                );
+
+
+        // -----------------------------------------------------
+        // CREATE / UPDATE PAYMENT
+        // -----------------------------------------------------
+
+        Payment payment =
+                existingPayment;
+
+
+        if (payment == null) {
+
+            payment =
+                    new Payment();
+
+            payment.setBooking(
+                    booking
+            );
+        }
+
+
+        payment.setAmount(
+                amount
+        );
+
+
+        payment.setPaymentMethod(
+                "RAZORPAY"
+        );
+
+
+        payment.setPaymentStatus(
+                "CREATED"
+        );
+
+
+        payment.setRazorpayOrderId(
+                orderId
+        );
+
+
+        payment.setRazorpayPaymentId(
+                null
+        );
+
+
+        payment.setRazorpaySignature(
+                null
+        );
+
+
+        payment.setPaymentDate(
+                LocalDateTime.now()
+        );
+
+
+        Payment savedPayment =
+                paymentRepository.save(
+                        payment
+                );
+
+
+        // -----------------------------------------------------
+        // RESPONSE
+        // -----------------------------------------------------
+
+        return new RazorpayOrderResponse(
+
+                booking.getId(),
+
+                savedPayment.getId(),
+
+                orderId,
+
+                razorpayKeyId,
+
+                amount,
+
+                "INR"
+        );
+    }
+
+
+    // =========================================================
+    // VERIFY RAZORPAY PAYMENT
+    // =========================================================
+
+    public Payment
+    verifyRazorpayPayment(
+            RazorpayVerifyRequest request
+    ) throws Exception {
+
+        // -----------------------------------------------------
+        // REQUEST VALIDATION
+        // -----------------------------------------------------
+
+        if (request == null) {
+
+            throw new RuntimeException(
+                    "Payment verification data is required"
+            );
+        }
+
+
+        if (request.getBookingId() == null) {
+
+            throw new RuntimeException(
+                    "Booking ID is required"
+            );
+        }
+
+
+        if (
+                request.getRazorpayOrderId() == null ||
+                        request.getRazorpayPaymentId() == null ||
+                        request.getRazorpaySignature() == null
+        ) {
+
+            throw new RuntimeException(
+                    "Razorpay payment details are incomplete"
             );
         }
 
@@ -76,461 +384,421 @@ public class PaymentService {
 
         Booking booking =
                 bookingRepository
-                        .findById(bookingId)
-                        .orElse(null);
-
-        if (booking == null) {
-
-            throw new RuntimeException(
-                    "Booking Not Found"
-            );
-        }
-
-
-        // -----------------------------------------------------
-        // ONLY APPROVED BOOKING CAN BE PAID
-        // -----------------------------------------------------
-
-        if (!"APPROVED".equalsIgnoreCase(
-                booking.getBookingStatus()
-        )) {
-
-            throw new RuntimeException(
-                    "Only Approved Booking Can Be Paid"
-            );
-        }
-
-
-        // -----------------------------------------------------
-        // UPI TRANSACTION ID / UTR
-        // -----------------------------------------------------
-
-        String upiTransactionId =
-                payment.getUpiTransactionId();
-
-
-        if (upiTransactionId == null ||
-                upiTransactionId.trim().isEmpty()) {
-
-            throw new RuntimeException(
-                    "UPI Transaction ID / UTR is required"
-            );
-        }
-
-
-        upiTransactionId =
-                upiTransactionId.trim();
-
-
-        // -----------------------------------------------------
-        // BASIC UTR VALIDATION
-        // -----------------------------------------------------
-
-        if (upiTransactionId.length() < 6) {
-
-            throw new RuntimeException(
-                    "Invalid UPI Transaction ID / UTR"
-            );
-        }
-
-
-        if (upiTransactionId.length() > 50) {
-
-            throw new RuntimeException(
-                    "UPI Transaction ID / UTR is too long"
-            );
-        }
-
-
-        // -----------------------------------------------------
-        // CHECK DUPLICATE UTR
-        // -----------------------------------------------------
-
-        Payment existingTransaction =
-                paymentRepository
-                        .findByUpiTransactionId(
-                                upiTransactionId
+                        .findById(
+                                request.getBookingId()
+                        )
+                        .orElseThrow(
+                                () ->
+                                        new RuntimeException(
+                                                "Booking Not Found"
+                                        )
                         );
 
-        if (existingTransaction != null) {
-
-            throw new RuntimeException(
-                    "This UPI Transaction ID has already been used"
-            );
-        }
-
 
         // -----------------------------------------------------
-        // SET BOOKING
+        // GET PAYMENT
         // -----------------------------------------------------
-
-        payment.setBooking(
-                booking
-        );
-
-
-        // -----------------------------------------------------
-        // ALWAYS TAKE AMOUNT FROM BOOKING
-        // NEVER TRUST CUSTOMER AMOUNT
-        // -----------------------------------------------------
-
-        payment.setAmount(
-                booking.getTotalAmount()
-        );
-
-
-        // -----------------------------------------------------
-        // PAYMENT METHOD
-        // -----------------------------------------------------
-
-        payment.setPaymentMethod(
-                "UPI"
-        );
-
-
-        // -----------------------------------------------------
-        // SAVE UTR
-        // -----------------------------------------------------
-
-        payment.setUpiTransactionId(
-                upiTransactionId
-        );
-
-
-        // -----------------------------------------------------
-        // PAYMENT STATUS
-        // -----------------------------------------------------
-
-        /*
-         * IMPORTANT
-         *
-         * Customer submitting a UTR does NOT mean
-         * that the payment is verified.
-         *
-         * Therefore:
-         *
-         * VERIFYING
-         *
-         * Admin will manually check the UTR against
-         * the real UPI/bank transaction.
-         *
-         * Admin can then:
-         *
-         * VERIFYING -> PAID
-         *
-         * OR
-         *
-         * VERIFYING -> REJECTED
-         */
-
-        payment.setPaymentStatus(
-                "VERIFYING"
-        );
-
-
-        // -----------------------------------------------------
-        // PAYMENT DATE
-        // -----------------------------------------------------
-
-        payment.setPaymentDate(
-                LocalDate.now()
-        );
-
-
-        // -----------------------------------------------------
-        // CUSTOMER
-        // -----------------------------------------------------
-
-        if (booking.getCustomer() != null) {
-
-            payment.setCustomer(
-                    booking.getCustomer()
-            );
-        }
-
-
-        // -----------------------------------------------------
-        // SAVE PAYMENT
-        // -----------------------------------------------------
-
-        Payment savedPayment =
-                paymentRepository.save(
-                        payment
-                );
-
-
-        // =====================================================
-        // SEND EMAIL TO CUSTOMER
-        // =====================================================
-
-        if (booking.getCustomer() != null) {
-
-            mailService.sendMail(
-
-                    booking.getCustomer().getEmail(),
-
-                    "Payment Submitted - Car Rental System",
-
-                    "Hello "
-                            + booking.getCustomer().getName()
-
-                            + "\n\nYour UPI payment details have been submitted."
-
-                            + "\n\nPayment ID : "
-                            + savedPayment.getId()
-
-                            + "\nBooking ID : "
-                            + booking.getId()
-
-                            + "\nCar : "
-                            + booking.getCarVariant()
-                            .getVariantName()
-
-                            + "\nFuel Type : "
-                            + booking.getCarVariant()
-                            .getFuelType()
-
-                            + "\nAmount : Rs. "
-                            + booking.getTotalAmount()
-
-                            + "\nPayment Method : UPI"
-
-                            + "\nUPI Transaction ID / UTR : "
-                            + savedPayment
-                            .getUpiTransactionId()
-
-                            + "\nPayment Status : VERIFYING"
-
-                            + "\n\nYour payment will be confirmed after "
-                            + "the administrator verifies the transaction."
-
-                            + "\n\nThank you for choosing Car Rental System."
-            );
-        }
-
-
-        return savedPayment;
-    }
-
-
-    // =========================================================
-    // VERIFY PAYMENT
-    // ADMIN
-    // =========================================================
-
-    public Payment verifyPayment(
-            Long paymentId) {
-
 
         Payment payment =
                 paymentRepository
-                        .findById(paymentId)
-                        .orElse(null);
+                        .findByBookingId(
+                                booking.getId()
+                        );
 
 
         if (payment == null) {
 
             throw new RuntimeException(
-                    "Payment Not Found"
+                    "Payment record not found"
             );
         }
 
 
         // -----------------------------------------------------
-        // CHECK PAYMENT STATUS
+        // PREVENT DOUBLE VERIFICATION
         // -----------------------------------------------------
 
-        if ("PAID".equalsIgnoreCase(
-                payment.getPaymentStatus()
-        )) {
+        if (
+                "PAID".equalsIgnoreCase(
+                        payment.getPaymentStatus()
+                )
+        ) {
+
+            return payment;
+        }
+
+
+        // -----------------------------------------------------
+        // VERIFY ORDER ID
+        // -----------------------------------------------------
+
+        if (
+                payment.getRazorpayOrderId() == null ||
+                        !request
+                                .getRazorpayOrderId()
+                                .equals(
+                                        payment
+                                                .getRazorpayOrderId()
+                                )
+        ) {
+
+            payment.setPaymentStatus(
+                    "FAILED"
+            );
+
+            paymentRepository.save(
+                    payment
+            );
 
             throw new RuntimeException(
-                    "Payment is already verified"
+                    "Invalid Razorpay Order ID"
             );
         }
 
 
-        if (!"VERIFYING".equalsIgnoreCase(
-                payment.getPaymentStatus()
-        )) {
+        // -----------------------------------------------------
+        // SIGNATURE VERIFICATION
+        //
+        // IMPORTANT SECURITY STEP
+        // -----------------------------------------------------
+
+        String generatedSignature =
+                request
+                        .getRazorpayOrderId()
+                        + "|"
+                        + request
+                        .getRazorpayPaymentId();
+
+
+        boolean validSignature =
+                Utils.verifySignature(
+
+                        generatedSignature,
+
+                        request
+                                .getRazorpaySignature(),
+
+                        razorpayKeySecret
+                );
+
+
+        // -----------------------------------------------------
+        // INVALID SIGNATURE
+        // -----------------------------------------------------
+
+        if (!validSignature) {
+
+            payment.setPaymentStatus(
+                    "FAILED"
+            );
+
+            paymentRepository.save(
+                    payment
+            );
+
+
+            // Release reserved car
+
+            if (booking.getCar() != null) {
+
+                Car car =
+                        booking.getCar();
+
+                car.setAvailable(
+                        true
+                );
+
+                carRepository.save(
+                        car
+                );
+            }
+
+
+            booking.setBookingStatus(
+                    "PAYMENT_FAILED"
+            );
+
+            bookingRepository.save(
+                    booking
+            );
+
 
             throw new RuntimeException(
-                    "Only VERIFYING payments can be verified"
+                    "Invalid Razorpay signature"
             );
         }
 
 
         // -----------------------------------------------------
-        // UTR MUST EXIST
+        // PAYMENT SUCCESS
         // -----------------------------------------------------
 
-        if (payment.getUpiTransactionId() == null ||
-                payment.getUpiTransactionId()
-                        .trim()
-                        .isEmpty()) {
-
-            throw new RuntimeException(
-                    "UPI Transaction ID / UTR is missing"
-            );
-        }
+        payment.setRazorpayPaymentId(
+                request
+                        .getRazorpayPaymentId()
+        );
 
 
-        /*
-         * IMPORTANT:
-         *
-         * The backend cannot independently know whether
-         * the UTR represents a real bank transaction
-         * unless a bank/payment-provider API is connected.
-         *
-         * Therefore the ADMIN must first check the UTR
-         * in the actual UPI/bank transaction history.
-         *
-         * After confirming it manually, Admin clicks
-         * Verify Payment.
-         */
+        payment.setRazorpaySignature(
+                request
+                        .getRazorpaySignature()
+        );
 
-
-        // -----------------------------------------------------
-        // SET PAYMENT AS PAID
-        // -----------------------------------------------------
 
         payment.setPaymentStatus(
                 "PAID"
         );
 
 
+        payment.setPaymentDate(
+                LocalDateTime.now()
+        );
+
+
         // -----------------------------------------------------
-        // GET BOOKING
+        // AUTOMATICALLY CONFIRM BOOKING
         // -----------------------------------------------------
 
-        Booking booking =
-                payment.getBooking();
+        booking.setBookingStatus(
+                "CONFIRMED"
+        );
 
 
-        if (booking != null) {
-
-            booking.setBookingStatus(
-                    "PAID"
-            );
-
-            bookingRepository.save(
-                    booking
-            );
-        }
+        bookingRepository.save(
+                booking
+        );
 
 
         // -----------------------------------------------------
         // SAVE PAYMENT
         // -----------------------------------------------------
 
-        Payment updatedPayment =
-                paymentRepository.save(
-                        payment
-                );
-
-
-        // =====================================================
-        // SEND SUCCESS EMAIL
-        // =====================================================
-
-        if (booking != null &&
-                booking.getCustomer() != null) {
-
-            mailService.sendMail(
-
-                    booking.getCustomer().getEmail(),
-
-                    "Payment Verified - Car Rental System",
-
-                    "Hello "
-                            + booking.getCustomer().getName()
-
-                            + "\n\nYour UPI payment has been verified successfully."
-
-                            + "\n\nPayment ID : "
-                            + updatedPayment.getId()
-
-                            + "\nBooking ID : "
-                            + booking.getId()
-
-                            + "\nCar : "
-                            + booking.getCarVariant()
-                            .getVariantName()
-
-                            + "\nAmount : Rs. "
-                            + updatedPayment.getAmount()
-
-                            + "\nPayment Method : UPI"
-
-                            + "\nUPI Transaction ID / UTR : "
-                            + updatedPayment
-                            .getUpiTransactionId()
-
-                            + "\nPayment Status : PAID"
-
-                            + "\nPayment Date : "
-                            + updatedPayment
-                            .getPaymentDate()
-
-                            + "\n\nYour booking is now confirmed."
-
-                            + "\n\nThank you for choosing Car Rental System."
-            );
-        }
-
-
-        return updatedPayment;
+        return paymentRepository.save(
+                payment
+        );
     }
 
 
     // =========================================================
-    // REJECT PAYMENT
-    // ADMIN
+    // CANCEL PAYMENT
     // =========================================================
 
-    public Payment rejectPayment(
-            Long paymentId) {
+    public void cancelPayment(
+            Long bookingId
+    ) {
 
-
-        Payment payment =
-                paymentRepository
-                        .findById(paymentId)
+        Booking booking =
+                bookingRepository
+                        .findById(
+                                bookingId
+                        )
                         .orElse(null);
 
 
-        if (payment == null) {
+        if (booking == null) {
+            return;
+        }
 
-            throw new RuntimeException(
-                    "Payment Not Found"
+
+        // -----------------------------------------------------
+        // DO NOT CANCEL ALREADY CONFIRMED PAYMENT
+        // -----------------------------------------------------
+
+        Payment payment =
+                paymentRepository
+                        .findByBookingId(
+                                bookingId
+                        );
+
+
+        if (
+                payment != null &&
+                        "PAID".equalsIgnoreCase(
+                                payment.getPaymentStatus()
+                        )
+        ) {
+
+            return;
+        }
+
+
+        // -----------------------------------------------------
+        // PAYMENT FAILED
+        // -----------------------------------------------------
+
+        if (payment != null) {
+
+            payment.setPaymentStatus(
+                    "FAILED"
+            );
+
+            payment.setPaymentDate(
+                    LocalDateTime.now()
+            );
+
+            paymentRepository.save(
+                    payment
             );
         }
 
 
         // -----------------------------------------------------
-        // ONLY VERIFYING PAYMENT CAN BE REJECTED
+        // RELEASE CAR
         // -----------------------------------------------------
 
-        if (!"VERIFYING".equalsIgnoreCase(
-                payment.getPaymentStatus()
-        )) {
+        if (booking.getCar() != null) {
 
-            throw new RuntimeException(
-                    "Only VERIFYING payments can be rejected"
+            Car car =
+                    booking.getCar();
+
+            car.setAvailable(
+                    true
+            );
+
+            carRepository.save(
+                    car
             );
         }
 
 
         // -----------------------------------------------------
-        // SET PAYMENT REJECTED
+        // UPDATE BOOKING
         // -----------------------------------------------------
 
-        payment.setPaymentStatus(
-                "REJECTED"
+        booking.setBookingStatus(
+                "PAYMENT_FAILED"
+        );
+
+
+        bookingRepository.save(
+                booking
+        );
+    }
+
+
+    // =========================================================
+    // ADMIN - GET ALL PAYMENTS
+    // =========================================================
+
+    public List<Payment>
+    getAllPayments() {
+
+        return paymentRepository
+                .findAll();
+    }
+
+
+    // =========================================================
+    // ADMIN REJECT / REFUND
+    // =========================================================
+
+    public Payment
+    rejectPayment(
+            Long paymentId
+    ) throws Exception {
+
+        Payment payment =
+                paymentRepository
+                        .findById(
+                                paymentId
+                        )
+                        .orElseThrow(
+                                () ->
+                                        new RuntimeException(
+                                                "Payment Not Found"
+                                        )
+                        );
+
+
+        // -----------------------------------------------------
+        // ONLY PAID PAYMENT CAN BE REFUNDED
+        // -----------------------------------------------------
+
+        if (
+                !"PAID".equalsIgnoreCase(
+                        payment.getPaymentStatus()
+                )
+        ) {
+
+            throw new RuntimeException(
+                    "Only paid payments can be rejected/refunded"
+            );
+        }
+
+
+        if (
+                payment.getRazorpayPaymentId() == null ||
+                        payment.getRazorpayPaymentId()
+                                .trim()
+                                .isEmpty()
+        ) {
+
+            throw new RuntimeException(
+                    "Razorpay Payment ID is missing"
+            );
+        }
+
+
+        // -----------------------------------------------------
+        // RAZORPAY CLIENT
+        // -----------------------------------------------------
+
+        RazorpayClient razorpayClient =
+                new RazorpayClient(
+                        razorpayKeyId,
+                        razorpayKeySecret
+                );
+
+
+        // -----------------------------------------------------
+        // REFUND REQUEST
+        // -----------------------------------------------------
+
+        JSONObject refundRequest =
+                new JSONObject();
+
+
+        refundRequest.put(
+                "amount",
+                (int)
+                        Math.round(
+                                payment.getAmount()
+                                        * 100
+                        )
         );
 
 
         // -----------------------------------------------------
-        // GET BOOKING
+        // RAZORPAY REFUND
+        // -----------------------------------------------------
+
+        razorpayClient
+                .payments
+                .refund(
+
+                        payment
+                                .getRazorpayPaymentId(),
+
+                        refundRequest
+                );
+
+
+        // -----------------------------------------------------
+        // UPDATE PAYMENT
+        // -----------------------------------------------------
+
+        payment.setPaymentStatus(
+                "REFUNDED"
+        );
+
+
+        payment.setPaymentDate(
+                LocalDateTime.now()
+        );
+
+
+        // -----------------------------------------------------
+        // UPDATE BOOKING
         // -----------------------------------------------------
 
         Booking booking =
@@ -539,24 +807,13 @@ public class PaymentService {
 
         if (booking != null) {
 
-            /*
-             * Payment was rejected.
-             *
-             * The booking should no longer remain
-             * in PAID/APPROVED state.
-             */
-
             booking.setBookingStatus(
                     "REJECTED"
             );
 
-            bookingRepository.save(
-                    booking
-            );
-
 
             // -------------------------------------------------
-            // MAKE CAR AVAILABLE AGAIN
+            // RELEASE CAR
             // -------------------------------------------------
 
             if (booking.getCar() != null) {
@@ -572,118 +829,16 @@ public class PaymentService {
                         car
                 );
             }
-        }
 
 
-        // -----------------------------------------------------
-        // SAVE PAYMENT
-        // -----------------------------------------------------
-
-        Payment updatedPayment =
-                paymentRepository.save(
-                        payment
-                );
-
-
-        // =====================================================
-        // SEND REJECTION EMAIL
-        // =====================================================
-
-        if (booking != null &&
-                booking.getCustomer() != null) {
-
-            mailService.sendMail(
-
-                    booking.getCustomer().getEmail(),
-
-                    "Payment Rejected - Car Rental System",
-
-                    "Hello "
-                            + booking.getCustomer().getName()
-
-                            + "\n\nYour submitted UPI payment "
-                            + "could not be verified."
-
-                            + "\n\nPayment ID : "
-                            + updatedPayment.getId()
-
-                            + "\nBooking ID : "
-                            + booking.getId()
-
-                            + "\nCar : "
-                            + booking.getCarVariant()
-                            .getVariantName()
-
-                            + "\nAmount : Rs. "
-                            + updatedPayment.getAmount()
-
-                            + "\nPayment Method : UPI"
-
-                            + "\nUPI Transaction ID / UTR : "
-                            + updatedPayment
-                            .getUpiTransactionId()
-
-                            + "\nPayment Status : REJECTED"
-
-                            + "\n\nPlease contact the administrator "
-                            + "or submit a valid payment."
-
+            bookingRepository.save(
+                    booking
             );
         }
 
 
-        return updatedPayment;
-    }
-
-
-    // =========================================================
-    // GET ALL PAYMENTS
-    // =========================================================
-
-    public List<Payment> getAllPayments() {
-
-        return paymentRepository.findAll();
-    }
-
-
-    // =========================================================
-    // GET PAYMENT BY ID
-    // =========================================================
-
-    public Payment getPaymentById(
-            Long id) {
-
-        return paymentRepository
-                .findById(id)
-                .orElse(null);
-    }
-
-
-    // =========================================================
-    // DELETE PAYMENT
-    // =========================================================
-
-    public String deletePayment(
-            Long id) {
-
-
-        Payment payment =
-                paymentRepository
-                        .findById(id)
-                        .orElse(null);
-
-
-        if (payment == null) {
-
-            return "Payment Not Found";
-        }
-
-
-        paymentRepository.deleteById(
-                id
+        return paymentRepository.save(
+                payment
         );
-
-
-        return "Payment Deleted Successfully";
     }
 }

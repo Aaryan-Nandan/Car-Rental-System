@@ -2,29 +2,46 @@ package com.example.backend.controller;
 
 import com.example.backend.entity.Booking;
 import com.example.backend.service.BookingService;
+
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/booking")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(
+        origins = "http://localhost:3000"
+)
 public class BookingController {
 
     @Autowired
     private BookingService bookingService;
 
-    // ADD BOOKING
+
+    // =========================================================
+    // CUSTOMER
+    // CREATE BOOKING
+    //
+    // IMPORTANT:
+    // Booking is NOT confirmed here.
+    //
+    // Status:
+    // PAYMENT_PENDING
+    // =========================================================
+
     @PostMapping("/add")
     public Object addBooking(
-            @RequestBody Booking booking) {
+            @RequestBody Booking booking
+    ) {
 
         try {
 
-            return bookingService.addBooking(
-                    booking
-            );
+            return bookingService
+                    .addBooking(
+                            booking
+                    );
 
         } catch (Exception e) {
 
@@ -32,34 +49,74 @@ public class BookingController {
         }
     }
 
-    // GET ALL BOOKINGS
+
+    // =========================================================
+    // ADMIN / CUSTOMER
+    // =========================================================
+
     @GetMapping("/all")
     public List<Booking> getAllBookings() {
 
-        return bookingService.getAllBookings();
+        return bookingService
+                .getAllBookings();
     }
 
-    // DELETE BOOKING
-    @DeleteMapping("/delete/{id}")
+
+    // =========================================================
+    // DELETE
+    // =========================================================
+
+    @DeleteMapping(
+            "/delete/{id}"
+    )
     public String deleteBooking(
-            @PathVariable Long id) {
+            @PathVariable Long id
+    ) {
 
-        return bookingService.deleteBooking(id);
+        return bookingService
+                .deleteBooking(
+                        id
+                );
     }
 
-    // APPROVE BOOKING
-    @PutMapping("/approve/{id}")
+
+    // =========================================================
+    // OLD ADMIN APPROVE ENDPOINT
+    //
+    // Kept only so your existing project does
+    // not break.
+    //
+    // NEW PAYMENT FLOW DOES NOT USE THIS.
+    // =========================================================
+
+    @PutMapping(
+            "/approve/{id}"
+    )
     public Booking approveBooking(
-            @PathVariable Long id) {
+            @PathVariable Long id
+    ) {
 
-        return bookingService.approveBooking(id);
+        return bookingService
+                .approveBooking(
+                        id
+                );
     }
 
-    // REJECT BOOKING
-    @PutMapping("/reject/{id}")
-    public Booking rejectBooking(
-            @PathVariable Long id) {
 
-        return bookingService.rejectBooking(id);
+    // =========================================================
+    // ADMIN REJECT BOOKING
+    // =========================================================
+
+    @PutMapping(
+            "/reject/{id}"
+    )
+    public Booking rejectBooking(
+            @PathVariable Long id
+    ) {
+
+        return bookingService
+                .rejectBooking(
+                        id
+                );
     }
 }

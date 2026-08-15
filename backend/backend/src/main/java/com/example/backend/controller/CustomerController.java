@@ -44,6 +44,23 @@ public class CustomerController {
 
 
     // ==========================================
+    // UPDATE CUSTOMER PROFILE
+    // ==========================================
+
+    @PutMapping("/{id}")
+    public Customer updateProfile(
+            @PathVariable Long id,
+            @RequestBody Customer customer
+    ) {
+
+        return customerService.updateProfile(
+                id,
+                customer
+        );
+    }
+
+
+    // ==========================================
     // LOGIN CUSTOMER
     // ==========================================
 

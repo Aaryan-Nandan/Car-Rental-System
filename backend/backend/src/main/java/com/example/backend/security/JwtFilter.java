@@ -39,12 +39,21 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
-            FilterChain filterChain)
-            throws ServletException, IOException {
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
 
         String requestPath =
                 request.getRequestURI();
+
+
+        System.out.println(
+                "=========================================="
+        );
+
+        System.out.println(
+                "JWT FILTER REQUEST: " + requestPath
+        );
 
 
         // ==========================================
@@ -119,6 +128,10 @@ public class JwtFilter extends OncePerRequestFilter {
 
         ) {
 
+            System.out.println(
+                    "PUBLIC ENDPOINT - JWT CHECK SKIPPED"
+            );
+
             filterChain.doFilter(
                     request,
                     response
@@ -138,6 +151,12 @@ public class JwtFilter extends OncePerRequestFilter {
                 );
 
 
+        System.out.println(
+                "Authorization Header Present: "
+                        + (authHeader != null)
+        );
+
+
         // ==========================================
         // NO TOKEN
         // ==========================================
@@ -153,6 +172,10 @@ public class JwtFilter extends OncePerRequestFilter {
                         )
 
         ) {
+
+            System.out.println(
+                    "NO VALID BEARER TOKEN FOUND"
+            );
 
             filterChain.doFilter(
                     request,
@@ -171,6 +194,34 @@ public class JwtFilter extends OncePerRequestFilter {
                 authHeader.substring(7);
 
 
+        System.out.println(
+                "JWT TOKEN RECEIVED"
+        );
+
+
+        // ==========================================
+        // CHECK EMPTY TOKEN
+        // ==========================================
+
+        if (
+                token == null
+                        ||
+                        token.trim().isEmpty()
+        ) {
+
+            System.out.println(
+                    "JWT TOKEN IS EMPTY"
+            );
+
+            filterChain.doFilter(
+                    request,
+                    response
+            );
+
+            return;
+        }
+
+
         // ==========================================
         // VALIDATE TOKEN
         // ==========================================
@@ -182,6 +233,19 @@ public class JwtFilter extends OncePerRequestFilter {
                             token
                     );
 
+
+            System.out.println(
+                    "JWT VALIDATION SUCCESS"
+            );
+
+            System.out.println(
+                    "JWT EMAIL: " + email
+            );
+
+
+            // ======================================
+            // CREATE AUTHENTICATION
+            // ======================================
 
             UsernamePasswordAuthenticationToken
                     authentication =
@@ -208,6 +272,10 @@ public class JwtFilter extends OncePerRequestFilter {
             );
 
 
+            // ======================================
+            // SET SECURITY CONTEXT
+            // ======================================
+
             SecurityContextHolder
 
                     .getContext()
@@ -217,16 +285,58 @@ public class JwtFilter extends OncePerRequestFilter {
                     );
 
 
+            System.out.println(
+                    "SECURITY CONTEXT AUTHENTICATION SET"
+            );
+
+
         } catch (Exception e) {
 
 
             // ======================================
-            // INVALID TOKEN
+            // JWT VALIDATION FAILED
+            // ======================================
+
+            System.out.println(
+                    "=========================================="
+            );
+
+            System.out.println(
+                    "JWT VALIDATION FAILED"
+            );
+
+            System.out.println(
+                    "Request Path: " + requestPath
+            );
+
+            System.out.println(
+                    "Exception Type: "
+                            + e.getClass().getName()
+            );
+
+            System.out.println(
+                    "Exception Message: "
+                            + e.getMessage()
+            );
+
+            System.out.println(
+                    "=========================================="
+            );
+
+
+            // ======================================
+            // PRINT COMPLETE ERROR
+            // ======================================
+
+            e.printStackTrace();
+
+
+            // ======================================
+            // RETURN 401
             // ======================================
 
             response.setStatus(
-                    HttpServletResponse
-                            .SC_UNAUTHORIZED
+                    HttpServletResponse.SC_UNAUTHORIZED
             );
 
             response.setContentType(

@@ -1,132 +1,289 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.RazorpayOrderResponse;
+import com.example.backend.dto.RazorpayVerifyRequest;
 import com.example.backend.entity.Payment;
 import com.example.backend.service.PaymentService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/payment")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(
+        origins = "http://localhost:3000"
+)
 public class PaymentController {
-
 
     @Autowired
     private PaymentService paymentService;
 
 
     // =========================================================
-    // ADD / SUBMIT PAYMENT
+    // CREATE RAZORPAY ORDER
     // =========================================================
 
-    @PostMapping("/add")
-    public Object addPayment(
-            @RequestBody Payment payment) {
+    @PostMapping(
+            "/create-order/{bookingId}"
+    )
+    public ResponseEntity<?> createOrder(
+            @PathVariable Long bookingId
+    ) {
 
         try {
 
-            return paymentService.addPayment(
+            RazorpayOrderResponse response =
+                    paymentService
+                            .createRazorpayOrder(
+                                    bookingId
+                            );
+
+            return ResponseEntity.ok(
+                    response
+            );
+
+        } catch (Exception e) {
+
+            Map<String, Object> response =
+                    new HashMap<>();
+
+            response.put(
+                    "success",
+                    false
+            );
+
+            response.put(
+                    "message",
+                    e.getMessage()
+            );
+
+            return ResponseEntity
+                    .badRequest()
+                    .body(response);
+        }
+    }
+
+
+    // =========================================================
+    // VERIFY RAZORPAY PAYMENT
+    // =========================================================
+
+    @PostMapping(
+            "/verify"
+    )
+    public ResponseEntity<?> verifyPayment(
+            @RequestBody RazorpayVerifyRequest request
+    ) {
+
+        try {
+
+            Payment payment =
+                    paymentService
+                            .verifyRazorpayPayment(
+                                    request
+                            );
+
+
+            Map<String, Object> response =
+                    new HashMap<>();
+
+
+            response.put(
+                    "success",
+                    true
+            );
+
+
+            response.put(
+                    "message",
+                    "Payment verified successfully"
+            );
+
+
+            response.put(
+                    "paymentId",
+                    payment.getId()
+            );
+
+
+            if (payment.getBooking() != null) {
+
+                response.put(
+                        "bookingId",
+                        payment
+                                .getBooking()
+                                .getId()
+                );
+
+
+                response.put(
+                        "bookingStatus",
+                        payment
+                                .getBooking()
+                                .getBookingStatus()
+                );
+            }
+
+
+            response.put(
+                    "paymentStatus",
+                    payment.getPaymentStatus()
+            );
+
+
+            response.put(
+                    "razorpayPaymentId",
+                    payment.getRazorpayPaymentId()
+            );
+
+
+            return ResponseEntity.ok(
+                    response
+            );
+
+        } catch (Exception e) {
+
+            Map<String, Object> response =
+                    new HashMap<>();
+
+            response.put(
+                    "success",
+                    false
+            );
+
+            response.put(
+                    "message",
+                    e.getMessage()
+            );
+
+            return ResponseEntity
+                    .badRequest()
+                    .body(response);
+        }
+    }
+
+
+    // =========================================================
+    // PAYMENT CANCEL / FAILED
+    // =========================================================
+
+    @DeleteMapping(
+            "/cancel/{bookingId}"
+    )
+    public ResponseEntity<?> cancelPayment(
+            @PathVariable Long bookingId
+    ) {
+
+        try {
+
+            paymentService
+                    .cancelPayment(
+                            bookingId
+                    );
+
+
+            Map<String, Object> response =
+                    new HashMap<>();
+
+
+            response.put(
+                    "success",
+                    true
+            );
+
+
+            response.put(
+                    "message",
+                    "Payment cancelled"
+            );
+
+
+            return ResponseEntity.ok(
+                    response
+            );
+
+        } catch (Exception e) {
+
+            Map<String, Object> response =
+                    new HashMap<>();
+
+            response.put(
+                    "success",
+                    false
+            );
+
+            response.put(
+                    "message",
+                    e.getMessage()
+            );
+
+            return ResponseEntity
+                    .badRequest()
+                    .body(response);
+        }
+    }
+
+
+    // =========================================================
+    // ADMIN - GET ALL PAYMENTS
+    // =========================================================
+
+    @GetMapping(
+            "/all"
+    )
+    public List<Payment> getAllPayments() {
+
+        return paymentService
+                .getAllPayments();
+    }
+
+
+    // =========================================================
+    // ADMIN - REFUND
+    // =========================================================
+
+    @PutMapping(
+            "/reject/{id}"
+    )
+    public ResponseEntity<?> rejectPayment(
+            @PathVariable Long id
+    ) {
+
+        try {
+
+            Payment payment =
+                    paymentService
+                            .rejectPayment(
+                                    id
+                            );
+
+            return ResponseEntity.ok(
                     payment
             );
 
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
 
-            e.printStackTrace();
+            Map<String, Object> response =
+                    new HashMap<>();
 
-            return e.getMessage();
-        }
-    }
-
-
-    // =========================================================
-    // GET ALL PAYMENTS
-    // =========================================================
-
-    @GetMapping("/all")
-    public List<Payment> getAllPayments() {
-
-        return paymentService.getAllPayments();
-    }
-
-
-    // =========================================================
-    // GET PAYMENT BY ID
-    // =========================================================
-
-    @GetMapping("/{id}")
-    public Payment getPaymentById(
-            @PathVariable Long id) {
-
-        return paymentService.getPaymentById(
-                id
-        );
-    }
-
-
-    // =========================================================
-    // VERIFY PAYMENT
-    // ADMIN
-    // =========================================================
-
-    @PutMapping("/verify/{id}")
-    public Object verifyPayment(
-            @PathVariable Long id) {
-
-        try {
-
-            return paymentService.verifyPayment(
-                    id
+            response.put(
+                    "success",
+                    false
             );
 
-        }
-        catch (Exception e) {
-
-            e.printStackTrace();
-
-            return e.getMessage();
-        }
-    }
-
-
-    // =========================================================
-    // REJECT PAYMENT
-    // ADMIN
-    // =========================================================
-
-    @PutMapping("/reject/{id}")
-    public Object rejectPayment(
-            @PathVariable Long id) {
-
-        try {
-
-            return paymentService.rejectPayment(
-                    id
+            response.put(
+                    "message",
+                    e.getMessage()
             );
 
+            return ResponseEntity
+                    .badRequest()
+                    .body(response);
         }
-        catch (Exception e) {
-
-            e.printStackTrace();
-
-            return e.getMessage();
-        }
-    }
-
-
-    // =========================================================
-    // DELETE PAYMENT
-    // =========================================================
-
-    @DeleteMapping("/delete/{id}")
-    public String deletePayment(
-            @PathVariable Long id) {
-
-        return paymentService.deletePayment(
-                id
-        );
     }
 }

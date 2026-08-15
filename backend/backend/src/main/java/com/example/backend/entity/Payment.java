@@ -1,33 +1,80 @@
 package com.example.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "payment")
+@JsonIgnoreProperties({
+        "hibernateLazyInitializer",
+        "handler"
+})
 public class Payment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
+    // =========================================================
+    // PAYMENT AMOUNT
+    // =========================================================
+
+    @Column(nullable = false)
     private Double amount;
 
-    private LocalDate paymentDate;
 
-    private String paymentStatus;
+    // =========================================================
+    // PAYMENT METHOD
+    // =========================================================
 
     private String paymentMethod;
 
-    private String upiTransactionId;
+
+    // =========================================================
+    // PAYMENT STATUS
+    //
+    // CREATED
+    // PAID
+    // FAILED
+    // REFUNDED
+    // =========================================================
+
+    private String paymentStatus;
 
 
     // =========================================================
-    // CUSTOMER
+    // RAZORPAY ORDER ID
     // =========================================================
 
-    @ManyToOne
-    private Customer customer;
+    @Column(unique = true)
+    private String razorpayOrderId;
+
+
+    // =========================================================
+    // RAZORPAY PAYMENT ID
+    // =========================================================
+
+    @Column(unique = true)
+    private String razorpayPaymentId;
+
+
+    // =========================================================
+    // RAZORPAY SIGNATURE
+    // =========================================================
+
+    @Column(length = 500)
+    private String razorpaySignature;
+
+
+    // =========================================================
+    // PAYMENT DATE
+    // =========================================================
+
+    private LocalDateTime paymentDate;
 
 
     // =========================================================
@@ -35,112 +82,92 @@ public class Payment {
     // =========================================================
 
     @OneToOne
+    @JoinColumn(name = "booking_id", nullable = false)
+    @JsonIgnore
     private Booking booking;
 
 
     // =========================================================
-    // GETTERS AND SETTERS
+    // GETTERS / SETTERS
     // =========================================================
 
     public Long getId() {
-
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
 
     public Double getAmount() {
-
         return amount;
     }
 
-
-    public void setAmount(
-            Double amount) {
-
+    public void setAmount(Double amount) {
         this.amount = amount;
     }
 
 
-    public LocalDate getPaymentDate() {
-
-        return paymentDate;
+    public String getPaymentMethod() {
+        return paymentMethod;
     }
 
-
-    public void setPaymentDate(
-            LocalDate paymentDate) {
-
-        this.paymentDate =
-                paymentDate;
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
     }
 
 
     public String getPaymentStatus() {
-
         return paymentStatus;
     }
 
-
-    public void setPaymentStatus(
-            String paymentStatus) {
-
-        this.paymentStatus =
-                paymentStatus;
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
     }
 
 
-    public String getPaymentMethod() {
+    public String getRazorpayOrderId() {
+        return razorpayOrderId;
+    }
 
-        return paymentMethod;
+    public void setRazorpayOrderId(String razorpayOrderId) {
+        this.razorpayOrderId = razorpayOrderId;
     }
 
 
-    public void setPaymentMethod(
-            String paymentMethod) {
+    public String getRazorpayPaymentId() {
+        return razorpayPaymentId;
+    }
 
-        this.paymentMethod =
-                paymentMethod;
+    public void setRazorpayPaymentId(String razorpayPaymentId) {
+        this.razorpayPaymentId = razorpayPaymentId;
     }
 
 
-    public String getUpiTransactionId() {
+    public String getRazorpaySignature() {
+        return razorpaySignature;
+    }
 
-        return upiTransactionId;
+    public void setRazorpaySignature(String razorpaySignature) {
+        this.razorpaySignature = razorpaySignature;
     }
 
 
-    public void setUpiTransactionId(
-            String upiTransactionId) {
-
-        this.upiTransactionId =
-                upiTransactionId;
+    public LocalDateTime getPaymentDate() {
+        return paymentDate;
     }
 
-
-    public Customer getCustomer() {
-
-        return customer;
-    }
-
-
-    public void setCustomer(
-            Customer customer) {
-
-        this.customer =
-                customer;
+    public void setPaymentDate(LocalDateTime paymentDate) {
+        this.paymentDate = paymentDate;
     }
 
 
     public Booking getBooking() {
-
         return booking;
     }
 
-
-    public void setBooking(
-            Booking booking) {
-
-        this.booking =
-                booking;
+    public void setBooking(Booking booking) {
+        this.booking = booking;
     }
 }

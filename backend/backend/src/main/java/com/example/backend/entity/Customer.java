@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 
 @Entity
 public class Customer {
@@ -22,7 +23,17 @@ public class Customer {
 
     private String phone;
 
+    // ==========================================
+    // PROFILE PHOTO
+    // ==========================================
+
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String profilePhoto;
+
+    // ==========================================
     // GETTERS AND SETTERS
+    // ==========================================
 
     public Long getId() {
         return id;
@@ -62,5 +73,13 @@ public class Customer {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getProfilePhoto() {
+        return profilePhoto;
+    }
+
+    public void setProfilePhoto(String profilePhoto) {
+        this.profilePhoto = profilePhoto;
     }
 }

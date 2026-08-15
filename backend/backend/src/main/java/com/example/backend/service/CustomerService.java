@@ -43,7 +43,6 @@ public class CustomerService {
             return "Email Already Exists";
         }
 
-
         // ==========================================
         // ENCRYPT PASSWORD
         // ==========================================
@@ -55,7 +54,6 @@ public class CustomerService {
                 )
 
         );
-
 
         // ==========================================
         // SAVE CUSTOMER
@@ -92,6 +90,80 @@ public class CustomerService {
 
 
     // ==========================================
+    // UPDATE CUSTOMER PROFILE
+    // ==========================================
+
+    public Customer updateProfile(
+            Long id,
+            Customer updatedCustomer
+    ) {
+
+        Customer customer =
+                customerRepository
+                        .findById(id)
+                        .orElse(null);
+
+        if (customer == null) {
+            return null;
+        }
+
+        // ==========================================
+        // UPDATE NAME
+        // ==========================================
+
+        if (updatedCustomer.getName() != null) {
+
+            customer.setName(
+                    updatedCustomer.getName()
+            );
+        }
+
+
+        // ==========================================
+        // UPDATE PHONE
+        // ==========================================
+
+        if (updatedCustomer.getPhone() != null) {
+
+            customer.setPhone(
+                    updatedCustomer.getPhone()
+            );
+        }
+
+
+        // ==========================================
+        // UPDATE PROFILE PHOTO
+        // ==========================================
+
+        if (updatedCustomer.getProfilePhoto() != null) {
+
+            customer.setProfilePhoto(
+                    updatedCustomer.getProfilePhoto()
+            );
+        }
+
+
+        // ==========================================
+        // DO NOT UPDATE EMAIL HERE
+        // ==========================================
+
+        // Email remains unchanged.
+
+
+        // ==========================================
+        // DO NOT UPDATE PASSWORD HERE
+        // ==========================================
+
+        // Password remains unchanged.
+
+
+        return customerRepository.save(
+                customer
+        );
+    }
+
+
+    // ==========================================
     // LOGIN CUSTOMER
     // ==========================================
 
@@ -99,19 +171,10 @@ public class CustomerService {
             LoginRequest loginRequest
     ) {
 
-        // ==========================================
-        // FIND CUSTOMER BY EMAIL
-        // ==========================================
-
         Customer customer =
                 customerRepository.findByEmail(
                         loginRequest.getEmail()
                 );
-
-
-        // ==========================================
-        // CUSTOMER NOT FOUND
-        // ==========================================
 
         if (customer == null) {
 
@@ -133,10 +196,6 @@ public class CustomerService {
                 );
 
 
-        // ==========================================
-        // INVALID PASSWORD
-        // ==========================================
-
         if (!passwordMatches) {
 
             return null;
@@ -144,7 +203,7 @@ public class CustomerService {
 
 
         // ==========================================
-        // GENERATE JWT TOKEN
+        // GENERATE JWT
         // ==========================================
 
         String token =
@@ -154,7 +213,7 @@ public class CustomerService {
 
 
         // ==========================================
-        // RETURN CUSTOMER LOGIN RESPONSE
+        // LOGIN RESPONSE
         // ==========================================
 
         return new AuthResponse(

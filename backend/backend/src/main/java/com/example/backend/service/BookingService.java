@@ -38,14 +38,18 @@ public class BookingService {
     // ADD BOOKING
     // =========================================================
 
-    public Booking addBooking(Booking booking) {
+    public Booking addBooking(
+            Booking booking
+    ) {
 
         // =====================================================
         // CUSTOMER VALIDATION
         // =====================================================
 
-        if (booking.getCustomer() == null ||
-                booking.getCustomer().getId() == null) {
+        if (
+                booking.getCustomer() == null ||
+                        booking.getCustomer().getId() == null
+        ) {
 
             throw new RuntimeException(
                     "Customer is required"
@@ -72,8 +76,10 @@ public class BookingService {
         // CAR VARIANT VALIDATION
         // =====================================================
 
-        if (booking.getCarVariant() == null ||
-                booking.getCarVariant().getId() == null) {
+        if (
+                booking.getCarVariant() == null ||
+                        booking.getCarVariant().getId() == null
+        ) {
 
             throw new RuntimeException(
                     "Car Variant is required"
@@ -100,18 +106,22 @@ public class BookingService {
         // DATE VALIDATION
         // =====================================================
 
-        if (booking.getFromDate() == null ||
-                booking.getToDate() == null) {
+        if (
+                booking.getFromDate() == null ||
+                        booking.getToDate() == null
+        ) {
 
             throw new RuntimeException(
                     "From Date and To Date are required"
             );
         }
 
-        if (booking.getToDate()
-                .isBefore(
-                        booking.getFromDate()
-                )) {
+        if (
+                booking.getToDate()
+                        .isBefore(
+                                booking.getFromDate()
+                        )
+        ) {
 
             throw new RuntimeException(
                     "To Date cannot be before From Date"
@@ -132,7 +142,19 @@ public class BookingService {
 
         // =====================================================
         // CALCULATE TOTAL AMOUNT
+        //
+        // IMPORTANT:
+        // Backend calculates the amount.
+        // Frontend amount is NOT trusted.
         // =====================================================
+
+        if (carVariant.getPricePerDay() == null ||
+                carVariant.getPricePerDay() <= 0) {
+
+            throw new RuntimeException(
+                    "Invalid car price"
+            );
+        }
 
         double totalAmount =
                 days *
@@ -155,8 +177,21 @@ public class BookingService {
                 carVariant
         );
 
+
+        // =====================================================
+        // IMPORTANT
+        //
+        // Booking is now waiting for Razorpay payment.
+        //
+        // It will become CONFIRMED only after:
+        //
+        // Razorpay payment
+        // +
+        // backend signature verification
+        // =====================================================
+
         booking.setBookingStatus(
-                "PENDING"
+                "PAYMENT_PENDING"
         );
 
 
@@ -179,7 +214,7 @@ public class BookingService {
 
 
         // =====================================================
-        // ASSIGN CAR TO BOOKING
+        // ASSIGN CAR
         // =====================================================
 
         booking.setCar(
@@ -189,20 +224,30 @@ public class BookingService {
 
         // =====================================================
         // LICENSE
+        //
+        // Current project stores only filename.
+        // Actual MultipartFile upload is separate.
         // =====================================================
 
-        /*
-         * Currently we are not uploading the actual file.
-         * We will implement MultipartFile upload separately.
-         */
+        if (
+                booking.getLicenseFileName() == null ||
+                        booking.getLicenseFileName()
+                                .trim()
+                                .isEmpty()
+        ) {
 
-        booking.setLicenseFileName(
-                "license.jpg"
-        );
+            booking.setLicenseFileName(
+                    "license.jpg"
+            );
+        }
 
 
         // =====================================================
-        // MAKE CAR UNAVAILABLE
+        // RESERVE CAR
+        //
+        // Car remains reserved while payment is pending.
+        // If payment is cancelled/failed,
+        // PaymentService releases it.
         // =====================================================
 
         car.setAvailable(
@@ -228,20 +273,25 @@ public class BookingService {
         // SEND BOOKING EMAIL
         // =====================================================
 
-        if (customer.getEmail() != null) {
+        if (
+                customer.getEmail() != null &&
+                        !customer.getEmail()
+                                .trim()
+                                .isEmpty()
+        ) {
 
             mailService.sendMail(
 
                     customer.getEmail(),
 
-                    "Booking Request Received - Car Rental System",
+                    "Booking Created - Payment Required",
 
                     "Hello "
                             + customer.getName()
 
-                            + "\n\nYour booking request has been submitted successfully."
+                            + "\n\nYour car booking has been created successfully."
 
-                            + "\n\nBooking Status : PENDING"
+                            + "\n\nBooking Status : PAYMENT_PENDING"
 
                             + "\n\nBooking ID : "
                             + savedBooking.getId()
@@ -261,10 +311,11 @@ public class BookingService {
                             + "\nTotal Amount : Rs. "
                             + booking.getTotalAmount()
 
-                            + "\n\nYour booking is waiting for Admin Approval."
+                            + "\n\nPlease complete the Razorpay payment to confirm your booking."
+
+                            + "\n\nYour booking will become CONFIRMED only after successful payment verification."
 
                             + "\n\nThank you for choosing Car Rental System."
-
             );
         }
 
@@ -279,7 +330,8 @@ public class BookingService {
 
     public List<Booking> getAllBookings() {
 
-        return bookingRepository.findAll();
+        return bookingRepository
+                .findAll();
     }
 
 
@@ -288,7 +340,8 @@ public class BookingService {
     // =========================================================
 
     public String deleteBooking(
-            Long id) {
+            Long id
+    ) {
 
         Booking booking =
                 bookingRepository
@@ -302,8 +355,7 @@ public class BookingService {
 
 
         // -----------------------------------------------------
-        // If car was assigned to this booking,
-        // make it available again.
+        // RELEASE CAR
         // -----------------------------------------------------
 
         if (booking.getCar() != null) {
@@ -331,11 +383,17 @@ public class BookingService {
 
 
     // =========================================================
-    // APPROVE BOOKING
+    // OLD ADMIN APPROVE ENDPOINT
+    //
+    // Kept for compatibility with your existing AdminDashboard.
+    //
+    // New normal flow does NOT require admin approval.
+    // Customer can pay while PAYMENT_PENDING.
     // =========================================================
 
     public Booking approveBooking(
-            Long id) {
+            Long id
+    ) {
 
         Booking booking =
                 bookingRepository
@@ -349,7 +407,7 @@ public class BookingService {
 
 
         // -----------------------------------------------------
-        // Change status
+        // CHANGE STATUS
         // -----------------------------------------------------
 
         booking.setBookingStatus(
@@ -358,7 +416,7 @@ public class BookingService {
 
 
         // -----------------------------------------------------
-        // Save booking
+        // SAVE
         // -----------------------------------------------------
 
         Booking updatedBooking =
@@ -368,24 +426,24 @@ public class BookingService {
 
 
         // -----------------------------------------------------
-        // SEND APPROVAL EMAIL
+        // EMAIL
         // -----------------------------------------------------
 
-        if (booking.getCustomer() != null &&
-                booking.getCustomer().getEmail() != null) {
+        if (
+                booking.getCustomer() != null &&
+                        booking.getCustomer().getEmail() != null
+        ) {
 
             mailService.sendMail(
 
                     booking.getCustomer().getEmail(),
 
-                    "Booking Approved - Car Rental System",
+                    "Booking Approved - Payment Required",
 
                     "Hello "
                             + booking.getCustomer().getName()
 
-                            + "\n\nCongratulations!"
-
-                            + "\n\nYour booking has been APPROVED."
+                            + "\n\nYour booking has been approved."
 
                             + "\n\nBooking ID : "
                             + booking.getId()
@@ -403,10 +461,9 @@ public class BookingService {
                             + "\nAmount : Rs. "
                             + booking.getTotalAmount()
 
-                            + "\n\nPlease login and complete your payment."
+                            + "\n\nPlease complete your Razorpay payment."
 
                             + "\n\nThank you for choosing Car Rental System."
-
             );
         }
 
@@ -416,11 +473,12 @@ public class BookingService {
 
 
     // =========================================================
-    // REJECT BOOKING
+    // ADMIN REJECT BOOKING
     // =========================================================
 
     public Booking rejectBooking(
-            Long id) {
+            Long id
+    ) {
 
         Booking booking =
                 bookingRepository
@@ -434,7 +492,7 @@ public class BookingService {
 
 
         // -----------------------------------------------------
-        // Change status
+        // CHANGE STATUS
         // -----------------------------------------------------
 
         booking.setBookingStatus(
@@ -443,7 +501,7 @@ public class BookingService {
 
 
         // -----------------------------------------------------
-        // Make assigned car available again
+        // RELEASE CAR
         // -----------------------------------------------------
 
         if (booking.getCar() != null) {
@@ -462,7 +520,7 @@ public class BookingService {
 
 
         // -----------------------------------------------------
-        // Save booking
+        // SAVE
         // -----------------------------------------------------
 
         Booking updatedBooking =
@@ -472,11 +530,13 @@ public class BookingService {
 
 
         // -----------------------------------------------------
-        // SEND REJECTION EMAIL
+        // EMAIL
         // -----------------------------------------------------
 
-        if (booking.getCustomer() != null &&
-                booking.getCustomer().getEmail() != null) {
+        if (
+                booking.getCustomer() != null &&
+                        booking.getCustomer().getEmail() != null
+        ) {
 
             mailService.sendMail(
 
@@ -501,7 +561,6 @@ public class BookingService {
                             + "\n\nPlease try booking another available vehicle."
 
                             + "\n\nThank you for choosing Car Rental System."
-
             );
         }
 

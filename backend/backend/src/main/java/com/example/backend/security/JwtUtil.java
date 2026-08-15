@@ -14,27 +14,13 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    // ==========================================
-    // JWT SECRET
-    // ==========================================
-
     private static final String SECRET =
             "mysecretkeymysecretkeymysecretkey12345";
-
-
-    // ==========================================
-    // SECRET KEY
-    // ==========================================
 
     private final Key key =
             Keys.hmacShaKeyFor(
                     SECRET.getBytes(StandardCharsets.UTF_8)
             );
-
-
-    // ==========================================
-    // GENERATE JWT TOKEN
-    // ==========================================
 
     public String generateToken(String email) {
 
@@ -60,11 +46,6 @@ public class JwtUtil {
 
                 .compact();
     }
-
-
-    // ==========================================
-    // EXTRACT EMAIL FROM TOKEN
-    // ==========================================
 
     public String extractEmail(String token) {
 
