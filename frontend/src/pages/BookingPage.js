@@ -1820,23 +1820,35 @@ function BookingPage() {
             }
 
 
+            // If a pickup position and address are already available,
+            // allow the main booking button to continue even if the
+            // separate "Confirm This Location" button was not clicked.
+            // The location is still fully validated before booking.
             if (
                 !locationConfirmed
             ) {
 
-                alert(
-                    "Please confirm your pickup location."
-                );
+                if (
+                    !pickupAddress ||
+                    pickupLatitude === null ||
+                    pickupLongitude === null
+                ) {
 
+                    alert(
+                        "Please select and confirm a valid pickup location."
+                    );
 
-                return;
+                    return;
+
+                }
+
+                setLocationConfirmed(true);
 
             }
 
 
             // -----------------------------------------------
-            // BOOKING DATA
-            // -----------------------------------------------
+            // BOOKING DATA -----------------------------------------------
 
             const bookingData = {
 
@@ -1971,18 +1983,43 @@ function BookingPage() {
                 }
 
 
-                // -------------------------------------------
-                // SUCCESS
-                // -------------------------------------------
+// -------------------------------------------
+// SUCCESS
+// -------------------------------------------
 
-                alert(
-                    "Booking Submitted Successfully."
-                );
+const createdBooking =
+    response.data;
+
+console.log(
+    "CREATED BOOKING:",
+    createdBooking
+);
+
+if (
+    !createdBooking ||
+    !createdBooking.id
+) {
+
+    alert(
+        "Booking was created, but Booking ID was not returned."
+    );
+
+    return;
+}
 
 
-                navigate(
-                    "/my-bookings"
-                );
+alert(
+    "Booking created successfully. Please complete the payment."
+);
+
+
+// -------------------------------------------------
+// GO TO RAZORPAY PAYMENT PAGE
+// -------------------------------------------------
+
+navigate(
+    `/payment/${createdBooking.id}/${createdBooking.totalAmount}`
+);
 
             }
 
@@ -3691,7 +3728,9 @@ function BookingPage() {
                                 carVariant.availableCars
                             ) <= 0 ||
 
-                            !locationConfirmed
+                            !position ||
+
+                            !pickupAddress
 
                         }
 
@@ -3716,7 +3755,8 @@ function BookingPage() {
                                 Number(
                                     carVariant.availableCars
                                 ) <= 0 ||
-                                !locationConfirmed
+                                !position ||
+                                !pickupAddress
 
                                     ? "#94a3b8"
 
@@ -3742,9 +3782,9 @@ function BookingPage() {
 
                                 ? "Submitting..."
 
-                                : !locationConfirmed
+                                : !position || !pickupAddress
 
-                                    ? "📍 Confirm Pickup Location First"
+                                    ? "📍 Select Pickup Location First"
 
                                     : "🚗 Confirm Booking"
 
@@ -3771,7 +3811,7 @@ function BookingPage() {
                         }}
                     >
 
-                        Booking will be sent to the admin for approval.
+                        Pickup location is required. Booking will be sent to the admin for approval.
 
                     </div>
 

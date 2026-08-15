@@ -4646,7 +4646,7 @@ function Home() {
                                 mailto:support@carrental.com
                             "
                         >
-                            📧 support@carrental.com
+                            📧 g4golden1401@gmail.com
                         </a>
 
                         <a
@@ -4654,7 +4654,7 @@ function Home() {
                                 tel:+919999999999
                             "
                         >
-                            📞 +91 99999 99999
+                            📞 +91 8002118249
                         </a>
 
                         <a href="#cars">

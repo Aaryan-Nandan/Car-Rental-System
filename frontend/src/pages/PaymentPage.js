@@ -1,4 +1,8 @@
-import { useState } from "react";
+import React, {
+    useEffect,
+    useRef,
+    useState
+} from "react";
 
 import axios from "axios";
 
@@ -7,725 +11,1069 @@ import {
     useParams
 } from "react-router-dom";
 
-import {
-    QRCodeCanvas
-} from "qrcode.react";
 
+// ============================================================
+// RAZORPAY CHECKOUT SCRIPT
+// ============================================================
+
+const RAZORPAY_SCRIPT =
+    "https://checkout.razorpay.com/v1/checkout.js";
+
+
+// ============================================================
+// PAYMENT PAGE
+// ============================================================
 
 function PaymentPage() {
 
-
-    const { bookingId, amount } =
-        useParams();
+    const {
+        bookingId,
+        amount: routeAmount
+    } = useParams();
 
 
     const navigate =
         useNavigate();
 
 
-    const [upiTransactionId,
-        setUpiTransactionId] =
-        useState("");
+    // ========================================================
+    // STATE
+    // ========================================================
+
+    const [
+        loading,
+        setLoading
+    ] = useState(true);
 
 
-    const [loading,
-        setLoading] =
-        useState(false);
+    const [
+        paymentOpening,
+        setPaymentOpening
+    ] = useState(false);
 
 
-    // =========================================================
-    // YOUR UPI DETAILS
-    // =========================================================
-
-    /*
-     * IMPORTANT:
-     *
-     * Replace this with YOUR REAL UPI ID.
-     *
-     * Example:
-     *
-     * const UPI_ID = "8002118249@ybl";
-     *
-     * DO NOT use the example below.
-     */
-
-    const UPI_ID =
-        "8002118249-2@ybl";
+    const [
+        errorMessage,
+        setErrorMessage
+    ] = useState("");
 
 
-    const MERCHANT_NAME =
-        "Car Rental System";
+    const [
+        orderData,
+        setOrderData
+    ] = useState(null);
 
 
-    // =========================================================
-    // CREATE UNIQUE TRANSACTION REFERENCE
-    // =========================================================
-
-    const transactionReference =
-        "CRS"
-        + bookingId
-        + Date.now();
+    const [
+        paymentCompleted,
+        setPaymentCompleted
+    ] = useState(false);
 
 
-    // =========================================================
-    // CREATE UPI PAYMENT LINK
-    // =========================================================
-
-    const upiPaymentUrl =
-
-        "upi://pay"
-        + "?pa="
-        + encodeURIComponent(
-            UPI_ID
-        )
-        + "&pn="
-        + encodeURIComponent(
-            MERCHANT_NAME
-        )
-        + "&tr="
-        + encodeURIComponent(
-            transactionReference
-        )
-        + "&am="
-        + encodeURIComponent(
-            amount
-        )
-        + "&cu=INR";
+    const cancelRequestSent =
+        useRef(false);
 
 
-    // =========================================================
-    // SUBMIT PAYMENT
-    // =========================================================
+    // ========================================================
+    // LOAD RAZORPAY SCRIPT
+    // ========================================================
 
-    const makePayment = async () => {
+    const loadRazorpayScript =
+        () => {
+
+            return new Promise(
+                (resolve) => {
+
+                    if (
+                        window.Razorpay
+                    ) {
+
+                        resolve(true);
+
+                        return;
+                    }
 
 
-        // -----------------------------------------------------
-        // LOGIN CHECK
-        // -----------------------------------------------------
+                    const existingScript =
+                        document.querySelector(
+                            `script[src="${RAZORPAY_SCRIPT}"]`
+                        );
 
-        const token =
-            localStorage.getItem(
-                "token"
+
+                    if (existingScript) {
+
+                        existingScript.onload =
+                            () => resolve(true);
+
+                        existingScript.onerror =
+                            () => resolve(false);
+
+                        return;
+                    }
+
+
+                    const script =
+                        document.createElement(
+                            "script"
+                        );
+
+
+                    script.src =
+                        RAZORPAY_SCRIPT;
+
+
+                    script.async =
+                        true;
+
+
+                    script.onload =
+                        () => resolve(true);
+
+
+                    script.onerror =
+                        () => resolve(false);
+
+
+                    document.body.appendChild(
+                        script
+                    );
+                }
             );
-
-
-        if (!token) {
-
-            alert(
-                "Please login first."
-            );
-
-            navigate(
-                "/login"
-            );
-
-            return;
-        }
-
-
-        // -----------------------------------------------------
-        // UPI ID CHECK
-        // -----------------------------------------------------
-
-        if (
-            UPI_ID ===
-            "YOUR_UPI_ID@upi"
-        ) {
-
-            alert(
-                "Please configure your real UPI ID in PaymentPage.js"
-            );
-
-            return;
-        }
-
-
-        // -----------------------------------------------------
-        // UTR CHECK
-        // -----------------------------------------------------
-
-        if (
-            !upiTransactionId.trim()
-        ) {
-
-            alert(
-                "Enter UPI Transaction ID / UTR after payment"
-            );
-
-            return;
-        }
-
-
-        // -----------------------------------------------------
-        // PAYMENT DATA
-        // -----------------------------------------------------
-
-        const paymentData = {
-
-            amount: Number(
-                amount
-            ),
-
-            paymentMethod:
-                "UPI",
-
-            paymentStatus:
-                "VERIFYING",
-
-            upiTransactionId:
-                upiTransactionId.trim(),
-
-            booking: {
-
-                id:
-                    Number(
-                        bookingId
-                    )
-
-            }
-
         };
 
 
-        setLoading(
-            true
-        );
+    // ========================================================
+    // CANCEL PAYMENT
+    // ========================================================
 
-
-        try {
-
-
-            const response =
-                await axios.post(
-
-                    "http://localhost:8081/payment/add",
-
-                    paymentData,
-
-                    {
-
-                        headers: {
-
-                            Authorization:
-                                `Bearer ${token}`
-
-                        }
-
-                    }
-
-                );
-
-
-            // -------------------------------------------------
-            // BACKEND MAY RETURN STRING ERROR
-            // -------------------------------------------------
+    const cancelPayment =
+        async () => {
 
             if (
-                typeof response.data ===
-                "string"
+                paymentCompleted
             ) {
-
-                alert(
-                    response.data
-                );
 
                 return;
             }
 
 
-            // -------------------------------------------------
-            // SUCCESS
-            // -------------------------------------------------
-
-            alert(
-
-                "Payment submitted successfully.\n\n"
-                + "Status: VERIFYING\n\n"
-                + "Admin will verify your payment."
-
-            );
-
-
-            navigate(
-                "/my-bookings"
-            );
-
-
-        }
-        catch (error) {
-
-
-            console.error(
-                "Payment Error:",
-                error
-            );
-
-
             if (
-                error.response &&
-                error.response.data
+                cancelRequestSent.current
             ) {
 
-                alert(
-                    error.response.data
-                );
-
-            }
-            else {
-
-                alert(
-                    "Payment submission failed"
-                );
+                return;
             }
 
-        }
-        finally {
 
-            setLoading(
-                false
-            );
-        }
-    };
+            cancelRequestSent.current =
+                true;
 
 
-    // =========================================================
+            try {
+
+                await axios.delete(
+                    `http://localhost:8081/payment/cancel/${bookingId}`,
+                    {
+                        headers: {
+                            Authorization:
+                                `Bearer ${localStorage.getItem("token")}`
+                        }
+                    }
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "PAYMENT CANCEL ERROR:",
+                    error
+                );
+            }
+        };
+
+
+    // ========================================================
+    // VERIFY PAYMENT
+    // ========================================================
+
+    const verifyPayment =
+        async (
+            razorpayResponse
+        ) => {
+
+            try {
+
+                setPaymentOpening(
+                    false
+                );
+
+
+                const token =
+                    localStorage.getItem(
+                        "token"
+                    );
+
+
+                const verifyData = {
+
+                    bookingId:
+                        Number(
+                            bookingId
+                        ),
+
+                    razorpayOrderId:
+                        razorpayResponse
+                            .razorpay_order_id,
+
+                    razorpayPaymentId:
+                        razorpayResponse
+                            .razorpay_payment_id,
+
+                    razorpaySignature:
+                        razorpayResponse
+                            .razorpay_signature
+                };
+
+
+                console.log(
+                    "RAZORPAY VERIFY DATA:",
+                    verifyData
+                );
+
+
+                const response =
+                    await axios.post(
+
+                        "http://localhost:8081/payment/verify",
+
+                        verifyData,
+
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
+                        }
+                    );
+
+
+                console.log(
+                    "PAYMENT VERIFY RESPONSE:",
+                    response.data
+                );
+
+
+                if (
+                    response.data &&
+                    response.data.success
+                ) {
+
+                    setPaymentCompleted(
+                        true
+                    );
+
+
+                    alert(
+                        "Payment successful! Your booking is confirmed."
+                    );
+
+
+                    navigate(
+                        "/my-bookings"
+                    );
+
+
+                    return;
+                }
+
+
+                throw new Error(
+                    response.data?.message ||
+                    "Payment verification failed."
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "PAYMENT VERIFICATION ERROR:",
+                    error
+                );
+
+
+                setPaymentOpening(
+                    false
+                );
+
+
+                const message =
+                    error.response?.data?.message ||
+                    error.message ||
+                    "Payment verification failed.";
+
+
+                alert(
+                    message
+                );
+
+
+                await cancelPayment();
+
+
+                navigate(
+                    "/my-bookings"
+                );
+            }
+        };
+
+
+    // ========================================================
+    // OPEN RAZORPAY
+    // ========================================================
+
+    const openRazorpay =
+        async (
+            order
+        ) => {
+
+            try {
+
+                const scriptLoaded =
+                    await loadRazorpayScript();
+
+
+                if (!scriptLoaded) {
+
+                    throw new Error(
+                        "Unable to load Razorpay Checkout."
+                    );
+                }
+
+
+                if (
+                    !window.Razorpay
+                ) {
+
+                    throw new Error(
+                        "Razorpay Checkout is not available."
+                    );
+                }
+
+
+                setPaymentOpening(
+                    true
+                );
+
+
+                const options = {
+
+                    key:
+                        order.keyId,
+
+                    amount:
+                        Math.round(
+                            Number(
+                                order.amount
+                            ) * 100
+                        ),
+
+                    currency:
+                        order.currency ||
+                        "INR",
+
+                    name:
+                        "Car Rental System",
+
+                    description:
+                        `Car Rental Booking #${bookingId}`,
+
+                    order_id:
+                        order.razorpayOrderId,
+
+
+                    handler:
+                        async (
+                            response
+                        ) => {
+
+                            await verifyPayment(
+                                response
+                            );
+                        },
+
+
+                    modal: {
+
+                        ondismiss:
+                            async () => {
+
+                                console.log(
+                                    "RAZORPAY CHECKOUT CLOSED"
+                                );
+
+
+                                if (
+                                    !paymentCompleted
+                                ) {
+
+                                    await cancelPayment();
+
+
+                                    setPaymentOpening(
+                                        false
+                                    );
+
+
+                                    alert(
+                                        "Payment cancelled. Your booking was not confirmed."
+                                    );
+
+
+                                    navigate(
+                                        "/my-bookings"
+                                    );
+                                }
+                            }
+                    },
+
+
+                    theme: {
+
+                        color:
+                            "#2563eb"
+                    }
+                };
+
+
+                const razorpay =
+                    new window.Razorpay(
+                        options
+                    );
+
+
+                // ------------------------------------------------
+                // PAYMENT FAILED EVENT
+                // ------------------------------------------------
+
+                razorpay.on(
+                    "payment.failed",
+                    async (
+                        response
+                    ) => {
+
+                        console.error(
+                            "RAZORPAY PAYMENT FAILED:",
+                            response
+                        );
+
+
+                        await cancelPayment();
+
+
+                        setPaymentOpening(
+                            false
+                        );
+
+
+                        alert(
+                            response.error?.description ||
+                            "Payment failed."
+                        );
+
+
+                        navigate(
+                            "/my-bookings"
+                        );
+                    }
+                );
+
+
+                razorpay.open();
+
+            } catch (error) {
+
+                console.error(
+                    "RAZORPAY OPEN ERROR:",
+                    error
+                );
+
+
+                setPaymentOpening(
+                    false
+                );
+
+
+                setErrorMessage(
+                    error.message ||
+                    "Unable to open Razorpay."
+                );
+
+
+                await cancelPayment();
+            }
+        };
+
+
+    // ========================================================
+    // CREATE RAZORPAY ORDER
+    // ========================================================
+
+    const createOrder =
+        async () => {
+
+            try {
+
+                setLoading(
+                    true
+                );
+
+
+                setErrorMessage(
+                    ""
+                );
+
+
+                const token =
+                    localStorage.getItem(
+                        "token"
+                    );
+
+
+                if (!token) {
+
+                    alert(
+                        "Please login before making payment."
+                    );
+
+
+                    navigate(
+                        "/login"
+                    );
+
+
+                    return;
+                }
+
+
+                if (
+                    !bookingId
+                ) {
+
+                    throw new Error(
+                        "Booking ID is missing."
+                    );
+                }
+
+
+                console.log(
+                    "CREATING RAZORPAY ORDER FOR BOOKING:",
+                    bookingId
+                );
+
+
+                const response =
+                    await axios.post(
+
+                        `http://localhost:8081/payment/create-order/${bookingId}`,
+
+                        {},
+
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
+                        }
+                    );
+
+
+                console.log(
+                    "RAZORPAY ORDER RESPONSE:",
+                    response.data
+                );
+
+
+                const data =
+                    response.data;
+
+
+                if (
+                    !data ||
+                    !data.razorpayOrderId ||
+                    !data.keyId ||
+                    !data.bookingId
+                ) {
+
+                    throw new Error(
+                        "Invalid Razorpay order response from backend."
+                    );
+                }
+
+
+                setOrderData(
+                    data
+                );
+
+
+                await openRazorpay(
+                    data
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "CREATE RAZORPAY ORDER ERROR:",
+                    error
+                );
+
+
+                const message =
+                    error.response?.data?.message ||
+                    error.message ||
+                    "Unable to create Razorpay order.";
+
+
+                setErrorMessage(
+                    message
+                );
+
+            } finally {
+
+                setLoading(
+                    false
+                );
+            }
+        };
+
+
+    // ========================================================
+    // CREATE ORDER WHEN PAGE OPENS
+    // ========================================================
+
+    useEffect(
+        () => {
+
+            createOrder();
+
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [
+            bookingId
+        ]
+    );
+
+
+    // ========================================================
     // PAGE
-    // =========================================================
+    // ========================================================
 
     return (
 
-
         <div
             style={{
+                minHeight:
+                    "calc(100vh - 80px)",
 
-                maxWidth:
-                    "600px",
+                background:
+                    "linear-gradient(135deg,#eef4ff,#f8fafc)",
 
-                margin:
-                    "40px auto",
+                display:
+                    "flex",
+
+                justifyContent:
+                    "center",
+
+                alignItems:
+                    "center",
 
                 padding:
-                    "30px",
-
-                backgroundColor:
-                    "white",
-
-                borderRadius:
-                    "12px",
-
-                boxShadow:
-                    "0 0 15px lightgray",
-
-                textAlign:
-                    "center"
-
+                    "30px 20px"
             }}
         >
 
-
-            {/* =================================================
-                TITLE
-            ================================================= */}
-
-            <h1>
-                UPI Payment
-            </h1>
-
-
-            <p
-                style={{
-                    color:
-                        "#666"
-                }}
-            >
-
-                Scan the QR code using any
-                UPI application
-
-            </p>
-
-
-            {/* =================================================
-                AMOUNT
-            ================================================= */}
-
             <div
                 style={{
-
-                    backgroundColor:
-                        "#f5f5f5",
-
-                    padding:
-                        "20px",
-
-                    borderRadius:
-                        "10px",
-
-                    marginTop:
-                        "20px"
-
-                }}
-            >
-
-                <p>
-                    Booking ID
-                </p>
-
-                <h3>
-                    #{bookingId}
-                </h3>
-
-
-                <p>
-                    Amount to Pay
-                </p>
-
-                <h1
-                    style={{
-                        color:
-                            "#1976D2"
-                    }}
-                >
-
-                    ₹ {amount}
-
-                </h1>
-
-            </div>
-
-
-            <br />
-
-
-            {/* =================================================
-                QR CODE
-            ================================================= */}
-
-            <div
-                style={{
-
-                    display:
-                        "inline-block",
-
-                    padding:
-                        "20px",
-
-                    backgroundColor:
-                        "white",
-
-                    border:
-                        "1px solid #ddd",
-
-                    borderRadius:
-                        "10px"
-
-                }}
-            >
-
-                <QRCodeCanvas
-
-                    value={
-                        upiPaymentUrl
-                    }
-
-                    size={
-                        280
-                    }
-
-                    level={
-                        "M"
-                    }
-
-                    includeMargin={
-                        true
-                    }
-
-                />
-
-            </div>
-
-
-            <h3>
-                Scan & Pay
-            </h3>
-
-
-            {/* =================================================
-                UPI ID
-            ================================================= */}
-
-            <div
-                style={{
-
-                    backgroundColor:
-                        "#f5f5f5",
-
-                    padding:
-                        "15px",
-
-                    borderRadius:
-                        "8px",
-
-                    marginTop:
-                        "15px"
-
-                }}
-            >
-
-                <p
-                    style={{
-                        margin:
-                            "0 0 5px 0"
-                    }}
-                >
-
-                    UPI ID
-
-                </p>
-
-
-                <strong>
-
-                    {UPI_ID}
-
-                </strong>
-
-            </div>
-
-
-            {/* =================================================
-                MOBILE PAYMENT LINK
-            ================================================= */}
-
-            <a
-
-                href={
-                    upiPaymentUrl
-                }
-
-                style={{
-
-                    display:
-                        "inline-block",
-
-                    marginTop:
-                        "20px",
-
-                    padding:
-                        "12px 20px",
-
-                    backgroundColor:
-                        "#1976D2",
-
-                    color:
-                        "white",
-
-                    textDecoration:
-                        "none",
-
-                    borderRadius:
-                        "5px",
-
-                    fontWeight:
-                        "bold"
-
-                }}
-
-            >
-
-                Open UPI App
-
-            </a>
-
-
-            <hr
-                style={{
-                    margin:
-                        "30px 0"
-                }}
-            />
-
-
-            {/* =================================================
-                UTR
-            ================================================= */}
-
-            <div
-                style={{
-                    textAlign:
-                        "left"
-                }}
-            >
-
-                <label>
-
-                    <strong>
-
-                        UPI Transaction ID / UTR
-
-                    </strong>
-
-                </label>
-
-
-                <input
-
-                    type="text"
-
-                    placeholder=
-                        "Enter UTR after payment"
-
-                    value={
-                        upiTransactionId
-                    }
-
-                    onChange={(e) =>
-                        setUpiTransactionId(
-                            e.target.value
-                        )
-                    }
-
-                    style={{
-
-                        width:
-                            "100%",
-
-                        padding:
-                            "12px",
-
-                        marginTop:
-                            "8px",
-
-                        boxSizing:
-                            "border-box",
-
-                        border:
-                            "1px solid #ccc",
-
-                        borderRadius:
-                            "5px"
-
-                    }}
-
-                />
-
-
-                <p
-                    style={{
-
-                        fontSize:
-                            "13px",
-
-                        color:
-                            "#666"
-
-                    }}
-                >
-
-                    After completing the UPI payment,
-                    enter the transaction ID/UTR shown
-                    in your UPI application.
-
-                </p>
-
-            </div>
-
-
-            {/* =================================================
-                SUBMIT
-            ================================================= */}
-
-            <button
-
-                onClick={
-                    makePayment
-                }
-
-                disabled={
-                    loading
-                }
-
-                style={{
-
                     width:
                         "100%",
 
-                    backgroundColor:
-                        loading
-                            ? "gray"
-                            : "green",
+                    maxWidth:
+                        "520px",
 
-                    color:
+                    background:
                         "white",
 
-                    border:
-                        "none",
+                    borderRadius:
+                        "18px",
 
                     padding:
-                        "14px",
+                        "30px",
 
-                    borderRadius:
-                        "6px",
+                    boxShadow:
+                        "0 12px 35px rgba(15,23,42,0.12)",
 
-                    cursor:
-                        loading
-                            ? "not-allowed"
-                            : "pointer",
-
-                    fontSize:
-                        "16px",
-
-                    fontWeight:
-                        "bold",
-
-                    marginTop:
-                        "20px"
-
+                    textAlign:
+                        "center"
                 }}
-
             >
+
+                {/* =================================================
+                    ICON
+                ================================================= */}
+
+                <div
+                    style={{
+                        fontSize:
+                            "50px",
+
+                        marginBottom:
+                            "10px"
+                    }}
+                >
+                    💳
+                </div>
+
+
+                {/* =================================================
+                    TITLE
+                ================================================= */}
+
+                <h1
+                    style={{
+                        margin:
+                            "0 0 10px",
+
+                        color:
+                            "#0f172a"
+                    }}
+                >
+                    Complete Payment
+                </h1>
+
+
+                {/* =================================================
+                    BOOKING
+                ================================================= */}
+
+                <p
+                    style={{
+                        color:
+                            "#64748b",
+
+                        marginBottom:
+                            "20px"
+                    }}
+                >
+                    Booking ID:{" "}
+                    <strong>
+                        {bookingId}
+                    </strong>
+                </p>
+
+
+                {/* =================================================
+                    AMOUNT
+                ================================================= */}
+
+                <div
+                    style={{
+                        background:
+                            "#eff6ff",
+
+                        border:
+                            "1px solid #bfdbfe",
+
+                        borderRadius:
+                            "12px",
+
+                        padding:
+                            "18px",
+
+                        marginBottom:
+                            "20px"
+                    }}
+                >
+
+                    <div
+                        style={{
+                            fontSize:
+                                "11px",
+
+                            fontWeight:
+                                "800",
+
+                            color:
+                                "#64748b",
+
+                            marginBottom:
+                                "5px"
+                        }}
+                    >
+                        PAYMENT AMOUNT
+                    </div>
+
+
+                    <div
+                        style={{
+                            fontSize:
+                                "30px",
+
+                            fontWeight:
+                                "900",
+
+                            color:
+                                "#1d4ed8"
+                        }}
+                    >
+
+                        ₹
+                        {
+                            Number(
+                                orderData?.amount ||
+                                routeAmount ||
+                                0
+                            ).toLocaleString(
+                                "en-IN"
+                            )
+                        }
+
+                    </div>
+
+                </div>
+
+
+                {/* =================================================
+                    LOADING
+                ================================================= */}
 
                 {
-                    loading
-                        ? "Submitting..."
-                        : "I Have Paid"
+                    loading && (
+
+                        <div
+                            style={{
+                                padding:
+                                    "20px",
+
+                                color:
+                                    "#475569",
+
+                                fontWeight:
+                                    "700"
+                            }}
+                        >
+
+                            Creating secure Razorpay order...
+
+                        </div>
+                    )
                 }
 
-            </button>
+
+                {/* =================================================
+                    PAYMENT OPENING
+                ================================================= */}
+
+                {
+                    paymentOpening && (
+
+                        <div
+                            style={{
+                                padding:
+                                    "20px",
+
+                                background:
+                                    "#f0fdf4",
+
+                                border:
+                                    "1px solid #bbf7d0",
+
+                                borderRadius:
+                                    "10px",
+
+                                color:
+                                    "#166534",
+
+                                fontWeight:
+                                    "700",
+
+                                marginBottom:
+                                    "15px"
+                            }}
+                        >
+
+                            🔐 Razorpay checkout is opening...
+
+                        </div>
+                    )
+                }
 
 
-            {/* =================================================
-                WARNING
-            ================================================= */}
+                {/* =================================================
+                    ERROR
+                ================================================= */}
 
-            <p
-                style={{
+                {
+                    errorMessage && (
 
-                    marginTop:
-                        "20px",
+                        <div
+                            style={{
+                                background:
+                                    "#fef2f2",
 
-                    fontSize:
-                        "13px",
+                                border:
+                                    "1px solid #fecaca",
 
-                    color:
-                        "#d35400"
+                                color:
+                                    "#b91c1c",
 
-                }}
-            >
+                                borderRadius:
+                                    "10px",
 
-                Your payment will remain
-                <strong>
-                    {" "}VERIFYING
-                </strong>
-                {" "}until the administrator
-                confirms the transaction.
+                                padding:
+                                    "14px",
 
-            </p>
+                                marginBottom:
+                                    "15px",
 
+                                fontWeight:
+                                    "700"
+                            }}
+                        >
+
+                            {errorMessage}
+
+                        </div>
+                    )
+                }
+
+
+                {/* =================================================
+                    RETRY
+                ================================================= */}
+
+                {
+                    errorMessage && (
+
+                        <button
+                            type="button"
+
+                            onClick={
+                                createOrder
+                            }
+
+                            style={{
+                                width:
+                                    "100%",
+
+                                height:
+                                    "48px",
+
+                                border:
+                                    "none",
+
+                                borderRadius:
+                                    "10px",
+
+                                background:
+                                    "#2563eb",
+
+                                color:
+                                    "white",
+
+                                fontWeight:
+                                    "900",
+
+                                cursor:
+                                    "pointer",
+
+                                marginBottom:
+                                    "10px"
+                            }}
+                        >
+                            🔄 Try Payment Again
+                        </button>
+                    )
+                }
+
+
+                {/* =================================================
+                    BACK
+                ================================================= */}
+
+                <button
+                    type="button"
+
+                    onClick={
+                        async () => {
+
+                            await cancelPayment();
+
+                            navigate(
+                                "/my-bookings"
+                            );
+                        }
+                    }
+
+                    disabled={
+                        paymentOpening
+                    }
+
+                    style={{
+                        width:
+                            "100%",
+
+                        height:
+                            "46px",
+
+                        border:
+                            "1px solid #cbd5e1",
+
+                        borderRadius:
+                            "10px",
+
+                        background:
+                            "white",
+
+                        color:
+                            "#334155",
+
+                        fontWeight:
+                            "800",
+
+                        cursor:
+                            paymentOpening
+                                ? "not-allowed"
+                                : "pointer"
+                    }}
+                >
+                    ← Back to My Bookings
+                </button>
+
+
+                {/* =================================================
+                    SECURITY MESSAGE
+                ================================================= */}
+
+                <p
+                    style={{
+                        fontSize:
+                            "11px",
+
+                        color:
+                            "#64748b",
+
+                        marginTop:
+                            "15px",
+
+                        lineHeight:
+                            "1.5"
+                    }}
+                >
+                    🔒 Your payment is processed securely by
+                    Razorpay. Your booking is confirmed only
+                    after the payment is verified by the backend.
+                </p>
+
+            </div>
 
         </div>
-
     );
 }
 
