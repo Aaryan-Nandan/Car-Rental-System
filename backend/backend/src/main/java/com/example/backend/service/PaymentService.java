@@ -15,10 +15,12 @@ import com.razorpay.Utils;
 
 import org.json.JSONObject;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -30,6 +32,12 @@ public class PaymentService {
 
     private final CarRepository carRepository;
 
+    private final MailService mailService;
+
+
+    // =========================================================
+    // RAZORPAY CONFIGURATION
+    // =========================================================
 
     @Value("${razorpay.key.id}")
     private String razorpayKeyId;
@@ -39,10 +47,16 @@ public class PaymentService {
     private String razorpayKeySecret;
 
 
+    // =========================================================
+    // CONSTRUCTOR
+    // =========================================================
+
+    @Autowired
     public PaymentService(
             PaymentRepository paymentRepository,
             BookingRepository bookingRepository,
-            CarRepository carRepository
+            CarRepository carRepository,
+            MailService mailService
     ) {
 
         this.paymentRepository =
@@ -53,6 +67,9 @@ public class PaymentService {
 
         this.carRepository =
                 carRepository;
+
+        this.mailService =
+                mailService;
     }
 
 
@@ -60,10 +77,10 @@ public class PaymentService {
     // CREATE RAZORPAY ORDER
     // =========================================================
 
-    public RazorpayOrderResponse
-    createRazorpayOrder(
+    public RazorpayOrderResponse createRazorpayOrder(
             Long bookingId
     ) throws Exception {
+
 
         // -----------------------------------------------------
         // GET BOOKING
@@ -71,9 +88,7 @@ public class PaymentService {
 
         Booking booking =
                 bookingRepository
-                        .findById(
-                                bookingId
-                        )
+                        .findById(bookingId)
                         .orElseThrow(
                                 () ->
                                         new RuntimeException(
@@ -83,13 +98,7 @@ public class PaymentService {
 
 
         // -----------------------------------------------------
-        // PAYMENT STATUS CHECK
-        //
-        // Normal:
-        // PAYMENT_PENDING
-        //
-        // Old Admin approval:
-        // APPROVED
+        // CHECK BOOKING STATUS
         // -----------------------------------------------------
 
         String bookingStatus =
@@ -131,7 +140,8 @@ public class PaymentService {
 
 
         if (
-                existingPayment != null &&
+                existingPayment != null
+                        &&
                         "PAID".equalsIgnoreCase(
                                 existingPayment
                                         .getPaymentStatus()
@@ -145,12 +155,7 @@ public class PaymentService {
 
 
         // -----------------------------------------------------
-        // AMOUNT
-        //
-        // IMPORTANT:
-        // Amount comes from DATABASE BOOKING.
-        //
-        // Frontend amount is NOT trusted.
+        // GET AMOUNT FROM DATABASE
         // -----------------------------------------------------
 
         Double bookingAmount =
@@ -158,7 +163,8 @@ public class PaymentService {
 
 
         if (
-                bookingAmount == null ||
+                bookingAmount == null
+                        ||
                         bookingAmount <= 0
         ) {
 
@@ -184,7 +190,7 @@ public class PaymentService {
 
 
         // -----------------------------------------------------
-        // RAZORPAY AMOUNT IS IN PAISE
+        // AMOUNT IN PAISE
         // -----------------------------------------------------
 
         int amountInPaise =
@@ -195,7 +201,7 @@ public class PaymentService {
 
 
         // -----------------------------------------------------
-        // CREATE ORDER REQUEST
+        // ORDER REQUEST
         // -----------------------------------------------------
 
         JSONObject orderRequest =
@@ -245,9 +251,11 @@ public class PaymentService {
         // -----------------------------------------------------
 
         Order razorpayOrder =
-                razorpayClient.orders.create(
-                        orderRequest
-                );
+                razorpayClient
+                        .orders
+                        .create(
+                                orderRequest
+                        );
 
 
         String orderId =
@@ -341,13 +349,13 @@ public class PaymentService {
     // VERIFY RAZORPAY PAYMENT
     // =========================================================
 
-    public Payment
-    verifyRazorpayPayment(
+    public Payment verifyRazorpayPayment(
             RazorpayVerifyRequest request
     ) throws Exception {
 
+
         // -----------------------------------------------------
-        // REQUEST VALIDATION
+        // VALIDATION
         // -----------------------------------------------------
 
         if (request == null) {
@@ -367,8 +375,10 @@ public class PaymentService {
 
 
         if (
-                request.getRazorpayOrderId() == null ||
-                        request.getRazorpayPaymentId() == null ||
+                request.getRazorpayOrderId() == null
+                        ||
+                        request.getRazorpayPaymentId() == null
+                        ||
                         request.getRazorpaySignature() == null
         ) {
 
@@ -433,7 +443,8 @@ public class PaymentService {
         // -----------------------------------------------------
 
         if (
-                payment.getRazorpayOrderId() == null ||
+                payment.getRazorpayOrderId() == null
+                        ||
                         !request
                                 .getRazorpayOrderId()
                                 .equals(
@@ -458,16 +469,15 @@ public class PaymentService {
 
         // -----------------------------------------------------
         // SIGNATURE VERIFICATION
-        //
-        // IMPORTANT SECURITY STEP
         // -----------------------------------------------------
 
         String generatedSignature =
                 request
                         .getRazorpayOrderId()
                         + "|"
-                        + request
-                        .getRazorpayPaymentId();
+                        +
+                        request
+                                .getRazorpayPaymentId();
 
 
         boolean validSignature =
@@ -492,12 +502,13 @@ public class PaymentService {
                     "FAILED"
             );
 
+
             paymentRepository.save(
                     payment
             );
 
 
-            // Release reserved car
+            // RELEASE CAR
 
             if (booking.getCar() != null) {
 
@@ -518,6 +529,7 @@ public class PaymentService {
                     "PAYMENT_FAILED"
             );
 
+
             bookingRepository.save(
                     booking
             );
@@ -529,9 +541,9 @@ public class PaymentService {
         }
 
 
-        // -----------------------------------------------------
+        // =====================================================
         // PAYMENT SUCCESS
-        // -----------------------------------------------------
+        // =====================================================
 
         payment.setRazorpayPaymentId(
                 request
@@ -555,9 +567,9 @@ public class PaymentService {
         );
 
 
-        // -----------------------------------------------------
+        // =====================================================
         // AUTOMATICALLY CONFIRM BOOKING
-        // -----------------------------------------------------
+        // =====================================================
 
         booking.setBookingStatus(
                 "CONFIRMED"
@@ -569,13 +581,290 @@ public class PaymentService {
         );
 
 
-        // -----------------------------------------------------
-        // SAVE PAYMENT
-        // -----------------------------------------------------
+        // =====================================================
+        // SAVE PAYMENT FIRST
+        // =====================================================
 
-        return paymentRepository.save(
-                payment
+        Payment savedPayment =
+                paymentRepository.save(
+                        payment
+                );
+
+
+        // =====================================================
+        // SEND PAYMENT SUCCESS EMAIL
+        // =====================================================
+
+        sendPaymentSuccessEmail(
+                savedPayment,
+                booking
         );
+
+
+        return savedPayment;
+    }
+
+
+    // =========================================================
+    // SEND PAYMENT SUCCESS EMAIL
+    // =========================================================
+
+    private void sendPaymentSuccessEmail(
+            Payment payment,
+            Booking booking
+    ) {
+
+        try {
+
+            if (
+                    booking == null
+                            ||
+                            booking.getCustomer() == null
+            ) {
+
+                System.out.println(
+                        "Payment email skipped: customer not found"
+                );
+
+                return;
+            }
+
+
+            String customerEmail =
+                    booking
+                            .getCustomer()
+                            .getEmail();
+
+
+            if (
+                    customerEmail == null
+                            ||
+                            customerEmail
+                                    .trim()
+                                    .isEmpty()
+            ) {
+
+                System.out.println(
+                        "Payment email skipped: customer email missing"
+                );
+
+                return;
+            }
+
+
+            String customerName =
+                    booking
+                            .getCustomer()
+                            .getName();
+
+
+            String carName =
+                    booking.getCarVariant() != null
+                            ?
+                            booking
+                                    .getCarVariant()
+                                    .getVariantName()
+                            :
+                            "N/A";
+
+
+            String fuelType =
+                    booking.getCarVariant() != null
+                            ?
+                            booking
+                                    .getCarVariant()
+                                    .getFuelType()
+                            :
+                            "N/A";
+
+
+            String registrationNumber =
+                    booking.getCar() != null
+                            ?
+                            booking
+                                    .getCar()
+                                    .getRegistrationNumber()
+                            :
+                            "Not Assigned";
+
+
+            String subject =
+                    "Car Rental Payment Successful - Payment #"
+                            + payment.getId();
+
+
+            String body =
+                    "Dear "
+                            + (
+                            customerName != null
+                                    ?
+                                    customerName
+                                    :
+                                    "Customer"
+                    )
+                            + ",\n\n"
+
+                            +
+
+                            "Your car rental payment has been successfully verified.\n\n"
+
+                            +
+
+                            "==============================\n"
+                            +
+                            "PAYMENT DETAILS\n"
+                            +
+                            "==============================\n"
+
+                            +
+
+                            "Payment ID: "
+                            + payment.getId()
+                            + "\n"
+
+                            +
+
+                            "Amount: ₹"
+                            + payment.getAmount()
+                            + "\n"
+
+                            +
+
+                            "Payment Status: "
+                            + payment.getPaymentStatus()
+                            + "\n"
+
+                            +
+
+                            "Payment Method: "
+                            + payment.getPaymentMethod()
+                            + "\n"
+
+                            +
+
+                            "Payment Date: "
+                            + payment.getPaymentDate()
+                            + "\n\n"
+
+                            +
+
+                            "==============================\n"
+                            +
+                            "RAZORPAY TRANSACTION\n"
+                            +
+                            "==============================\n"
+
+                            +
+
+                            "Razorpay Order ID: "
+                            + payment.getRazorpayOrderId()
+                            + "\n"
+
+                            +
+
+                            "Razorpay Payment ID: "
+                            + payment.getRazorpayPaymentId()
+                            + "\n"
+
+                            +
+
+                            "Razorpay Signature: "
+                            + payment.getRazorpaySignature()
+                            + "\n\n"
+
+                            +
+
+                            "==============================\n"
+                            +
+                            "BOOKING DETAILS\n"
+                            +
+                            "==============================\n"
+
+                            +
+
+                            "Booking ID: "
+                            + booking.getId()
+                            + "\n"
+
+                            +
+
+                            "Booking Status: "
+                            + booking.getBookingStatus()
+                            + "\n"
+
+                            +
+
+                            "Car: "
+                            + carName
+                            + "\n"
+
+                            +
+
+                            "Fuel Type: "
+                            + fuelType
+                            + "\n"
+
+                            +
+
+                            "Registration Number: "
+                            + registrationNumber
+                            + "\n"
+
+                            +
+
+                            "From Date: "
+                            + booking.getFromDate()
+                            + "\n"
+
+                            +
+
+                            "To Date: "
+                            + booking.getToDate()
+                            + "\n"
+
+                            +
+
+                            "Total Booking Amount: ₹"
+                            + booking.getTotalAmount()
+                            + "\n\n"
+
+                            +
+
+                            "Thank you for choosing Car Rental System.\n\n"
+
+                            +
+
+                            "This is an automatically generated email.";
+
+
+            mailService.sendMail(
+                    customerEmail,
+                    subject,
+                    body
+            );
+
+
+            System.out.println(
+                    "PAYMENT SUCCESS EMAIL SENT TO: "
+                            + customerEmail
+            );
+
+        } catch (Exception e) {
+
+            /*
+             * IMPORTANT:
+             *
+             * Payment is already PAID.
+             *
+             * If email fails, we should NOT change
+             * the payment back to FAILED.
+             */
+
+            System.out.println(
+                    "PAYMENT EMAIL FAILED: "
+                            + e.getMessage()
+            );
+        }
     }
 
 
@@ -600,10 +889,6 @@ public class PaymentService {
         }
 
 
-        // -----------------------------------------------------
-        // DO NOT CANCEL ALREADY CONFIRMED PAYMENT
-        // -----------------------------------------------------
-
         Payment payment =
                 paymentRepository
                         .findByBookingId(
@@ -611,8 +896,13 @@ public class PaymentService {
                         );
 
 
+        // -----------------------------------------------------
+        // DO NOT CANCEL PAID PAYMENT
+        // -----------------------------------------------------
+
         if (
-                payment != null &&
+                payment != null
+                        &&
                         "PAID".equalsIgnoreCase(
                                 payment.getPaymentStatus()
                         )
@@ -632,9 +922,11 @@ public class PaymentService {
                     "FAILED"
             );
 
+
             payment.setPaymentDate(
                     LocalDateTime.now()
             );
+
 
             paymentRepository.save(
                     payment
@@ -678,24 +970,39 @@ public class PaymentService {
 
     // =========================================================
     // ADMIN - GET ALL PAYMENTS
+    // NEWEST PAYMENT FIRST
     // =========================================================
 
-    public List<Payment>
-    getAllPayments() {
+    public List<Payment> getAllPayments() {
 
-        return paymentRepository
-                .findAll();
+        List<Payment> payments =
+                paymentRepository.findAll();
+
+
+        payments.sort(
+                Comparator
+                        .comparing(
+                                Payment::getPaymentDate,
+                                Comparator.nullsLast(
+                                        Comparator.naturalOrder()
+                                )
+                        )
+                        .reversed()
+        );
+
+
+        return payments;
     }
 
 
     // =========================================================
-    // ADMIN REJECT / REFUND
+    // ADMIN - REFUND
     // =========================================================
 
-    public Payment
-    rejectPayment(
+    public Payment rejectPayment(
             Long paymentId
     ) throws Exception {
+
 
         Payment payment =
                 paymentRepository
@@ -727,7 +1034,8 @@ public class PaymentService {
 
 
         if (
-                payment.getRazorpayPaymentId() == null ||
+                payment.getRazorpayPaymentId() == null
+                        ||
                         payment.getRazorpayPaymentId()
                                 .trim()
                                 .isEmpty()
@@ -769,13 +1077,12 @@ public class PaymentService {
 
 
         // -----------------------------------------------------
-        // RAZORPAY REFUND
+        // REFUND
         // -----------------------------------------------------
 
         razorpayClient
                 .payments
                 .refund(
-
                         payment
                                 .getRazorpayPaymentId(),
 

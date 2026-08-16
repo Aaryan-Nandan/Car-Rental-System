@@ -12,16 +12,19 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/customer")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(
+        origins = "http://localhost:3000"
+)
 public class CustomerController {
 
     @Autowired
     private CustomerService customerService;
 
 
-    // ==========================================
+    // =========================================================
     // GET ALL CUSTOMERS
-    // ==========================================
+    // ADMIN
+    // =========================================================
 
     @GetMapping("/all")
     public List<Customer> getAllCustomers() {
@@ -30,9 +33,9 @@ public class CustomerController {
     }
 
 
-    // ==========================================
+    // =========================================================
     // GET CUSTOMER BY ID
-    // ==========================================
+    // =========================================================
 
     @GetMapping("/{id}")
     public Customer getCustomerById(
@@ -43,9 +46,9 @@ public class CustomerController {
     }
 
 
-    // ==========================================
+    // =========================================================
     // UPDATE CUSTOMER PROFILE
-    // ==========================================
+    // =========================================================
 
     @PutMapping("/{id}")
     public Customer updateProfile(
@@ -60,9 +63,9 @@ public class CustomerController {
     }
 
 
-    // ==========================================
+    // =========================================================
     // LOGIN CUSTOMER
-    // ==========================================
+    // =========================================================
 
     @PostMapping("/login")
     public AuthResponse loginCustomer(

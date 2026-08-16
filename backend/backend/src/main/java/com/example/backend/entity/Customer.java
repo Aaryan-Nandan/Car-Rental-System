@@ -14,6 +14,10 @@ public class Customer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // ==========================================
+    // BASIC INFORMATION
+    // ==========================================
+
     private String name;
 
     @Column(unique = true)
@@ -22,6 +26,17 @@ public class Customer {
     private String password;
 
     private String phone;
+
+    // ==========================================
+    // ADDITIONAL CUSTOMER INFORMATION
+    // ==========================================
+
+    private String alternatePhone;
+
+    private String bloodGroup;
+
+    @Column(length = 1000)
+    private String address;
 
     // ==========================================
     // PROFILE PHOTO
@@ -73,6 +88,30 @@ public class Customer {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getAlternatePhone() {
+        return alternatePhone;
+    }
+
+    public void setAlternatePhone(String alternatePhone) {
+        this.alternatePhone = alternatePhone;
+    }
+
+    public String getBloodGroup() {
+        return bloodGroup;
+    }
+
+    public void setBloodGroup(String bloodGroup) {
+        this.bloodGroup = bloodGroup;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     public String getProfilePhoto() {

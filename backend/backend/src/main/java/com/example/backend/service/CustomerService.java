@@ -25,9 +25,9 @@ public class CustomerService {
     private PasswordEncoder passwordEncoder;
 
 
-    // ==========================================
+    // =========================================================
     // REGISTER CUSTOMER
-    // ==========================================
+    // =========================================================
 
     public Object registerCustomer(
             Customer customer
@@ -43,9 +43,10 @@ public class CustomerService {
             return "Email Already Exists";
         }
 
-        // ==========================================
+
+        // =====================================================
         // ENCRYPT PASSWORD
-        // ==========================================
+        // =====================================================
 
         customer.setPassword(
 
@@ -55,9 +56,21 @@ public class CustomerService {
 
         );
 
-        // ==========================================
+
+        // =====================================================
         // SAVE CUSTOMER
-        // ==========================================
+        //
+        // This saves:
+        //
+        // name
+        // email
+        // password
+        // phone
+        // alternatePhone
+        // bloodGroup
+        // address
+        // profilePhoto
+        // =====================================================
 
         return customerRepository.save(
                 customer
@@ -65,9 +78,9 @@ public class CustomerService {
     }
 
 
-    // ==========================================
+    // =========================================================
     // GET CUSTOMER BY ID
-    // ==========================================
+    // =========================================================
 
     public Customer getCustomerById(
             Long id
@@ -79,9 +92,9 @@ public class CustomerService {
     }
 
 
-    // ==========================================
+    // =========================================================
     // GET ALL CUSTOMERS
-    // ==========================================
+    // =========================================================
 
     public List<Customer> getAllCustomers() {
 
@@ -89,9 +102,9 @@ public class CustomerService {
     }
 
 
-    // ==========================================
+    // =========================================================
     // UPDATE CUSTOMER PROFILE
-    // ==========================================
+    // =========================================================
 
     public Customer updateProfile(
             Long id,
@@ -104,58 +117,135 @@ public class CustomerService {
                         .orElse(null);
 
         if (customer == null) {
+
             return null;
         }
 
-        // ==========================================
-        // UPDATE NAME
-        // ==========================================
 
-        if (updatedCustomer.getName() != null) {
+        // =====================================================
+        // UPDATE NAME
+        // =====================================================
+
+        if (
+                updatedCustomer.getName() != null
+                        &&
+                        !updatedCustomer.getName()
+                                .trim()
+                                .isEmpty()
+        ) {
 
             customer.setName(
-                    updatedCustomer.getName()
+                    updatedCustomer
+                            .getName()
+                            .trim()
             );
         }
 
 
-        // ==========================================
+        // =====================================================
         // UPDATE PHONE
-        // ==========================================
+        // =====================================================
 
-        if (updatedCustomer.getPhone() != null) {
+        if (
+                updatedCustomer.getPhone() != null
+                        &&
+                        !updatedCustomer.getPhone()
+                                .trim()
+                                .isEmpty()
+        ) {
 
             customer.setPhone(
-                    updatedCustomer.getPhone()
+                    updatedCustomer
+                            .getPhone()
+                            .trim()
             );
         }
 
 
-        // ==========================================
-        // UPDATE PROFILE PHOTO
-        // ==========================================
+        // =====================================================
+        // UPDATE ALTERNATE PHONE
+        // =====================================================
 
-        if (updatedCustomer.getProfilePhoto() != null) {
+        if (
+                updatedCustomer.getAlternatePhone() != null
+        ) {
+
+            customer.setAlternatePhone(
+                    updatedCustomer
+                            .getAlternatePhone()
+                            .trim()
+            );
+        }
+
+
+        // =====================================================
+        // UPDATE BLOOD GROUP
+        // =====================================================
+
+        if (
+                updatedCustomer.getBloodGroup() != null
+                        &&
+                        !updatedCustomer.getBloodGroup()
+                                .trim()
+                                .isEmpty()
+        ) {
+
+            customer.setBloodGroup(
+                    updatedCustomer
+                            .getBloodGroup()
+                            .trim()
+            );
+        }
+
+
+        // =====================================================
+        // UPDATE PERMANENT ADDRESS
+        // =====================================================
+
+        if (
+                updatedCustomer.getAddress() != null
+        ) {
+
+            customer.setAddress(
+                    updatedCustomer
+                            .getAddress()
+                            .trim()
+            );
+        }
+
+
+        // =====================================================
+        // UPDATE PROFILE PHOTO
+        // =====================================================
+
+        if (
+                updatedCustomer.getProfilePhoto() != null
+        ) {
 
             customer.setProfilePhoto(
-                    updatedCustomer.getProfilePhoto()
+                    updatedCustomer
+                            .getProfilePhoto()
             );
         }
 
 
-        // ==========================================
-        // DO NOT UPDATE EMAIL HERE
-        // ==========================================
+        // =====================================================
+        // EMAIL
+        //
+        // DO NOT CHANGE EMAIL HERE
+        // =====================================================
 
-        // Email remains unchanged.
+
+        // =====================================================
+        // PASSWORD
+        //
+        // DO NOT CHANGE PASSWORD HERE
+        // =====================================================
 
 
-        // ==========================================
-        // DO NOT UPDATE PASSWORD HERE
-        // ==========================================
-
-        // Password remains unchanged.
-
+        // =====================================================
+        // SAVE UPDATED CUSTOMER
+        // =====================================================
 
         return customerRepository.save(
                 customer
@@ -163,9 +253,9 @@ public class CustomerService {
     }
 
 
-    // ==========================================
+    // =========================================================
     // LOGIN CUSTOMER
-    // ==========================================
+    // =========================================================
 
     public AuthResponse loginCustomer(
             LoginRequest loginRequest
@@ -182,9 +272,9 @@ public class CustomerService {
         }
 
 
-        // ==========================================
+        // =====================================================
         // CHECK PASSWORD
-        // ==========================================
+        // =====================================================
 
         boolean passwordMatches =
                 passwordEncoder.matches(
@@ -202,9 +292,9 @@ public class CustomerService {
         }
 
 
-        // ==========================================
+        // =====================================================
         // GENERATE JWT
-        // ==========================================
+        // =====================================================
 
         String token =
                 jwtUtil.generateToken(
@@ -212,9 +302,9 @@ public class CustomerService {
                 );
 
 
-        // ==========================================
+        // =====================================================
         // LOGIN RESPONSE
-        // ==========================================
+        // =====================================================
 
         return new AuthResponse(
 

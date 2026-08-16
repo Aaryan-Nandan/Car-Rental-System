@@ -1,6 +1,5 @@
 package com.example.backend.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
@@ -71,6 +70,13 @@ public class Payment {
 
 
     // =========================================================
+    // UPI TRANSACTION ID
+    // =========================================================
+
+    private String upiTransactionId;
+
+
+    // =========================================================
     // PAYMENT DATE
     // =========================================================
 
@@ -79,11 +85,24 @@ public class Payment {
 
     // =========================================================
     // BOOKING
+    //
+    // IMPORTANT:
+    // DO NOT USE @JsonIgnore HERE.
+    //
+    // MyPayments.js and AdminDashboard.js need:
+    //
+    // payment.booking
+    // payment.booking.customer
+    // payment.booking.carVariant
+    // payment.booking.car
+    //
     // =========================================================
 
     @OneToOne
-    @JoinColumn(name = "booking_id", nullable = false)
-    @JsonIgnore
+    @JoinColumn(
+            name = "booking_id",
+            nullable = false
+    )
     private Booking booking;
 
 
@@ -131,7 +150,9 @@ public class Payment {
         return razorpayOrderId;
     }
 
-    public void setRazorpayOrderId(String razorpayOrderId) {
+    public void setRazorpayOrderId(
+            String razorpayOrderId
+    ) {
         this.razorpayOrderId = razorpayOrderId;
     }
 
@@ -140,7 +161,9 @@ public class Payment {
         return razorpayPaymentId;
     }
 
-    public void setRazorpayPaymentId(String razorpayPaymentId) {
+    public void setRazorpayPaymentId(
+            String razorpayPaymentId
+    ) {
         this.razorpayPaymentId = razorpayPaymentId;
     }
 
@@ -149,8 +172,23 @@ public class Payment {
         return razorpaySignature;
     }
 
-    public void setRazorpaySignature(String razorpaySignature) {
-        this.razorpaySignature = razorpaySignature;
+    public void setRazorpaySignature(
+            String razorpaySignature
+    ) {
+        this.razorpaySignature =
+                razorpaySignature;
+    }
+
+
+    public String getUpiTransactionId() {
+        return upiTransactionId;
+    }
+
+    public void setUpiTransactionId(
+            String upiTransactionId
+    ) {
+        this.upiTransactionId =
+                upiTransactionId;
     }
 
 
@@ -158,8 +196,11 @@ public class Payment {
         return paymentDate;
     }
 
-    public void setPaymentDate(LocalDateTime paymentDate) {
-        this.paymentDate = paymentDate;
+    public void setPaymentDate(
+            LocalDateTime paymentDate
+    ) {
+        this.paymentDate =
+                paymentDate;
     }
 
 
@@ -167,7 +208,9 @@ public class Payment {
         return booking;
     }
 
-    public void setBooking(Booking booking) {
+    public void setBooking(
+            Booking booking
+    ) {
         this.booking = booking;
     }
 }

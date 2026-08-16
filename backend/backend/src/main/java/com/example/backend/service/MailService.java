@@ -11,18 +11,31 @@ public class MailService {
     @Autowired
     private JavaMailSender mailSender;
 
+
+    // =========================================================
+    // SEND SIMPLE MAIL
+    // =========================================================
+
     public void sendMail(
-
             String to,
-
             String subject,
-
             String body
-
     ) {
+
+        if (
+                to == null ||
+                        to.trim().isEmpty()
+        ) {
+
+            throw new RuntimeException(
+                    "Customer email address is missing"
+            );
+        }
+
 
         SimpleMailMessage message =
                 new SimpleMailMessage();
+
 
         message.setTo(to);
 
@@ -30,8 +43,7 @@ public class MailService {
 
         message.setText(body);
 
+
         mailSender.send(message);
-
     }
-
 }
