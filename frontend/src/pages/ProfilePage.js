@@ -30,6 +30,19 @@ function ProfilePage() {
     const [phone, setPhone] =
         useState("");
 
+    // ==========================================
+    // NEW PROFILE FIELDS
+    // ==========================================
+
+    const [alternateMobile, setAlternateMobile] =
+        useState("");
+
+    const [bloodGroup, setBloodGroup] =
+        useState("");
+
+    const [permanentAddress, setPermanentAddress] =
+        useState("");
+
     const [saving, setSaving] =
         useState(false);
 
@@ -88,16 +101,13 @@ function ProfilePage() {
 
             const response =
                 await axios.get(
-
                     `http://localhost:8081/customer/${customerId}`,
-
                     {
                         headers: {
                             Authorization:
                                 `Bearer ${token}`
                         }
                     }
-
                 );
 
 
@@ -120,8 +130,28 @@ function ProfilePage() {
                 response.data.name || ""
             );
 
+
             setPhone(
                 response.data.phone || ""
+            );
+
+
+            // ==========================================
+            // NEW PROFILE VALUES
+            // ==========================================
+
+            setAlternateMobile(
+                response.data.alternateMobile || ""
+            );
+
+
+            setBloodGroup(
+                response.data.bloodGroup || ""
+            );
+
+
+            setPermanentAddress(
+                response.data.permanentAddress || ""
             );
 
         }
@@ -143,11 +173,11 @@ function ProfilePage() {
                     error.response.data
                 );
 
+
                 console.error(
                     "Status:",
                     error.response.status
                 );
-
             }
 
 
@@ -162,6 +192,7 @@ function ProfilePage() {
             setLoading(false);
 
         }
+
     };
 
 
@@ -232,6 +263,7 @@ function ProfilePage() {
                     "customerId"
                 );
 
+
             const token =
                 localStorage.getItem(
                     "token"
@@ -242,14 +274,11 @@ function ProfilePage() {
 
                 const response =
                     await axios.put(
-
                         `http://localhost:8081/customer/${customerId}`,
-
                         {
                             profilePhoto:
                                 base64Image
                         },
-
                         {
                             headers: {
                                 Authorization:
@@ -259,7 +288,6 @@ function ProfilePage() {
                                     "application/json"
                             }
                         }
-
                     );
 
 
@@ -281,6 +309,7 @@ function ProfilePage() {
                     error
                 );
 
+
                 alert(
                     "Unable to update profile photo."
                 );
@@ -293,6 +322,7 @@ function ProfilePage() {
         reader.readAsDataURL(
             file
         );
+
     };
 
 
@@ -307,11 +337,16 @@ function ProfilePage() {
                 "customerId"
             );
 
+
         const token =
             localStorage.getItem(
                 "token"
             );
 
+
+        // ==========================================
+        // VALIDATION
+        // ==========================================
 
         if (!name.trim()) {
 
@@ -338,9 +373,12 @@ function ProfilePage() {
             setSaving(true);
 
 
+            // ==========================================
+            // UPDATE CUSTOMER
+            // ==========================================
+
             const response =
                 await axios.put(
-
                     `http://localhost:8081/customer/${customerId}`,
 
                     {
@@ -348,11 +386,21 @@ function ProfilePage() {
                             name.trim(),
 
                         phone:
-                            phone.trim()
+                            phone.trim(),
+
+                        alternateMobile:
+                            alternateMobile.trim(),
+
+                        bloodGroup:
+                            bloodGroup,
+
+                        permanentAddress:
+                            permanentAddress.trim()
                     },
 
                     {
                         headers: {
+
                             Authorization:
                                 `Bearer ${token}`,
 
@@ -360,23 +408,56 @@ function ProfilePage() {
                                 "application/json"
                         }
                     }
-
                 );
 
+
+            console.log(
+                "Updated Profile:",
+                response.data
+            );
+
+
+            // ==========================================
+            // UPDATE CUSTOMER STATE
+            // ==========================================
 
             setCustomer(
                 response.data
             );
 
 
+            // ==========================================
+            // UPDATE EDIT STATES
+            // ==========================================
+
             setName(
                 response.data.name || ""
             );
+
 
             setPhone(
                 response.data.phone || ""
             );
 
+
+            setAlternateMobile(
+                response.data.alternateMobile || ""
+            );
+
+
+            setBloodGroup(
+                response.data.bloodGroup || ""
+            );
+
+
+            setPermanentAddress(
+                response.data.permanentAddress || ""
+            );
+
+
+            // ==========================================
+            // CLOSE EDIT MODE
+            // ==========================================
 
             setEditing(false);
 
@@ -395,6 +476,23 @@ function ProfilePage() {
             );
 
 
+            if (
+                error.response
+            ) {
+
+                console.error(
+                    "Backend Response:",
+                    error.response.data
+                );
+
+
+                console.error(
+                    "Status:",
+                    error.response.status
+                );
+            }
+
+
             alert(
                 "Unable to update profile."
             );
@@ -406,6 +504,7 @@ function ProfilePage() {
             setSaving(false);
 
         }
+
     };
 
 
@@ -443,6 +542,7 @@ function ProfilePage() {
             </div>
 
         );
+
     }
 
 
@@ -496,10 +596,12 @@ function ProfilePage() {
                         {error}
                     </h2>
 
+
                     <button
                         onClick={
                             fetchProfile
                         }
+
                         style={{
                             marginTop:
                                 "15px",
@@ -534,6 +636,7 @@ function ProfilePage() {
             </div>
 
         );
+
     }
 
 
@@ -723,7 +826,8 @@ function ProfilePage() {
                         }}
                     >
 
-                        📷 Change Photo
+                         Change Photo
+
 
                         <input
                             type="file"
@@ -759,7 +863,9 @@ function ProfilePage() {
                     }}
                 >
 
+                    {/* ================================= */}
                     {/* NAME */}
+                    {/* ================================= */}
 
                     <div>
 
@@ -833,8 +939,10 @@ function ProfilePage() {
                                         "#111827"
                                 }}
                             >
+
                                 {customer?.name ||
                                     "Not available"}
+
                             </div>
 
                         )}
@@ -842,7 +950,9 @@ function ProfilePage() {
                     </div>
 
 
+                    {/* ================================= */}
                     {/* EMAIL */}
+                    {/* ================================= */}
 
                     <div>
 
@@ -899,7 +1009,9 @@ function ProfilePage() {
                     </div>
 
 
+                    {/* ================================= */}
                     {/* PHONE */}
+                    {/* ================================= */}
 
                     <div>
 
@@ -925,6 +1037,8 @@ function ProfilePage() {
                         {editing ? (
 
                             <input
+                                type="tel"
+
                                 value={
                                     phone
                                 }
@@ -984,7 +1098,337 @@ function ProfilePage() {
                     </div>
 
 
+                    {/* ================================= */}
+                    {/* ALTERNATE MOBILE NUMBER */}
+                    {/* ================================= */}
+
+                    <div>
+
+                        <label
+                            style={{
+                                display:
+                                    "block",
+
+                                fontWeight:
+                                    "600",
+
+                                marginBottom:
+                                    "7px",
+
+                                color:
+                                    "#374151"
+                            }}
+                        >
+                            Alternate Mobile Number
+                        </label>
+
+
+                        {editing ? (
+
+                            <input
+                                type="tel"
+
+                                value={
+                                    alternateMobile
+                                }
+
+                                placeholder="Enter alternate mobile number"
+
+                                onChange={(e) =>
+                                    setAlternateMobile(
+                                        e.target.value
+                                    )
+                                }
+
+                                style={{
+                                    width:
+                                        "100%",
+
+                                    padding:
+                                        "13px",
+
+                                    boxSizing:
+                                        "border-box",
+
+                                    border:
+                                        "1px solid #d1d5db",
+
+                                    borderRadius:
+                                        "8px",
+
+                                    fontSize:
+                                        "16px"
+                                }}
+                            />
+
+                        ) : (
+
+                            <div
+                                style={{
+                                    padding:
+                                        "13px",
+
+                                    background:
+                                        "#f9fafb",
+
+                                    borderRadius:
+                                        "8px",
+
+                                    color:
+                                        "#111827"
+                                }}
+                            >
+
+                                {customer?.alternateMobile ||
+                                    "Not available"}
+
+                            </div>
+
+                        )}
+
+                    </div>
+
+
+                    {/* ================================= */}
+                    {/* BLOOD GROUP */}
+                    {/* ================================= */}
+
+                    <div>
+
+                        <label
+                            style={{
+                                display:
+                                    "block",
+
+                                fontWeight:
+                                    "600",
+
+                                marginBottom:
+                                    "7px",
+
+                                color:
+                                    "#374151"
+                            }}
+                        >
+                            Blood Group
+                        </label>
+
+
+                        {editing ? (
+
+                            <select
+                                value={
+                                    bloodGroup
+                                }
+
+                                onChange={(e) =>
+                                    setBloodGroup(
+                                        e.target.value
+                                    )
+                                }
+
+                                style={{
+                                    width:
+                                        "100%",
+
+                                    padding:
+                                        "13px",
+
+                                    boxSizing:
+                                        "border-box",
+
+                                    border:
+                                        "1px solid #d1d5db",
+
+                                    borderRadius:
+                                        "8px",
+
+                                    fontSize:
+                                        "16px",
+
+                                    backgroundColor:
+                                        "white",
+
+                                    cursor:
+                                        "pointer"
+                                }}
+                            >
+
+                                <option value="">
+                                    Select Blood Group
+                                </option>
+
+                                <option value="A+">
+                                    A+
+                                </option>
+
+                                <option value="A-">
+                                    A-
+                                </option>
+
+                                <option value="B+">
+                                    B+
+                                </option>
+
+                                <option value="B-">
+                                    B-
+                                </option>
+
+                                <option value="AB+">
+                                    AB+
+                                </option>
+
+                                <option value="AB-">
+                                    AB-
+                                </option>
+
+                                <option value="O+">
+                                    O+
+                                </option>
+
+                                <option value="O-">
+                                    O-
+                                </option>
+
+                            </select>
+
+                        ) : (
+
+                            <div
+                                style={{
+                                    padding:
+                                        "13px",
+
+                                    background:
+                                        "#f9fafb",
+
+                                    borderRadius:
+                                        "8px",
+
+                                    color:
+                                        "#111827"
+                                }}
+                            >
+
+                                {customer?.bloodGroup ||
+                                    "Not available"}
+
+                            </div>
+
+                        )}
+
+                    </div>
+
+
+                    {/* ================================= */}
+                    {/* PERMANENT ADDRESS */}
+                    {/* ================================= */}
+
+                    <div>
+
+                        <label
+                            style={{
+                                display:
+                                    "block",
+
+                                fontWeight:
+                                    "600",
+
+                                marginBottom:
+                                    "7px",
+
+                                color:
+                                    "#374151"
+                            }}
+                        >
+                            Permanent Address
+                        </label>
+
+
+                        {editing ? (
+
+                            <textarea
+                                value={
+                                    permanentAddress
+                                }
+
+                                placeholder="Enter permanent address"
+
+                                onChange={(e) =>
+                                    setPermanentAddress(
+                                        e.target.value
+                                    )
+                                }
+
+                                rows="4"
+
+                                style={{
+                                    width:
+                                        "100%",
+
+                                    padding:
+                                        "13px",
+
+                                    boxSizing:
+                                        "border-box",
+
+                                    border:
+                                        "1px solid #d1d5db",
+
+                                    borderRadius:
+                                        "8px",
+
+                                    fontSize:
+                                        "16px",
+
+                                    resize:
+                                        "vertical",
+
+                                    fontFamily:
+                                        "Arial, Helvetica, sans-serif"
+                                }}
+                            />
+
+                        ) : (
+
+                            <div
+                                style={{
+                                    padding:
+                                        "13px",
+
+                                    background:
+                                        "#f9fafb",
+
+                                    borderRadius:
+                                        "8px",
+
+                                    color:
+                                        "#111827",
+
+                                    whiteSpace:
+                                        "pre-wrap",
+
+                                    minHeight:
+                                        "45px",
+
+                                    boxSizing:
+                                        "border-box"
+                                }}
+                            >
+
+                                {customer?.permanentAddress ||
+                                    "Not available"}
+
+                            </div>
+
+                        )}
+
+                    </div>
+
+
+                    {/* ================================= */}
                     {/* CUSTOMER ID */}
+                    {/* ================================= */}
 
                     <div>
 
@@ -1086,12 +1530,14 @@ function ProfilePage() {
                                     "pointer"
                             }}
                         >
-                            ✏️ Edit Profile
+                             Edit Profile
                         </button>
 
                     ) : (
 
                         <>
+
+                            {/* SAVE */}
 
                             <button
                                 onClick={
@@ -1125,16 +1571,25 @@ function ProfilePage() {
                                         "600",
 
                                     cursor:
-                                        "pointer"
+                                        saving
+                                            ? "not-allowed"
+                                            : "pointer",
+
+                                    opacity:
+                                        saving
+                                            ? 0.7
+                                            : 1
                                 }}
                             >
 
                                 {saving
                                     ? "Saving..."
-                                    : "💾 Save Changes"}
+                                    : " Save Changes"}
 
                             </button>
 
+
+                            {/* CANCEL */}
 
                             <button
                                 onClick={() => {
@@ -1143,13 +1598,33 @@ function ProfilePage() {
                                         false
                                     );
 
+
                                     setName(
                                         customer?.name ||
                                         ""
                                     );
 
+
                                     setPhone(
                                         customer?.phone ||
+                                        ""
+                                    );
+
+
+                                    setAlternateMobile(
+                                        customer?.alternateMobile ||
+                                        ""
+                                    );
+
+
+                                    setBloodGroup(
+                                        customer?.bloodGroup ||
+                                        ""
+                                    );
+
+
+                                    setPermanentAddress(
+                                        customer?.permanentAddress ||
                                         ""
                                     );
 
@@ -1195,6 +1670,8 @@ function ProfilePage() {
         </div>
 
     );
+
 }
+
 
 export default ProfilePage;

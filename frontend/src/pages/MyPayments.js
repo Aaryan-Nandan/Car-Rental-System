@@ -651,7 +651,7 @@ function MyPayments() {
 
 
             doc.text(
-                "CAR RENTAL SYSTEM",
+                "CarRental",
                 105,
                 18,
                 {
@@ -766,69 +766,69 @@ function MyPayments() {
             );
 
 
-            // =================================================
-            // CUSTOMER DETAILS
-            // =================================================
+            // // =================================================
+            // // CUSTOMER DETAILS
+            // // =================================================
 
-            const customerStartY =
-                doc.lastAutoTable.finalY +
-                10;
+            // const customerStartY =
+            //     doc.lastAutoTable.finalY +
+            //     10;
 
 
-            autoTable(
-                doc,
-                {
-                    startY:
-                        customerStartY,
+            // autoTable(
+            //     doc,
+            //     {
+            //         startY:
+            //             customerStartY,
 
-                    theme:
-                        "grid",
+            //         theme:
+            //             "grid",
 
-                    head: [
-                        [
-                            "Customer Details",
-                            "Information"
-                        ]
-                    ],
+            //         head: [
+            //             [
+            //                 "Customer Details",
+            //                 "Information"
+            //             ]
+            //         ],
 
-                    body: [
+            //         body: [
 
-                        [
-                            "Customer ID",
-                            customer?.id ||
-                            "N/A"
-                        ],
+            //             [
+            //                 "Customer ID",
+            //                 customer?.id ||
+            //                 "N/A"
+            //             ],
 
-                        [
-                            "Customer Name",
-                            customer?.name ||
-                            "N/A"
-                        ],
+            //             [
+            //                 "Customer Name",
+            //                 customer?.name ||
+            //                 "N/A"
+            //             ],
 
-                        [
-                            "Email",
-                            customer?.email ||
-                            "N/A"
-                        ],
+            //             [
+            //                 "Email",
+            //                 customer?.email ||
+            //                 "N/A"
+            //             ],
 
-                        [
-                            "Phone",
-                            customer?.phone ||
-                            customer?.mobile ||
-                            "N/A"
-                        ]
-                    ],
+            //             [
+            //                 "Phone",
+            //                 customer?.phone ||
+            //                 customer?.mobile ||
+            //                 "N/A"
+            //             ]
+            //         ],
 
-                    styles: {
+            //         styles: {
 
-                        fontSize:
-                            9,
+            //             fontSize:
+            //                 9,
 
-                        cellPadding:
-                            4
-                    }
-                }
-            );
+            //             cellPadding:
+            //                 4
+            //         }
+            //     }
+            // );
 
 
             // =================================================
@@ -1105,7 +1105,7 @@ function MyPayments() {
 
 
             doc.text(
-                "Thank you for choosing Car Rental System!",
+                "Thank you for choosing CarRental !",
                 105,
                 footerY,
                 {
@@ -1127,7 +1127,7 @@ function MyPayments() {
 
 
             doc.text(
-                "This is a computer-generated payment receipt.",
+                "😊 Have a safe and happy journey! ",
                 105,
                 footerY + 7,
                 {

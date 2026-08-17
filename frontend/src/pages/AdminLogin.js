@@ -12,75 +12,169 @@ function AdminLogin() {
     const [password, setPassword] =
         useState("");
 
+    const [loading, setLoading] =
+        useState(false);
 
-    const handleLogin = (e) => {
+
+    // =========================================================
+    // ADMIN LOGIN
+    // =========================================================
+
+    const handleLogin = async (e) => {
 
         e.preventDefault();
 
+        if (loading) {
+            return;
+        }
+
         const loginData = {
-
             email: email,
-
             password: password
         };
 
-        axios
-            .post(
-                "http://localhost:8081/admin/login",
-                loginData
-            )
+        setLoading(true);
 
-            .then((response) => {
+        try {
 
-                console.log(response.data);
-
-                if (!response.data) {
-
-                    alert(
-                        "Invalid Admin Credentials"
-                    );
-
-                    return;
-                }
-
-                localStorage.setItem(
-                    "adminToken",
-                    response.data.token
+            const response =
+                await axios.post(
+                    "http://localhost:8081/admin/login",
+                    loginData
                 );
 
-                alert(
-                    "Admin Login Successful"
-                );
+            console.log(
+                "ADMIN LOGIN RESPONSE:",
+                response.data
+            );
 
-                navigate(
-                    "/admin-dashboard"
-                );
 
-            })
+            // =================================================
+            // VALIDATE RESPONSE
+            // =================================================
 
-            .catch(() => {
+            if (
+                !response.data ||
+                !response.data.token
+            ) {
 
                 alert(
                     "Invalid Admin Credentials"
                 );
 
-            });
+                return;
+            }
+
+
+            // =================================================
+            // CLEAR CUSTOMER SESSION
+            // =================================================
+
+            localStorage.removeItem(
+                "token"
+            );
+
+            localStorage.removeItem(
+                "customerId"
+            );
+
+            localStorage.removeItem(
+                "customerEmail"
+            );
+
+            localStorage.removeItem(
+                "customerName"
+            );
+
+
+            // =================================================
+            // SAVE ADMIN SESSION
+            // =================================================
+
+            localStorage.setItem(
+                "adminToken",
+                response.data.token
+            );
+
+
+            // Optional admin information
+            if (response.data.email) {
+
+                localStorage.setItem(
+                    "adminEmail",
+                    response.data.email
+                );
+
+            }
+
+
+            console.log(
+                "Admin token saved:",
+                localStorage.getItem(
+                    "adminToken"
+                )
+            );
+
+
+            // =================================================
+            // SUCCESS
+            // =================================================
+
+            alert(
+                "Admin Login Successful"
+            );
+
+
+            navigate(
+                "/admin-dashboard"
+            );
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "ADMIN LOGIN ERROR:",
+                error
+            );
+
+            alert(
+                error.response?.data?.message ||
+                "Invalid Admin Credentials"
+            );
+
+        }
+
+        finally {
+
+            setLoading(false);
+
+        }
+
     };
 
+
+    // =========================================================
+    // PAGE
+    // =========================================================
 
     return (
 
         <div
             style={{
-                minHeight: "calc(100vh - 90px)",
+                minHeight:
+                    "calc(100vh - 90px)",
 
-                backgroundColor: "#f5f5f5",
+                backgroundColor:
+                    "#f5f5f5",
 
                 display: "flex",
 
-                justifyContent: "center",
+                justifyContent:
+                    "center",
 
-                alignItems: "flex-start",
+                alignItems:
+                    "flex-start",
 
                 paddingTop: "55px",
 
@@ -88,7 +182,8 @@ function AdminLogin() {
 
                 paddingRight: "20px",
 
-                boxSizing: "border-box"
+                boxSizing:
+                    "border-box"
             }}
         >
 
@@ -98,20 +193,25 @@ function AdminLogin() {
 
                     maxWidth: "570px",
 
-                    backgroundColor: "white",
+                    backgroundColor:
+                        "white",
 
                     borderRadius: "14px",
 
-                    padding: "40px 42px",
+                    padding:
+                        "40px 42px",
 
-                    boxSizing: "border-box",
+                    boxSizing:
+                        "border-box",
 
                     boxShadow:
                         "0 4px 18px rgba(0,0,0,0.12)"
                 }}
             >
 
-                {/* ADMIN LOGIN HEADING */}
+                {/* =================================================
+                    ADMIN LOGIN HEADING
+                ================================================= */}
 
                 <h1
                     style={{
@@ -123,7 +223,8 @@ function AdminLogin() {
 
                         marginTop: "0",
 
-                        marginBottom: "38px",
+                        marginBottom:
+                            "38px",
 
                         fontWeight: "700"
                     }}
@@ -132,8 +233,14 @@ function AdminLogin() {
                 </h1>
 
 
+                {/* =================================================
+                    LOGIN FORM
+                ================================================= */}
+
                 <form
-                    onSubmit={handleLogin}
+                    onSubmit={
+                        handleLogin
+                    }
                 >
 
                     {/* EMAIL */}
@@ -144,7 +251,8 @@ function AdminLogin() {
 
                             fontSize: "19px",
 
-                            marginBottom: "9px",
+                            marginBottom:
+                                "9px",
 
                             color: "#222"
                         }}
@@ -168,12 +276,17 @@ function AdminLogin() {
 
                         required
 
+                        disabled={loading}
+
+                        autoComplete="email"
+
                         style={{
                             width: "100%",
 
                             height: "54px",
 
-                            padding: "0 14px",
+                            padding:
+                                "0 14px",
 
                             fontSize: "17px",
 
@@ -187,7 +300,13 @@ function AdminLogin() {
 
                             outline: "none",
 
-                            marginBottom: "24px"
+                            marginBottom:
+                                "24px",
+
+                            backgroundColor:
+                                loading
+                                    ? "#f5f5f5"
+                                    : "white"
                         }}
                     />
 
@@ -200,7 +319,8 @@ function AdminLogin() {
 
                             fontSize: "19px",
 
-                            marginBottom: "9px",
+                            marginBottom:
+                                "9px",
 
                             color: "#222"
                         }}
@@ -224,12 +344,17 @@ function AdminLogin() {
 
                         required
 
+                        disabled={loading}
+
+                        autoComplete="current-password"
+
                         style={{
                             width: "100%",
 
                             height: "54px",
 
-                            padding: "0 14px",
+                            padding:
+                                "0 14px",
 
                             fontSize: "17px",
 
@@ -243,15 +368,25 @@ function AdminLogin() {
 
                             outline: "none",
 
-                            marginBottom: "30px"
+                            marginBottom:
+                                "30px",
+
+                            backgroundColor:
+                                loading
+                                    ? "#f5f5f5"
+                                    : "white"
                         }}
                     />
 
 
-                    {/* LOGIN BUTTON */}
+                    {/* =================================================
+                        LOGIN BUTTON
+                    ================================================= */}
 
                     <button
                         type="submit"
+
+                        disabled={loading}
 
                         style={{
                             width: "100%",
@@ -259,7 +394,9 @@ function AdminLogin() {
                             height: "60px",
 
                             backgroundColor:
-                                "black",
+                                loading
+                                    ? "#64748b"
+                                    : "#000000",
 
                             color: "white",
 
@@ -269,12 +406,22 @@ function AdminLogin() {
 
                             fontSize: "20px",
 
-                            fontWeight: "500",
+                            fontWeight: "600",
 
-                            cursor: "pointer"
+                            cursor:
+                                loading
+                                    ? "not-allowed"
+                                    : "pointer",
+
+                            transition:
+                                "0.2s"
                         }}
                     >
-                        Login
+
+                        {loading
+                            ? "Logging in..."
+                            : "Admin Login"}
+
                     </button>
 
                 </form>
@@ -282,7 +429,9 @@ function AdminLogin() {
             </div>
 
         </div>
+
     );
+
 }
 
 export default AdminLogin;

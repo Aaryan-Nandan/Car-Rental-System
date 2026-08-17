@@ -1066,7 +1066,7 @@ function RegisterPage() {
                         }}
                     >
 
-                        🚗
+                        
 
                     </div>
 
@@ -1125,7 +1125,7 @@ function RegisterPage() {
                         style={sectionTitleStyle}
                     >
 
-                        👤 Personal Information
+                         Personal Information
 
                     </div>
 
@@ -1268,8 +1268,8 @@ function RegisterPage() {
 
                                     {
                                         emailValid
-                                            ? "✅ Valid Email"
-                                            : "❌ Invalid Email"
+                                            ? " Valid Email"
+                                            : " Invalid Email"
                                     }
 
                                 </div>
@@ -1376,8 +1376,8 @@ function RegisterPage() {
 
                                         {
                                             phoneValid
-                                                ? "✅ Valid"
-                                                : "❌ Invalid"
+                                                ? " Valid"
+                                                : " Invalid"
                                         }
 
                                     </div>
@@ -1471,8 +1471,8 @@ function RegisterPage() {
 
                                         {
                                             alternatePhoneValid
-                                                ? "✅ Valid"
-                                                : "❌ Invalid"
+                                                ? " Valid"
+                                                : " Invalid"
                                         }
 
                                     </div>
@@ -1662,7 +1662,7 @@ function RegisterPage() {
                         style={sectionTitleStyle}
                     >
 
-                        🔐 Account Security
+                         Account Security
 
                     </div>
 
@@ -1766,8 +1766,9 @@ function RegisterPage() {
 
                             {
                                 showPassword
-                                    ? "🙈"
-                                    : "👁️"
+                                ? "👁️"
+                                : "🙈"
+                                    
                             }
 
                         </button>
@@ -1875,7 +1876,7 @@ function RegisterPage() {
                             }}
                         >
 
-                            📧 Send OTP
+                             Send OTP
 
                         </button>
 
@@ -1932,7 +1933,7 @@ function RegisterPage() {
                                 }}
                             >
 
-                                📩 Enter OTP
+                                 Enter OTP
 
                             </div>
 
@@ -2003,7 +2004,7 @@ function RegisterPage() {
                                         }}
                                     >
 
-                                        ✅ Verify OTP
+                                         Verify OTP
 
                                     </button>
 
@@ -2238,7 +2239,7 @@ function RegisterPage() {
                     {
                         loading
                             ? "Creating Account..."
-                            : "🚗 Create Account"
+                            : " Create Account"
                     }
 
                 </button>

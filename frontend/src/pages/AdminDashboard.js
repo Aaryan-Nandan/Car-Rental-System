@@ -1,28 +1,138 @@
-import { useEffect, useRef, useState } from "react";
+import {
+    useEffect,
+    useRef,
+    useState
+} from "react";
+
 import axios from "axios";
 
-import DashboardCharts from "../components/charts/DashboardCharts";
+import {
+    useNavigate
+} from "react-router-dom";
+
+import DashboardCharts
+    from "../components/charts/DashboardCharts";
+
+import jsPDF
+    from "jspdf";
+
+import autoTable
+    from "jspdf-autotable";
+
+
+// =========================================================
+// STAT CARD
+// =========================================================
+
+function StatCard({ title, value }) {
+
+    return (
+        <div
+            style={{
+                backgroundColor: "white",
+                border: "1px solid #e1e1e1",
+                borderRadius: "10px",
+                padding: "18px",
+                boxShadow:
+                    "0 2px 8px rgba(0,0,0,0.05)"
+            }}
+        >
+
+            <p
+                style={{
+                    margin: "0 0 8px",
+                    color: "#777",
+                    fontSize: "14px"
+                }}
+            >
+                {title}
+            </p>
+
+            <h2
+                style={{
+                    margin: "0",
+                    fontSize: "28px",
+                    color: "#111827"
+                }}
+            >
+                {value}
+            </h2>
+
+        </div>
+    );
+}
+
+
+// =========================================================
+// ADMIN DASHBOARD
+// =========================================================
 
 function AdminDashboard() {
 
-    // ==========================================
-    // STATE
-    // ==========================================
+    const navigate = useNavigate();
 
-    const [bookings, setBookings] = useState([]);
-
-    const [payments, setPayments] = useState([]);
-
-    const [dashboardData, setDashboardData] =
-        useState({});
-
-    const [searchText, setSearchText] =
-        useState("");
+    const API =
+        "http://localhost:8081";
 
 
-    // ==========================================
-    // CHART REF
-    // ==========================================
+    // =====================================================
+    // STATES
+    // =====================================================
+
+    const [
+        payments,
+        setPayments
+    ] = useState([]);
+
+    const [
+        customers,
+        setCustomers
+    ] = useState([]);
+
+    const [
+        dashboardData,
+        setDashboardData
+    ] = useState({});
+
+    const [
+        loadingPayments,
+        setLoadingPayments
+    ] = useState(false);
+
+    const [
+        loadingCustomers,
+        setLoadingCustomers
+    ] = useState(false);
+
+    const [
+        customerIdSearch,
+        setCustomerIdSearch
+    ] = useState("");
+
+    const [
+        customerNameSearch,
+        setCustomerNameSearch
+    ] = useState("");
+
+    const [
+        phoneSearch,
+        setPhoneSearch
+    ] = useState("");
+
+    const [
+        dateSearch,
+        setDateSearch
+    ] = useState("");
+
+    const [
+        paymentStatusFilter,
+        setPaymentStatusFilter
+    ] = useState("ALL");
+
+
+    // =====================================================
+    // CHART REFS
+    // =====================================================
 
     const chartSectionRef =
         useRef(null);
@@ -31,75 +141,31 @@ function AdminDashboard() {
         useRef(null);
 
 
-    // ==========================================
-    // LOAD DATA
-    // ==========================================
+    // =====================================================
+    // INITIAL LOAD
+    // =====================================================
 
     useEffect(() => {
-
-        fetchBookings();
 
         fetchDashboardData();
 
         fetchPayments();
 
+        fetchCustomers();
+
     }, []);
 
 
-    // ==========================================
-    // FETCH BOOKINGS
-    // ==========================================
-
-    const fetchBookings = () => {
-
-        axios
-            .get(
-                "http://localhost:8081/booking/all"
-            )
-
-            .then((response) => {
-
-                if (
-                    Array.isArray(
-                        response.data
-                    )
-                ) {
-
-                    setBookings(
-                        response.data
-                    );
-
-                } else {
-
-                    setBookings([]);
-
-                }
-
-            })
-
-            .catch((error) => {
-
-                console.error(
-                    "Booking Error:",
-                    error
-                );
-
-            });
-
-    };
-
-
-    // ==========================================
-    // FETCH DASHBOARD DATA
-    // ==========================================
+    // =====================================================
+    // FETCH DASHBOARD
+    // =====================================================
 
     const fetchDashboardData = () => {
 
         axios
             .get(
-                "http://localhost:8081/admin/dashboard"
+                `${API}/admin/dashboard`
             )
-
             .then((response) => {
 
                 setDashboardData(
@@ -107,7 +173,6 @@ function AdminDashboard() {
                 );
 
             })
-
             .catch((error) => {
 
                 console.error(
@@ -115,22 +180,25 @@ function AdminDashboard() {
                     error
                 );
 
+                setDashboardData({});
+
             });
 
     };
 
 
-    // ==========================================
+    // =====================================================
     // FETCH PAYMENTS
-    // ==========================================
+    // =====================================================
 
     const fetchPayments = () => {
 
+        setLoadingPayments(true);
+
         axios
             .get(
-                "http://localhost:8081/payment/all"
+                `${API}/payment/all`
             )
-
             .then((response) => {
 
                 if (
@@ -150,7 +218,6 @@ function AdminDashboard() {
                 }
 
             })
-
             .catch((error) => {
 
                 console.error(
@@ -158,195 +225,115 @@ function AdminDashboard() {
                     error
                 );
 
+                setPayments([]);
+
+            })
+            .finally(() => {
+
+                setLoadingPayments(false);
+
             });
 
     };
 
 
-    // ==========================================
-    // APPROVE BOOKING
-    // ==========================================
+    // =====================================================
+    // FETCH CUSTOMERS
+    // =====================================================
 
-    const approveBooking = (id) => {
+    const fetchCustomers = () => {
+
+        setLoadingCustomers(true);
 
         axios
-            .put(
-                `http://localhost:8081/booking/approve/${id}`
+            .get(
+                `${API}/customer/all`
             )
+            .then((response) => {
 
-            .then(() => {
+                if (
+                    Array.isArray(
+                        response.data
+                    )
+                ) {
 
-                alert(
-                    "Booking Approved"
-                );
+                    setCustomers(
+                        response.data
+                    );
 
-                fetchBookings();
+                } else {
 
-                fetchDashboardData();
+                    setCustomers([]);
+
+                }
 
             })
-
             .catch((error) => {
 
                 console.error(
-                    "Approve Error:",
+                    "Customer Error:",
                     error
                 );
 
-                alert(
-                    error.response?.data ||
-                    "Unable to approve booking."
-                );
-
-            });
-
-    };
-
-
-    // ==========================================
-    // REJECT BOOKING
-    // ==========================================
-
-    const rejectBooking = (id) => {
-
-        if (
-            !window.confirm(
-                "Are you sure you want to reject this booking?"
-            )
-        ) {
-
-            return;
-
-        }
-
-
-        axios
-            .put(
-                `http://localhost:8081/booking/reject/${id}`
-            )
-
-            .then(() => {
-
-                alert(
-                    "Booking Rejected"
-                );
-
-                fetchBookings();
-
-                fetchDashboardData();
+                setCustomers([]);
 
             })
+            .finally(() => {
 
-            .catch((error) => {
-
-                console.error(
-                    "Reject Error:",
-                    error
-                );
-
-                alert(
-                    error.response?.data ||
-                    "Unable to reject booking."
-                );
+                setLoadingCustomers(false);
 
             });
 
     };
 
 
-    // ==========================================
-    // VERIFY PAYMENT
-    // ==========================================
+    // =====================================================
+    // REFRESH
+    // =====================================================
 
-    const verifyPayment = (id) => {
+    const refreshDashboard = () => {
+
+        fetchDashboardData();
+
+        fetchPayments();
+
+        fetchCustomers();
+
+    };
+
+
+    // =====================================================
+    // REJECT / REFUND PAYMENT
+    // =====================================================
+
+    const rejectPayment = (
+        paymentId
+    ) => {
 
         const confirmed =
             window.confirm(
-                "Have you checked this UTR in your actual UPI/bank transaction history?\n\nClick OK only if the transaction is genuine."
+                "Are you sure you want to reject/refund this payment?"
             );
 
-
         if (!confirmed) {
-
             return;
-
         }
-
 
         axios
             .put(
-                `http://localhost:8081/payment/verify/${id}`
+                `${API}/payment/reject/${paymentId}`
             )
-
             .then(() => {
 
                 alert(
-                    "Payment Verified Successfully"
+                    "Payment rejected/refunded successfully."
                 );
 
                 fetchPayments();
 
-                fetchBookings();
-
                 fetchDashboardData();
 
             })
-
-            .catch((error) => {
-
-                console.error(
-                    "Verify Payment Error:",
-                    error
-                );
-
-                alert(
-                    error.response?.data ||
-                    "Unable to verify payment."
-                );
-
-            });
-
-    };
-
-
-    // ==========================================
-    // REJECT PAYMENT
-    // ==========================================
-
-    const rejectPayment = (id) => {
-
-        const confirmed =
-            window.confirm(
-                "Are you sure you want to reject this payment?"
-            );
-
-
-        if (!confirmed) {
-
-            return;
-
-        }
-
-
-        axios
-            .put(
-                `http://localhost:8081/payment/reject/${id}`
-            )
-
-            .then(() => {
-
-                alert(
-                    "Payment Rejected"
-                );
-
-                fetchPayments();
-
-                fetchBookings();
-
-                fetchDashboardData();
-
-            })
-
             .catch((error) => {
 
                 console.error(
@@ -355,6 +342,7 @@ function AdminDashboard() {
                 );
 
                 alert(
+                    error.response?.data?.message ||
                     error.response?.data ||
                     "Unable to reject payment."
                 );
@@ -364,9 +352,9 @@ function AdminDashboard() {
     };
 
 
-    // ==========================================
-    // SMOOTH CHART SCROLL EFFECT
-    // ==========================================
+    // =====================================================
+    // CHART SCROLL ANIMATION
+    // =====================================================
 
     useEffect(() => {
 
@@ -376,11 +364,8 @@ function AdminDashboard() {
                 !chartSectionRef.current ||
                 !chartContentRef.current
             ) {
-
                 return;
-
             }
-
 
             const section =
                 chartSectionRef.current;
@@ -394,7 +379,6 @@ function AdminDashboard() {
             const viewportHeight =
                 window.innerHeight;
 
-
             const startPoint =
                 viewportHeight * 0.80;
 
@@ -402,13 +386,12 @@ function AdminDashboard() {
                 viewportHeight * 0.35;
 
             const distance =
-                startPoint - endPoint;
-
+                startPoint -
+                endPoint;
 
             const progress =
                 (startPoint - rect.top) /
                 distance;
-
 
             const limitedProgress =
                 Math.max(
@@ -419,15 +402,15 @@ function AdminDashboard() {
                     )
                 );
 
-
             const scale =
                 0.72 +
-                (0.28 * limitedProgress);
-
+                (
+                    0.28 *
+                    limitedProgress
+                );
 
             chart.style.transform =
                 `scale(${scale})`;
-
         };
 
 
@@ -466,136 +449,328 @@ function AdminDashboard() {
     }, []);
 
 
-    // ==========================================
-    // SORT BOOKINGS
-    // NEWEST FIRST
-    // ==========================================
-
-    const sortedBookings = [
-        ...bookings
-    ].sort(
-        (a, b) =>
-            Number(b.id || 0) -
-            Number(a.id || 0)
-    );
-
-
-    // ==========================================
+    // =====================================================
     // SORT PAYMENTS
-    // NEWEST FIRST
-    // ==========================================
+    // =====================================================
 
     const sortedPayments = [
         ...payments
-    ].sort((a, b) => {
+    ].sort(
+        (a, b) => {
 
-        const dateA =
-            a.paymentDate
-                ? new Date(
-                    a.paymentDate
-                ).getTime()
-                : 0;
+            const dateA =
+                a?.paymentDate
+                    ? new Date(
+                        a.paymentDate
+                    ).getTime()
+                    : 0;
 
+            const dateB =
+                b?.paymentDate
+                    ? new Date(
+                        b.paymentDate
+                    ).getTime()
+                    : 0;
 
-        const dateB =
-            b.paymentDate
-                ? new Date(
-                    b.paymentDate
-                ).getTime()
-                : 0;
+            if (
+                dateA !== dateB
+            ) {
 
+                return (
+                    dateB -
+                    dateA
+                );
 
-        if (
-            dateA !== dateB
-        ) {
+            }
 
-            return dateB - dateA;
+            return (
+                Number(
+                    b?.id || 0
+                ) -
+                Number(
+                    a?.id || 0
+                )
+            );
 
         }
+    );
 
 
-        return (
-            Number(b.id || 0) -
-            Number(a.id || 0)
-        );
+    // =====================================================
+    // FILTER CUSTOMERS
+    // =====================================================
 
-    });
+    const filteredCustomers =
+        customers.filter(
+            (customer) => {
 
-
-    // ==========================================
-    // SEARCH BOOKINGS
-    // ==========================================
-
-    const filteredBookings =
-        sortedBookings.filter(
-            (booking) => {
-
-                const customerName =
-                    booking.customer &&
-                    booking.customer.name
-                        ? booking.customer.name
-                        : "";
+                const idMatch =
+                    !customerIdSearch ||
+                    String(
+                        customer?.id || ""
+                    )
+                        .toLowerCase()
+                        .includes(
+                            customerIdSearch
+                                .toLowerCase()
+                        );
 
 
-                const carName =
-                    booking.carVariant &&
-                    booking.carVariant.variantName
-                        ? booking.carVariant.variantName
-                        : "";
+                const nameMatch =
+                    !customerNameSearch ||
+                    String(
+                        customer?.name || ""
+                    )
+                        .toLowerCase()
+                        .includes(
+                            customerNameSearch
+                                .toLowerCase()
+                        );
 
 
-                const search =
-                    searchText.toLowerCase();
+                const phoneMatch =
+                    !phoneSearch ||
+                    String(
+                        customer?.phone || ""
+                    )
+                        .toLowerCase()
+                        .includes(
+                            phoneSearch
+                                .toLowerCase()
+                        ) ||
+                    String(
+                        customer?.alternatePhone ||
+                        ""
+                    )
+                        .toLowerCase()
+                        .includes(
+                            phoneSearch
+                                .toLowerCase()
+                        );
 
 
                 return (
-                    customerName
-                        .toLowerCase()
-                        .includes(search)
-
-                    ||
-
-                    carName
-                        .toLowerCase()
-                        .includes(search)
+                    idMatch &&
+                    nameMatch &&
+                    phoneMatch
                 );
 
             }
         );
 
 
-    // ==========================================
+    // =====================================================
+    // FILTER PAYMENTS
+    // =====================================================
+
+    const filteredPayments =
+        sortedPayments.filter(
+            (payment) => {
+
+                const customer =
+                    payment?.customer ||
+                    payment?.booking?.customer ||
+                    null;
+
+
+                if (
+                    customerIdSearch
+                ) {
+
+                    const id =
+                        String(
+                            customer?.id ||
+                            ""
+                        )
+                            .toLowerCase();
+
+                    if (
+                        !id.includes(
+                            customerIdSearch
+                                .toLowerCase()
+                        )
+                    ) {
+
+                        return false;
+
+                    }
+
+                }
+
+
+                if (
+                    customerNameSearch
+                ) {
+
+                    const name =
+                        String(
+                            customer?.name ||
+                            ""
+                        )
+                            .toLowerCase();
+
+                    if (
+                        !name.includes(
+                            customerNameSearch
+                                .toLowerCase()
+                        )
+                    ) {
+
+                        return false;
+
+                    }
+
+                }
+
+
+                if (
+                    phoneSearch
+                ) {
+
+                    const phone =
+                        String(
+                            customer?.phone ||
+                            ""
+                        )
+                            .toLowerCase();
+
+                    const alternatePhone =
+                        String(
+                            customer?.alternatePhone ||
+                            ""
+                        )
+                            .toLowerCase();
+
+                    const search =
+                        phoneSearch
+                            .toLowerCase();
+
+                    if (
+                        !phone.includes(
+                            search
+                        ) &&
+                        !alternatePhone.includes(
+                            search
+                        )
+                    ) {
+
+                        return false;
+
+                    }
+
+                }
+
+
+                if (
+                    paymentStatusFilter !==
+                    "ALL"
+                ) {
+
+                    const status =
+                        String(
+                            payment?.paymentStatus ||
+                            ""
+                        )
+                            .toUpperCase();
+
+                    if (
+                        status !==
+                        paymentStatusFilter
+                    ) {
+
+                        return false;
+
+                    }
+
+                }
+
+
+                if (
+                    dateSearch
+                ) {
+
+                    const paymentDate =
+                        payment?.paymentDate
+                            ? String(
+                                payment.paymentDate
+                            ).substring(
+                                0,
+                                10
+                            )
+                            : "";
+
+                    if (
+                        paymentDate !==
+                        dateSearch
+                    ) {
+
+                        return false;
+
+                    }
+
+                }
+
+
+                return true;
+
+            }
+        );
+
+
+    // =====================================================
+    // CLEAR FILTERS
+    // =====================================================
+
+    const clearFilters = () => {
+
+        setCustomerIdSearch("");
+
+        setCustomerNameSearch("");
+
+        setPhoneSearch("");
+
+        setDateSearch("");
+
+        setPaymentStatusFilter(
+            "ALL"
+        );
+
+    };
+
+
+    // =====================================================
     // PAYMENT STATUS COLOR
-    // ==========================================
+    // =====================================================
 
     const getPaymentStatusColor =
         (status) => {
 
-            if (
-                status === "PAID"
-            ) {
+            const value =
+                String(
+                    status || ""
+                ).toUpperCase();
 
+
+            if (
+                value === "PAID"
+            ) {
                 return "green";
-
             }
 
 
             if (
-                status === "REJECTED" ||
-                status === "FAILED"
+                value === "FAILED" ||
+                value === "REJECTED"
             ) {
-
                 return "red";
-
             }
 
 
             if (
-                status === "VERIFYING"
+                value === "CREATED" ||
+                value === "PENDING"
             ) {
-
                 return "orange";
-
             }
 
 
@@ -604,418 +779,810 @@ function AdminDashboard() {
         };
 
 
-    // ==========================================
+    // =====================================================
     // BOOKING STATUS COLOR
-    // ==========================================
+    // =====================================================
 
     const getBookingStatusColor =
         (status) => {
 
+            const value =
+                String(
+                    status || ""
+                ).toUpperCase();
+
+
             if (
-                status === "APPROVED"
+                value === "APPROVED" ||
+                value === "CONFIRMED" ||
+                value === "COMPLETED"
             ) {
-
                 return "green";
-
             }
 
 
             if (
-                status === "PAID"
+                value === "REJECTED" ||
+                value === "CANCELLED" ||
+                value === "FAILED"
             ) {
-
-                return "green";
-
-            }
-
-
-            if (
-                status === "REJECTED"
-            ) {
-
                 return "red";
-
             }
 
 
-            return "orange";
+            if (
+                value === "PENDING" ||
+                value === "CREATED"
+            ) {
+                return "orange";
+            }
+
+
+            return "#555";
 
         };
 
 
-    // ==========================================
-    // PAGE
-    // ==========================================
+    // =====================================================
+    // FORMAT DATE
+    // =====================================================
+
+    const formatDate = (
+        date
+    ) => {
+
+        if (!date) {
+            return "N/A";
+        }
+
+        const parsed =
+            new Date(date);
+
+
+        if (
+            Number.isNaN(
+                parsed.getTime()
+            )
+        ) {
+            return String(date);
+        }
+
+
+        return parsed.toLocaleString(
+            "en-IN",
+            {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            }
+        );
+
+    };
+
+
+   // =====================================================
+// DOWNLOAD PAYMENT PDF
+// =====================================================
+
+const downloadPaymentPDF = (payment) => {
+
+    const pdf = new jsPDF();
+
+    const customer =
+        payment?.customer ||
+        payment?.booking?.customer ||
+        null;
+
+    const booking =
+        payment?.booking ||
+        null;
+
+    const carVariant =
+        booking?.carVariant ||
+        null;
+
+    const car =
+        booking?.car ||
+        null;
+
+
+    // =====================================================
+    // IMPORTANT:
+    // Use actual payment amount.
+    // Do NOT use a fixed amount.
+    // =====================================================
+
+    const paymentAmount =
+        Number(payment?.amount ?? 0);
+
+    const bookingTotalAmount =
+        Number(
+            booking?.totalAmount ??
+            paymentAmount
+        );
+
+
+    // =====================================================
+    // FORMAT MONEY
+    // =====================================================
+
+    const formatMoney = (value) => {
+
+        const number =
+            Number(value ?? 0);
+
+        if (Number.isNaN(number)) {
+            return "Rs. 0";
+        }
+
+        return `Rs. ${number.toLocaleString("en-IN", {
+            maximumFractionDigits: 0
+        })}`;
+    };
+
+
+    // =====================================================
+    // PDF TITLE
+    // =====================================================
+
+    pdf.setFontSize(18);
+
+    pdf.text(
+        "CarRental",
+        14,
+        18
+    );
+
+
+    pdf.setFontSize(14);
+
+    pdf.text(
+        "Customer Booking Detail",
+        14,
+        30
+    );
+
+
+    // =====================================================
+    // PAYMENT INFORMATION
+    // =====================================================
+
+    autoTable(
+        pdf,
+        {
+            startY: 38,
+
+            head: [
+                [
+                    "Payment Information",
+                    "Details"
+                ]
+            ],
+
+            body: [
+
+                [
+                    "Payment ID",
+                    payment?.id ?? "N/A"
+                ],
+
+                [
+                    "Amount",
+                    formatMoney(paymentAmount)
+                ],
+
+                [
+                    "Status",
+                    payment?.paymentStatus || "N/A"
+                ],
+
+                [
+                    "Payment Method",
+                    payment?.paymentMethod || "N/A"
+                ],
+
+                [
+                    "Payment Date",
+                    formatDate(
+                        payment?.paymentDate
+                    )
+                ]
+
+            ]
+        }
+    );
+
+
+    let nextY =
+        pdf.lastAutoTable.finalY + 10;
+
+
+    // =====================================================
+    // CUSTOMER INFORMATION
+    // =====================================================
+
+    autoTable(
+        pdf,
+        {
+            startY: nextY,
+
+            head: [
+                [
+                    "Customer Information",
+                    "Details"
+                ]
+            ],
+
+            body: [
+
+                [
+                    "Customer ID",
+                    customer?.id ?? "N/A"
+                ],
+
+                [
+                    "Name",
+                    customer?.name || "N/A"
+                ],
+
+                [
+                    "Email",
+                    customer?.email || "N/A"
+                ],
+
+                [
+                    "Phone",
+                    customer?.phone || "N/A"
+                ],
+
+                [
+                    "Alternate Phone",
+                    customer?.alternatePhone || "N/A"
+                ],
+
+                [
+                    "Blood Group",
+                    customer?.bloodGroup || "N/A"
+                ],
+
+                [
+                    "Permanent Address",
+                    customer?.address || "N/A"
+                ]
+
+            ]
+        }
+    );
+
+
+    nextY =
+        pdf.lastAutoTable.finalY + 10;
+
+
+    // =====================================================
+    // BOOKING INFORMATION
+    // =====================================================
+
+    autoTable(
+        pdf,
+        {
+            startY: nextY,
+
+            head: [
+                [
+                    "Booking Information",
+                    "Details"
+                ]
+            ],
+
+            body: [
+
+                [
+                    "Booking ID",
+                    booking?.id ?? "N/A"
+                ],
+
+                [
+                    "Booking Status",
+                    booking?.bookingStatus || "N/A"
+                ],
+
+                [
+                    "From Date",
+                    booking?.fromDate || "N/A"
+                ],
+
+                [
+                    "To Date",
+                    booking?.toDate || "N/A"
+                ],
+
+                [
+                    "Total Amount",
+                    formatMoney(bookingTotalAmount)
+                ],
+
+                [
+                    "Pickup Address",
+                    booking?.pickupAddress || "N/A"
+                ]
+
+            ]
+        }
+    );
+
+
+    nextY =
+        pdf.lastAutoTable.finalY + 10;
+
+
+    // =====================================================
+    // VEHICLE INFORMATION
+    // =====================================================
+
+    autoTable(
+        pdf,
+        {
+            startY: nextY,
+
+            head: [
+                [
+                    "Vehicle Information",
+                    "Details"
+                ]
+            ],
+
+            body: [
+
+                [
+                    "Car",
+                    carVariant?.variantName || "N/A"
+                ],
+
+                [
+                    "Fuel Type",
+                    carVariant?.fuelType || "N/A"
+                ],
+
+                [
+                    "Price Per Day",
+                    formatMoney(
+                        carVariant?.pricePerDay ?? 0
+                    )
+                ],
+
+                [
+                    "Registration Number",
+                    car?.registrationNumber ||
+                    "Not Assigned"
+                ],
+
+                [
+                    "Color",
+                    car?.color || "N/A"
+                ]
+
+            ]
+        }
+    );
+
+
+    nextY =
+        pdf.lastAutoTable.finalY + 10;
+
+
+    // =====================================================
+    // RAZORPAY DETAILS
+    // =====================================================
+
+    autoTable(
+        pdf,
+        {
+            startY: nextY,
+
+            head: [
+                [
+                    "Razorpay Details",
+                    "Details"
+                ]
+            ],
+
+            body: [
+
+                [
+                    "Order ID",
+                    payment?.razorpayOrderId ||
+                    "N/A"
+                ],
+
+                [
+                    "Razorpay Payment ID",
+                    payment?.razorpayPaymentId ||
+                    "N/A"
+                ],
+
+                [
+                    "Signature",
+                    payment?.razorpaySignature ||
+                    "N/A"
+                ],
+
+                [
+                    "UTR / Transaction ID",
+                    payment?.upiTransactionId ||
+                    "N/A"
+                ]
+
+            ]
+        }
+    );
+
+
+    // =====================================================
+    // SAVE PDF
+    // =====================================================
+
+    pdf.save(
+        `CarRental-Customer-Booking-${payment?.id || "details"}.pdf`
+    );
+
+};
+
+
+    // =====================================================
+    // RETURN
+    // =====================================================
 
     return (
 
         <div
             style={{
-                minHeight:
-                    "100vh",
-
-                backgroundColor:
-                    "#f7f7f7",
-
-                padding:
-                    "30px",
-
-                boxSizing:
-                    "border-box"
+                minHeight: "100vh",
+                backgroundColor: "#f7f7f7",
+                padding: "30px",
+                boxSizing: "border-box"
             }}
         >
 
 
-            {/* ==========================================
-                PAGE TITLE
-            ========================================== */}
+            {/* =================================================
+                QUICK CONTROLS
+            ================================================= */}
 
-            <div
+            <section
                 style={{
-                    marginBottom:
-                        "25px"
+                    background:
+                        "linear-gradient(135deg, #111827, #1f2937)",
+                    borderRadius: "14px",
+                    padding: "22px",
+                    marginBottom: "25px",
+                    color: "white",
+                    boxShadow:
+                        "0 8px 25px rgba(0,0,0,0.15)"
                 }}
             >
 
-                <h1
+                <div
                     style={{
-                        margin:
-                            "0 0 20px 0",
-
-                        fontSize:
-                            "32px",
-
-                        fontWeight:
-                            "700"
+                        marginBottom: "18px"
                     }}
                 >
-                    Admin Dashboard
-                </h1>
+
+                    <h2
+                        style={{
+                            margin: "0 0 5px",
+                            fontSize: "24px",
+                            fontWeight: "700"
+                        }}
+                    >
+                        Admin Quick Controls
+                    </h2>
+
+                    <p
+                        style={{
+                            margin: "0",
+                            color: "#d1d5db",
+                            fontSize: "14px"
+                        }}
+                    >
+                        Manage cars and monitor
+                        customer reviews
+                    </p>
+
+                </div>
+
+
+                <div
+                    className="admin-quick-grid"
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns:
+                            "1fr 1fr",
+                        gap: "15px"
+                    }}
+                >
+
+                    <button
+                        type="button"
+                        onClick={() =>
+                            navigate(
+                                "/manage-cars"
+                            )
+                        }
+                        style={{
+                            border: "none",
+                            borderRadius: "10px",
+                            padding: "20px",
+                            background: "white",
+                            color: "#111827",
+                            cursor: "pointer",
+                            textAlign: "left"
+                        }}
+                    >
+
+                        <div
+                            style={{
+                                fontSize: "32px",
+                                marginBottom: "8px"
+                            }}
+                        >
+                            
+                        </div>
+
+                        <h3
+                            style={{
+                                margin: "0 0 7px",
+                                fontSize: "19px"
+                            }}
+                        >
+                            Manage Cars
+                        </h3>
+
+                        <p
+                            style={{
+                                margin: "0",
+                                color: "#6b7280",
+                                lineHeight: "1.5",
+                                fontSize: "14px"
+                            }}
+                        >
+                            Add cars, model/variant,
+                            registration number,
+                            color and manage
+                            availability.
+                        </p>
+
+                        <div
+                            style={{
+                                marginTop: "12px",
+                                color: "#2563eb",
+                                fontWeight: "700"
+                            }}
+                        >
+                            Open Car Management →
+                        </div>
+
+                    </button>
+
+
+                    <button
+                        type="button"
+                        onClick={() =>
+                            navigate(
+                                "/manage-reviews"
+                            )
+                        }
+                        style={{
+                            border: "none",
+                            borderRadius: "10px",
+                            padding: "20px",
+                            background: "white",
+                            color: "#111827",
+                            cursor: "pointer",
+                            textAlign: "left"
+                        }}
+                    >
+
+                        <div
+                            style={{
+                                fontSize: "32px",
+                                marginBottom: "8px"
+                            }}
+                        >
+                            
+                        </div>
+
+                        <h3
+                            style={{
+                                margin: "0 0 7px",
+                                fontSize: "19px"
+                            }}
+                        >
+                            Customer Reviews
+                        </h3>
+
+                        <p
+                            style={{
+                                margin: "0",
+                                color: "#6b7280",
+                                lineHeight: "1.5",
+                                fontSize: "14px"
+                            }}
+                        >
+                            Read customer ratings,
+                            reviews and feedback
+                            about your rental service.
+                        </p>
+
+                        <div
+                            style={{
+                                marginTop: "12px",
+                                color: "#2563eb",
+                                fontWeight: "700"
+                            }}
+                        >
+                            Read Reviews →
+                        </div>
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            {/* =================================================
+                DASHBOARD HEADER
+            ================================================= */}
+
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: "15px",
+                    flexWrap: "wrap",
+                    marginBottom: "20px"
+                }}
+            >
+
+                <div>
+
+                    <h1
+                        style={{
+                            margin: "0 0 5px",
+                            fontSize: "32px",
+                            fontWeight: "700"
+                        }}
+                    >
+                        Admin Dashboard
+                    </h1>
+
+                    <p
+                        style={{
+                            margin: "0",
+                            color: "#777"
+                        }}
+                    >
+                        Monitor customers,
+                        cars and payments
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    onClick={
+                        refreshDashboard
+                    }
+                    style={{
+                        padding: "10px 18px",
+                        backgroundColor: "#111827",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        fontWeight: "600"
+                    }}
+                >
+                    Refresh Dashboard
+                </button>
 
             </div>
 
 
-            {/* ==========================================
-                DASHBOARD STAT CARDS
-            ========================================== */}
+            {/* =================================================
+                STAT CARDS
+            ================================================= */}
 
             <div
+                className="admin-stat-grid"
                 style={{
-                    display:
-                        "grid",
-
+                    display: "grid",
                     gridTemplateColumns:
                         "repeat(4, minmax(0, 1fr))",
-
-                    gap:
-                        "12px",
-
-                    marginBottom:
-                        "20px"
+                    gap: "12px",
+                    marginBottom: "20px"
                 }}
             >
 
+                <StatCard
+                    title="Customers"
+                    value={
+                        dashboardData.totalCustomers ||
+                        customers.length ||
+                        0
+                    }
+                />
 
-                {/* CUSTOMERS */}
+                <StatCard
+                    title="Cars"
+                    value={
+                        dashboardData.totalCars ||
+                        0
+                    }
+                />
 
-                <div
-                    style={{
-                        backgroundColor:
-                            "white",
+                <StatCard
+                    title="Bookings"
+                    value={
+                        dashboardData.totalBookings ||
+                        0
+                    }
+                />
 
-                        padding:
-                            "18px 20px",
-
-                        minHeight:
-                            "85px",
-
-                        borderRadius:
-                            "10px",
-
-                        border:
-                            "1px solid #e5e5e5",
-
-                        boxShadow:
-                            "0 2px 8px rgba(0,0,0,0.06)"
-                    }}
-                >
-
-                    <p
-                        style={{
-                            margin:
-                                "0 0 10px",
-
-                            fontSize:
-                                "17px",
-
-                            fontWeight:
-                                "600"
-                        }}
-                    >
-                        Customers
-                    </p>
-
-                    <h2
-                        style={{
-                            margin:
-                                "0",
-
-                            fontSize:
-                                "30px"
-                        }}
-                    >
-                        {
-                            dashboardData.totalCustomers ||
-                            0
-                        }
-                    </h2>
-
-                </div>
-
-
-                {/* CARS */}
-
-                <div
-                    style={{
-                        backgroundColor:
-                            "white",
-
-                        padding:
-                            "18px 20px",
-
-                        minHeight:
-                            "85px",
-
-                        borderRadius:
-                            "10px",
-
-                        border:
-                            "1px solid #e5e5e5",
-
-                        boxShadow:
-                            "0 2px 8px rgba(0,0,0,0.06)"
-                    }}
-                >
-
-                    <p
-                        style={{
-                            margin:
-                                "0 0 10px",
-
-                            fontSize:
-                                "17px",
-
-                            fontWeight:
-                                "600"
-                        }}
-                    >
-                        Cars
-                    </p>
-
-                    <h2
-                        style={{
-                            margin:
-                                "0",
-
-                            fontSize:
-                                "30px"
-                        }}
-                    >
-                        {
-                            dashboardData.totalCars ||
-                            0
-                        }
-                    </h2>
-
-                </div>
-
-
-                {/* BOOKINGS */}
-
-                <div
-                    style={{
-                        backgroundColor:
-                            "white",
-
-                        padding:
-                            "18px 20px",
-
-                        minHeight:
-                            "85px",
-
-                        borderRadius:
-                            "10px",
-
-                        border:
-                            "1px solid #e5e5e5",
-
-                        boxShadow:
-                            "0 2px 8px rgba(0,0,0,0.06)"
-                    }}
-                >
-
-                    <p
-                        style={{
-                            margin:
-                                "0 0 10px",
-
-                            fontSize:
-                                "17px",
-
-                            fontWeight:
-                                "600"
-                        }}
-                    >
-                        Bookings
-                    </p>
-
-                    <h2
-                        style={{
-                            margin:
-                                "0",
-
-                            fontSize:
-                                "30px"
-                        }}
-                    >
-                        {
-                            dashboardData.totalBookings ||
-                            bookings.length
-                        }
-                    </h2>
-
-                </div>
-
-
-                {/* PAYMENTS */}
-
-                <div
-                    style={{
-                        backgroundColor:
-                            "white",
-
-                        padding:
-                            "18px 20px",
-
-                        minHeight:
-                            "85px",
-
-                        borderRadius:
-                            "10px",
-
-                        border:
-                            "1px solid #e5e5e5",
-
-                        boxShadow:
-                            "0 2px 8px rgba(0,0,0,0.06)"
-                    }}
-                >
-
-                    <p
-                        style={{
-                            margin:
-                                "0 0 10px",
-
-                            fontSize:
-                                "17px",
-
-                            fontWeight:
-                                "600"
-                        }}
-                    >
-                        Payments
-                    </p>
-
-                    <h2
-                        style={{
-                            margin:
-                                "0",
-
-                            fontSize:
-                                "30px"
-                        }}
-                    >
-                        {
-                            dashboardData.totalPayments ||
-                            payments.length
-                        }
-                    </h2>
-
-                </div>
+                <StatCard
+                    title="Payments"
+                    value={
+                        dashboardData.totalPayments ||
+                        payments.length ||
+                        0
+                    }
+                />
 
             </div>
 
 
-            {/* ==========================================
-                CHART
-            ========================================== */}
+            {/* =================================================
+                DASHBOARD CHART
+            ================================================= */}
 
             <div
-                ref={
-                    chartSectionRef
-                }
-
+                ref={chartSectionRef}
                 style={{
-                    position:
-                        "relative",
-
-                    marginBottom:
-                        "30px",
-
-                    width:
-                        "100%"
+                    position: "relative",
+                    marginBottom: "30px",
+                    width: "100%"
                 }}
-
-                className=
-                    "admin-chart-scroll-area"
             >
 
                 <div
                     style={{
-                        display:
-                            "flex",
-
-                        justifyContent:
-                            "center",
-
-                        alignItems:
-                            "flex-start",
-
-                        width:
-                            "100%",
-
-                        overflow:
-                            "visible"
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "flex-start",
+                        width: "100%",
+                        overflow: "visible"
                     }}
                 >
 
                     <div
-                        ref={
-                            chartContentRef
-                        }
-
+                        ref={chartContentRef}
                         style={{
-                            width:
-                                "100%",
-
-                            maxWidth:
-                                "1100px",
-
-                            transform:
-                                "scale(0.72)",
-
+                            width: "100%",
+                            maxWidth: "1100px",
+                            transform: "scale(0.72)",
                             transformOrigin:
                                 "center top",
-
                             transition:
                                 "transform 0.08s linear",
-
                             willChange:
                                 "transform"
                         }}
-
-                        className=
-                            "admin-chart-content"
                     >
 
                         <DashboardCharts
@@ -1031,1002 +1598,1100 @@ function AdminDashboard() {
             </div>
 
 
-            {/* ==========================================
-                TWO MANAGEMENT SECTIONS
-            ========================================== */}
+            {/* =================================================
+                CUSTOMER DETAILS
+            ================================================= */}
 
-            <div
+            <section
                 style={{
-                    display:
-                        "grid",
-
-                    gridTemplateColumns:
-                        "1fr 1fr",
-
-                    gap:
-                        "25px",
-
-                    alignItems:
-                        "start",
-
-                    marginTop:
-                        "30px"
+                    backgroundColor: "white",
+                    border: "1px solid #e1e1e1",
+                    borderRadius: "10px",
+                    padding: "20px",
+                    boxShadow:
+                        "0 2px 8px rgba(0,0,0,0.05)",
+                    width: "100%",
+                    boxSizing: "border-box"
                 }}
-
-                className=
-                    "admin-management-grid"
             >
 
+                {/* HEADER */}
 
-                {/* ==================================================
-                    BOOKING MANAGEMENT
-                ================================================== */}
-
-                <section
+                <div
                     style={{
-                        backgroundColor:
-                            "white",
-
-                        border:
-                            "1px solid #e1e1e1",
-
-                        borderRadius:
-                            "10px",
-
-                        padding:
-                            "20px",
-
-                        boxShadow:
-                            "0 2px 8px rgba(0,0,0,0.05)"
+                        display: "flex",
+                        justifyContent:
+                            "space-between",
+                        alignItems: "center",
+                        marginBottom: "20px",
+                        gap: "10px",
+                        flexWrap: "wrap"
                     }}
                 >
 
-                    <div
-                        style={{
-                            display:
-                                "flex",
-
-                            justifyContent:
-                                "space-between",
-
-                            alignItems:
-                                "center",
-
-                            marginBottom:
-                                "20px",
-
-                            gap:
-                                "10px"
-                        }}
-                    >
+                    <div>
 
                         <h2
                             style={{
-                                margin:
-                                    "0",
-
-                                fontSize:
-                                    "22px"
+                                margin: "0 0 5px",
+                                fontSize: "22px"
                             }}
                         >
-                            Booking Management
+                            Customer Details
                         </h2>
 
-                        <span
+                        <p
                             style={{
-                                backgroundColor:
-                                    "#f1f1f1",
-
-                                padding:
-                                    "6px 10px",
-
-                                borderRadius:
-                                    "15px",
-
-                                fontSize:
-                                    "13px"
+                                margin: "0",
+                                color: "#777",
+                                fontSize: "14px"
                             }}
                         >
-                            {
-                                filteredBookings.length
-                            }
-                        </span>
+                            Customer, payment, vehicle
+                            and Razorpay transaction
+                            details
+                        </p>
 
                     </div>
 
 
-                    {/* SEARCH */}
+                    <span
+                        style={{
+                            backgroundColor: "#f1f1f1",
+                            padding: "6px 10px",
+                            borderRadius: "15px",
+                            fontSize: "13px"
+                        }}
+                    >
+                        {
+                            filteredPayments.length
+                        } Payments
+                    </span>
+
+                </div>
+
+
+                {/* =================================================
+                    SEARCH / FILTER AREA
+                ================================================= */}
+
+                <div
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns:
+                            "repeat(5, minmax(0, 1fr))",
+                        gap: "10px",
+                        marginBottom: "20px"
+                    }}
+                >
 
                     <input
                         type="text"
-
-                        placeholder=
-                            "Search customer or car"
-
+                        placeholder="Customer ID"
                         value={
-                            searchText
+                            customerIdSearch
                         }
-
-                        onChange={
-                            (e) =>
-                                setSearchText(
-                                    e.target.value
-                                )
+                        onChange={(e) =>
+                            setCustomerIdSearch(
+                                e.target.value
+                            )
                         }
-
                         style={{
-                            width:
-                                "100%",
-
-                            boxSizing:
-                                "border-box",
-
-                            padding:
-                                "11px",
-
+                            padding: "10px",
                             border:
                                 "1px solid #ccc",
-
-                            borderRadius:
-                                "6px",
-
-                            marginBottom:
-                                "20px",
-
-                            fontSize:
-                                "14px"
+                            borderRadius: "6px",
+                            width: "100%",
+                            boxSizing:
+                                "border-box"
                         }}
                     />
 
 
-                    {/* BOOKINGS */}
-
-                    {
-                        filteredBookings.length === 0
-
-                            ?
-
-                            (
-
-                                <p
-                                    style={{
-                                        color:
-                                            "#777",
-
-                                        textAlign:
-                                            "center",
-
-                                        padding:
-                                            "30px 0"
-                                    }}
-                                >
-                                    No bookings found.
-                                </p>
-
+                    <input
+                        type="text"
+                        placeholder="Customer Name"
+                        value={
+                            customerNameSearch
+                        }
+                        onChange={(e) =>
+                            setCustomerNameSearch(
+                                e.target.value
                             )
-
-                            :
-
-                            (
-
-                                filteredBookings.map(
-                                    (booking) => (
-
-                                        <div
-                                            key={
-                                                booking.id
-                                            }
-
-                                            style={{
-                                                border:
-                                                    "1px solid #ddd",
-
-                                                borderRadius:
-                                                    "8px",
-
-                                                padding:
-                                                    "15px",
-
-                                                marginBottom:
-                                                    "15px",
-
-                                                backgroundColor:
-                                                    "#fafafa"
-                                            }}
-                                        >
-
-                                            <h3
-                                                style={{
-                                                    margin:
-                                                        "0 0 12px",
-
-                                                    fontSize:
-                                                        "18px"
-                                                }}
-                                            >
-                                                Booking #
-                                                {
-                                                    booking.id
-                                                }
-                                            </h3>
-
-
-                                            <p>
-                                                <strong>
-                                                    Customer:
-                                                </strong>{" "}
-
-                                                {
-                                                    booking.customer &&
-                                                    booking.customer.name
-                                                        ? booking.customer.name
-                                                        : "N/A"
-                                                }
-                                            </p>
-
-
-                                            <p>
-                                                <strong>
-                                                    Email:
-                                                </strong>{" "}
-
-                                                {
-                                                    booking.customer &&
-                                                    booking.customer.email
-                                                        ? booking.customer.email
-                                                        : "N/A"
-                                                }
-                                            </p>
-
-
-                                            <p>
-                                                <strong>
-                                                    Car:
-                                                </strong>{" "}
-
-                                                {
-                                                    booking.carVariant &&
-                                                    booking.carVariant.variantName
-                                                        ? booking.carVariant.variantName
-                                                        : "N/A"
-                                                }
-                                            </p>
-
-
-                                            <p>
-                                                <strong>
-                                                    Fuel:
-                                                </strong>{" "}
-
-                                                {
-                                                    booking.carVariant &&
-                                                    booking.carVariant.fuelType
-                                                        ? booking.carVariant.fuelType
-                                                        : "N/A"
-                                                }
-                                            </p>
-
-
-                                            <p>
-                                                <strong>
-                                                    From Date:
-                                                </strong>{" "}
-
-                                                {
-                                                    booking.fromDate ||
-                                                    "N/A"
-                                                }
-                                            </p>
-
-
-                                            <p>
-                                                <strong>
-                                                    To Date:
-                                                </strong>{" "}
-
-                                                {
-                                                    booking.toDate ||
-                                                    "N/A"
-                                                }
-                                            </p>
-
-
-                                            <p>
-                                                <strong>
-                                                    Total Amount:
-                                                </strong>{" "}
-
-                                                ₹
-                                                {
-                                                    booking.totalAmount ||
-                                                    0
-                                                }
-                                            </p>
-
-
-                                            <p>
-                                                <strong>
-                                                    Assigned Car:
-                                                </strong>{" "}
-
-                                                {
-                                                    booking.car &&
-                                                    booking.car.registrationNumber
-                                                        ? booking.car.registrationNumber
-                                                        : "Not Assigned"
-                                                }
-                                            </p>
-
-
-                                            <p>
-                                                <strong>
-                                                    Status:
-                                                </strong>{" "}
-
-                                                <span
-                                                    style={{
-                                                        color:
-                                                            getBookingStatusColor(
-                                                                booking.bookingStatus
-                                                            ),
-
-                                                        fontWeight:
-                                                            "700"
-                                                    }}
-                                                >
-                                                    {
-                                                        booking.bookingStatus ||
-                                                        "PENDING"
-                                                    }
-                                                </span>
-                                            </p>
-
-
-                                            {
-                                                booking.bookingStatus ===
-                                                    "PENDING"
-
-                                                    &&
-
-                                                    (
-
-                                                        <div
-                                                            style={{
-                                                                display:
-                                                                    "flex",
-
-                                                                gap:
-                                                                    "10px",
-
-                                                                marginTop:
-                                                                    "15px"
-                                                            }}
-                                                        >
-
-                                                            <button
-                                                                onClick={
-                                                                    () =>
-                                                                        approveBooking(
-                                                                            booking.id
-                                                                        )
-                                                                }
-
-                                                                style={{
-                                                                    flex:
-                                                                        "1",
-
-                                                                    padding:
-                                                                        "10px",
-
-                                                                    backgroundColor:
-                                                                        "green",
-
-                                                                    color:
-                                                                        "white",
-
-                                                                    border:
-                                                                        "none",
-
-                                                                    borderRadius:
-                                                                        "5px",
-
-                                                                    cursor:
-                                                                        "pointer"
-                                                                }}
-                                                            >
-                                                                Approve
-                                                            </button>
-
-
-                                                            <button
-                                                                onClick={
-                                                                    () =>
-                                                                        rejectBooking(
-                                                                            booking.id
-                                                                        )
-                                                                }
-
-                                                                style={{
-                                                                    flex:
-                                                                        "1",
-
-                                                                    padding:
-                                                                        "10px",
-
-                                                                    backgroundColor:
-                                                                        "red",
-
-                                                                    color:
-                                                                        "white",
-
-                                                                    border:
-                                                                        "none",
-
-                                                                    borderRadius:
-                                                                        "5px",
-
-                                                                    cursor:
-                                                                        "pointer"
-                                                                }}
-                                                            >
-                                                                Reject
-                                                            </button>
-
-                                                        </div>
-
-                                                    )
-                                            }
-
-                                        </div>
-
-                                    )
-                                )
-
-                            )
-                    }
-
-                </section>
-
-
-                {/* ==================================================
-                    PAYMENT MANAGEMENT
-                ================================================== */}
-
-                <section
-                    style={{
-                        backgroundColor:
-                            "white",
-
-                        border:
-                            "1px solid #e1e1e1",
-
-                        borderRadius:
-                            "10px",
-
-                        padding:
-                            "20px",
-
-                        boxShadow:
-                            "0 2px 8px rgba(0,0,0,0.05)"
-                    }}
-                >
-
-                    {/* PAYMENT HEADER */}
-
-                    <div
+                        }
                         style={{
-                            display:
-                                "flex",
+                            padding: "10px",
+                            border:
+                                "1px solid #ccc",
+                            borderRadius: "6px",
+                            width: "100%",
+                            boxSizing:
+                                "border-box"
+                        }}
+                    />
 
-                            justifyContent:
-                                "space-between",
 
-                            alignItems:
-                                "center",
+                    <input
+                        type="text"
+                        placeholder="Phone"
+                        value={
+                            phoneSearch
+                        }
+                        onChange={(e) =>
+                            setPhoneSearch(
+                                e.target.value
+                            )
+                        }
+                        style={{
+                            padding: "10px",
+                            border:
+                                "1px solid #ccc",
+                            borderRadius: "6px",
+                            width: "100%",
+                            boxSizing:
+                                "border-box"
+                        }}
+                    />
 
-                            marginBottom:
-                                "20px"
+
+                    <input
+                        type="date"
+                        value={
+                            dateSearch
+                        }
+                        onChange={(e) =>
+                            setDateSearch(
+                                e.target.value
+                            )
+                        }
+                        style={{
+                            padding: "10px",
+                            border:
+                                "1px solid #ccc",
+                            borderRadius: "6px",
+                            width: "100%",
+                            boxSizing:
+                                "border-box"
+                        }}
+                    />
+
+
+                    <select
+                        value={
+                            paymentStatusFilter
+                        }
+                        onChange={(e) =>
+                            setPaymentStatusFilter(
+                                e.target.value
+                            )
+                        }
+                        style={{
+                            padding: "10px",
+                            border:
+                                "1px solid #ccc",
+                            borderRadius: "6px",
+                            width: "100%",
+                            boxSizing:
+                                "border-box"
                         }}
                     >
 
-                        <h2
-                            style={{
-                                margin:
-                                    "0",
+                        <option value="ALL">
+                            All Payments
+                        </option>
 
-                                fontSize:
-                                    "22px"
+                        <option value="PAID">
+                            Paid
+                        </option>
+
+                        <option value="FAILED">
+                            Failed
+                        </option>
+
+                        <option value="REJECTED">
+                            Rejected
+                        </option>
+
+                        <option value="PENDING">
+                            Pending
+                        </option>
+
+                        <option value="CREATED">
+                            Created
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    onClick={
+                        clearFilters
+                    }
+                    style={{
+                        padding: "9px 16px",
+                        marginBottom: "20px",
+                        backgroundColor:
+                            "#6b7280",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor: "pointer"
+                    }}
+                >
+                    Clear Filters
+                </button>
+
+
+                {/* =================================================
+                    LOADING
+                ================================================= */}
+
+                {
+                    loadingPayments && (
+
+                        <p
+                            style={{
+                                textAlign:
+                                    "center",
+                                color: "#777",
+                                padding: "30px"
                             }}
                         >
-                            Payment Management
-                        </h2>
+                            Loading customer details...
+                        </p>
+
+                    )
+                }
 
 
-                        <span
+                {/* =================================================
+                    EMPTY
+                ================================================= */}
+
+                {
+                    !loadingPayments &&
+                    filteredPayments.length === 0 && (
+
+                        <p
                             style={{
-                                backgroundColor:
-                                    "#f1f1f1",
-
-                                padding:
-                                    "6px 10px",
-
-                                borderRadius:
-                                    "15px",
-
-                                fontSize:
-                                    "13px"
+                                color: "#777",
+                                textAlign: "center",
+                                padding: "40px 0"
                             }}
                         >
+                            No customer details found.
+                        </p>
+
+                    )
+                }
+
+
+                {/* =================================================
+                    PAYMENT / CUSTOMER CARDS
+                ================================================= */}
+
+                {
+                    !loadingPayments &&
+                    filteredPayments.length > 0 && (
+
+                        <div>
+
                             {
-                                sortedPayments.length
-                            }
-                        </span>
+                                filteredPayments.map(
+                                    (payment) => {
 
-                    </div>
+                                        const booking =
+                                            payment?.booking ||
+                                            null;
 
 
-                    {/* PAYMENTS */}
+                                        const customer =
+                                            payment?.customer ||
+                                            booking?.customer ||
+                                            null;
 
-                    {
-                        sortedPayments.length === 0
 
-                            ?
+                                        const carVariant =
+                                            booking?.carVariant ||
+                                            null;
 
-                            (
 
-                                <p
-                                    style={{
-                                        color:
-                                            "#777",
+                                        const car =
+                                            booking?.car ||
+                                            null;
 
-                                        textAlign:
-                                            "center",
 
-                                        padding:
-                                            "30px 0"
-                                    }}
-                                >
-                                    No payments found.
-                                </p>
+                                        const paymentStatus =
+                                            String(
+                                                payment?.paymentStatus ||
+                                                "N/A"
+                                            ).toUpperCase();
 
-                            )
 
-                            :
+                                        const bookingStatus =
+                                            String(
+                                                booking?.bookingStatus ||
+                                                "N/A"
+                                            ).toUpperCase();
 
-                            (
 
-                                sortedPayments.map(
-                                    (payment) => (
+                                        return (
 
-                                        <div
-                                            key={
-                                                payment.id
-                                            }
-
-                                            style={{
-                                                border:
-                                                    "1px solid #ddd",
-
-                                                borderRadius:
-                                                    "8px",
-
-                                                padding:
-                                                    "15px",
-
-                                                marginBottom:
-                                                    "15px",
-
-                                                backgroundColor:
-                                                    "#fafafa"
-                                            }}
-                                        >
-
-                                            {/* PAYMENT TITLE */}
-
-                                            <h3
-                                                style={{
-                                                    margin:
-                                                        "0 0 12px",
-
-                                                    fontSize:
-                                                        "18px"
-                                                }}
-                                            >
-                                                Payment #
-                                                {
+                                            <div
+                                                key={
                                                     payment.id
                                                 }
-                                            </h3>
+                                                style={{
+                                                    border:
+                                                        "1px solid #ddd",
+                                                    borderRadius:
+                                                        "10px",
+                                                    padding:
+                                                        "20px",
+                                                    marginBottom:
+                                                        "18px",
+                                                    backgroundColor:
+                                                        "#fafafa"
+                                                }}
+                                            >
 
+                                                {/* HEADER */}
 
-                                            {/* AMOUNT */}
-
-                                            <p>
-                                                <strong>
-                                                    Amount:
-                                                </strong>{" "}
-
-                                                ₹
-                                                {
-                                                    payment.amount ||
-                                                    0
-                                                }
-                                            </p>
-
-
-                                            {/* PAYMENT STATUS */}
-
-                                            <p>
-                                                <strong>
-                                                    Payment Status:
-                                                </strong>{" "}
-
-                                                <span
+                                                <div
                                                     style={{
-                                                        color:
-                                                            getPaymentStatusColor(
-                                                                payment.paymentStatus
-                                                            ),
-
-                                                        fontWeight:
-                                                            "700"
+                                                        display:
+                                                            "flex",
+                                                        justifyContent:
+                                                            "space-between",
+                                                        alignItems:
+                                                            "center",
+                                                        gap: "10px",
+                                                        flexWrap:
+                                                            "wrap",
+                                                        marginBottom:
+                                                            "18px"
                                                     }}
                                                 >
-                                                    {
-                                                        payment.paymentStatus ||
-                                                        "VERIFYING"
-                                                    }
-                                                </span>
-                                            </p>
+
+                                                    <h3
+                                                        style={{
+                                                            margin:
+                                                                "0",
+                                                            fontSize:
+                                                                "20px"
+                                                        }}
+                                                    >
+                                                        Customer Details #
+                                                        {
+                                                            payment.id
+                                                        }
+                                                    </h3>
 
 
-                                            {/* PAYMENT DATE */}
+                                                    <span
+                                                        style={{
+                                                            color:
+                                                                getPaymentStatusColor(
+                                                                    paymentStatus
+                                                                ),
+                                                            fontWeight:
+                                                                "700",
+                                                            fontSize:
+                                                                "15px"
+                                                        }}
+                                                    >
+                                                        {
+                                                            paymentStatus
+                                                        }
+                                                    </span>
 
-                                            <p>
-                                                <strong>
-                                                    Payment Date:
-                                                </strong>{" "}
-
-                                                {
-                                                    payment.paymentDate ||
-                                                    "N/A"
-                                                }
-                                            </p>
+                                                </div>
 
 
-                                            {/* UTR */}
+                                                {/* =================================================
+                                                    LEFT CUSTOMER / RIGHT PAYMENT
+                                                ================================================= */}
 
-                                            <p>
-                                                <strong>
-                                                    UTR / Transaction ID:
-                                                </strong>{" "}
-
-                                                <span
+                                                <div
+                                                    className=
+                                                        "admin-customer-payment-grid"
                                                     style={{
-                                                        fontWeight:
-                                                            "600",
-
-                                                        wordBreak:
-                                                            "break-all"
+                                                        display:
+                                                            "grid",
+                                                        gridTemplateColumns:
+                                                            "1fr 1fr",
+                                                        gap:
+                                                            "15px",
+                                                        alignItems:
+                                                            "stretch"
                                                     }}
                                                 >
-                                                    {
-                                                        payment.upiTransactionId ||
-                                                        "N/A"
-                                                    }
-                                                </span>
-                                            </p>
 
+                                                    {/* CUSTOMER */}
 
-                                            {/* PAYMENT METHOD */}
+                                                    <div
+                                                        style={{
+                                                            backgroundColor:
+                                                                "white",
+                                                            borderRadius:
+                                                                "8px",
+                                                            padding:
+                                                                "18px",
+                                                            border:
+                                                                "1px solid #eee"
+                                                        }}
+                                                    >
 
-                                            <p>
-                                                <strong>
-                                                    Payment Method:
-                                                </strong>{" "}
-
-                                                {
-                                                    payment.paymentMethod ||
-                                                    "N/A"
-                                                }
-                                            </p>
-
-
-                                            {/* BOOKING ID */}
-
-                                            <p>
-                                                <strong>
-                                                    Booking ID:
-                                                </strong>{" "}
-
-                                                {
-                                                    payment.booking &&
-                                                    payment.booking.id
-                                                        ? payment.booking.id
-                                                        : "N/A"
-                                                }
-                                            </p>
-
-
-                                            {/* CUSTOMER */}
-
-                                            <p>
-                                                <strong>
-                                                    Customer:
-                                                </strong>{" "}
-
-                                                {
-                                                    payment.customer &&
-                                                    payment.customer.name
-                                                        ? payment.customer.name
-
-                                                        :
-
-                                                        payment.booking &&
-                                                        payment.booking.customer &&
-                                                        payment.booking.customer.name
-
-                                                            ?
-
-                                                            payment.booking.customer.name
-
-                                                            :
-
-                                                            "N/A"
-                                                }
-                                            </p>
-
-
-                                            {/* CUSTOMER EMAIL */}
-
-                                            <p>
-                                                <strong>
-                                                    Customer Email:
-                                                </strong>{" "}
-
-                                                {
-                                                    payment.customer &&
-                                                    payment.customer.email
-                                                        ? payment.customer.email
-
-                                                        :
-
-                                                        payment.booking &&
-                                                        payment.booking.customer &&
-                                                        payment.booking.customer.email
-
-                                                            ?
-
-                                                            payment.booking.customer.email
-
-                                                            :
-
-                                                            "N/A"
-                                                }
-                                            </p>
-
-
-                                            {/* CAR */}
-
-                                            <p>
-                                                <strong>
-                                                    Car:
-                                                </strong>{" "}
-
-                                                {
-                                                    payment.booking &&
-                                                    payment.booking.carVariant &&
-                                                    payment.booking.carVariant.variantName
-                                                        ? payment.booking.carVariant.variantName
-                                                        : "N/A"
-                                                }
-                                            </p>
-
-
-                                            {/* FUEL TYPE */}
-
-                                            <p>
-                                                <strong>
-                                                    Fuel:
-                                                </strong>{" "}
-
-                                                {
-                                                    payment.booking &&
-                                                    payment.booking.carVariant &&
-                                                    payment.booking.carVariant.fuelType
-                                                        ? payment.booking.carVariant.fuelType
-                                                        : "N/A"
-                                                }
-                                            </p>
-
-
-                                            {/* ==========================================
-                                                VERIFY / REJECT
-                                            ========================================== */}
-
-                                            {
-                                                payment.paymentStatus ===
-                                                    "VERIFYING"
-
-                                                    &&
-
-                                                    (
-
-                                                        <div
+                                                        <h4
                                                             style={{
-                                                                display:
-                                                                    "flex",
-
-                                                                gap:
-                                                                    "10px",
-
-                                                                marginTop:
+                                                                margin:
+                                                                    "0 0 15px",
+                                                                fontSize:
                                                                     "18px",
-
-                                                                paddingTop:
-                                                                    "15px",
-
-                                                                borderTop:
-                                                                    "1px solid #ddd"
+                                                                color:
+                                                                    "#111827"
                                                             }}
                                                         >
+                                                            Customer Information
+                                                        </h4>
 
-                                                            {/* VERIFY */}
 
-                                                            <button
-                                                                onClick={
-                                                                    () =>
-                                                                        verifyPayment(
-                                                                            payment.id
-                                                                        )
-                                                                }
+                                                        <p>
+                                                            <strong>
+                                                                Customer ID:
+                                                            </strong>{" "}
+                                                            {
+                                                                customer?.id ||
+                                                                "N/A"
+                                                            }
+                                                        </p>
 
+
+                                                        <p>
+                                                            <strong>
+                                                                Customer Name:
+                                                            </strong>{" "}
+                                                            {
+                                                                customer?.name ||
+                                                                "N/A"
+                                                            }
+                                                        </p>
+
+
+                                                        <p
+                                                            style={{
+                                                                wordBreak:
+                                                                    "break-word"
+                                                            }}
+                                                        >
+                                                            <strong>
+                                                                Email:
+                                                            </strong>{" "}
+                                                            {
+                                                                customer?.email ||
+                                                                "N/A"
+                                                            }
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Phone:
+                                                            </strong>{" "}
+                                                            {
+                                                                customer?.phone ||
+                                                                customer?.mobile ||
+                                                                "N/A"
+                                                            }
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Alternate Phone:
+                                                            </strong>{" "}
+                                                            {
+                                                                customer?.alternatePhone ||
+                                                                "N/A"
+                                                            }
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Blood Group:
+                                                            </strong>{" "}
+                                                            {
+                                                                customer?.bloodGroup ||
+                                                                "N/A"
+                                                            }
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Permanent Address:
+                                                            </strong>{" "}
+                                                            {
+                                                                customer?.address ||
+                                                                "N/A"
+                                                            }
+                                                        </p>
+
+                                                    </div>
+
+
+                                                    {/* PAYMENT */}
+
+                                                    <div
+                                                        style={{
+                                                            backgroundColor:
+                                                                "white",
+                                                            borderRadius:
+                                                                "8px",
+                                                            padding:
+                                                                "18px",
+                                                            border:
+                                                                "1px solid #eee"
+                                                        }}
+                                                    >
+
+                                                        <h4
+                                                            style={{
+                                                                margin:
+                                                                    "0 0 15px",
+                                                                fontSize:
+                                                                    "18px",
+                                                                color:
+                                                                    "#111827"
+                                                            }}
+                                                        >
+                                                            Payment Information
+                                                        </h4>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Payment ID:
+                                                            </strong>{" "}
+                                                            {
+                                                                payment?.id ||
+                                                                "N/A"
+                                                            }
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Amount:
+                                                            </strong>{" "}
+                                                            ₹
+                                                            {
+                                                                payment?.amount ||
+                                                                0
+                                                            }
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Status:
+                                                            </strong>{" "}
+
+                                                            <span
                                                                 style={{
-                                                                    flex:
-                                                                        "1",
-
-                                                                    padding:
-                                                                        "11px",
-
-                                                                    backgroundColor:
-                                                                        "green",
-
                                                                     color:
-                                                                        "white",
-
-                                                                    border:
-                                                                        "none",
-
-                                                                    borderRadius:
-                                                                        "5px",
-
-                                                                    cursor:
-                                                                        "pointer",
-
+                                                                        getPaymentStatusColor(
+                                                                            paymentStatus
+                                                                        ),
                                                                     fontWeight:
-                                                                        "600"
+                                                                        "700"
                                                                 }}
                                                             >
-                                                                Verify Payment
-                                                            </button>
-
-
-                                                            {/* REJECT */}
-
-                                                            <button
-                                                                onClick={
-                                                                    () =>
-                                                                        rejectPayment(
-                                                                            payment.id
-                                                                        )
+                                                                {
+                                                                    paymentStatus
                                                                 }
+                                                            </span>
+                                                        </p>
 
+
+                                                        <p>
+                                                            <strong>
+                                                                Payment Method:
+                                                            </strong>{" "}
+                                                            {
+                                                                payment?.paymentMethod ||
+                                                                "N/A"
+                                                            }
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Payment Date:
+                                                            </strong>{" "}
+                                                            {
+                                                                formatDate(
+                                                                    payment?.paymentDate
+                                                                )
+                                                            }
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Booking ID:
+                                                            </strong>{" "}
+                                                            {
+                                                                booking?.id ||
+                                                                "N/A"
+                                                            }
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Booking Status:
+                                                            </strong>{" "}
+
+                                                            <span
                                                                 style={{
-                                                                    flex:
-                                                                        "1",
-
-                                                                    padding:
-                                                                        "11px",
-
-                                                                    backgroundColor:
-                                                                        "red",
-
                                                                     color:
-                                                                        "white",
-
-                                                                    border:
-                                                                        "none",
-
-                                                                    borderRadius:
-                                                                        "5px",
-
-                                                                    cursor:
-                                                                        "pointer",
-
+                                                                        getBookingStatusColor(
+                                                                            bookingStatus
+                                                                        ),
                                                                     fontWeight:
-                                                                        "600"
+                                                                        "700"
                                                                 }}
                                                             >
-                                                                Reject Payment
-                                                            </button>
+                                                                {
+                                                                    bookingStatus
+                                                                }
+                                                            </span>
+                                                        </p>
 
-                                                        </div>
+                                                    </div>
 
-                                                    )
-                                            }
+                                                </div>
 
 
-                                            {/* VERIFIED MESSAGE */}
+                                                {/* =================================================
+                                                    BOOKING + VEHICLE
+                                                ================================================= */}
 
-                                            {
-                                                payment.paymentStatus ===
-                                                    "PAID"
+                                                <div
+                                                    className=
+                                                        "admin-customer-payment-grid"
+                                                    style={{
+                                                        display:
+                                                            "grid",
+                                                        gridTemplateColumns:
+                                                            "1fr 1fr",
+                                                        gap:
+                                                            "15px",
+                                                        marginTop:
+                                                            "15px"
+                                                    }}
+                                                >
 
-                                                    &&
+                                                    {/* BOOKING */}
 
-                                                    (
+                                                    <div
+                                                        style={{
+                                                            backgroundColor:
+                                                                "white",
+                                                            borderRadius:
+                                                                "8px",
+                                                            padding:
+                                                                "18px",
+                                                            border:
+                                                                "1px solid #eee"
+                                                        }}
+                                                    >
+
+                                                        <h4
+                                                            style={{
+                                                                margin:
+                                                                    "0 0 15px",
+                                                                fontSize:
+                                                                    "18px"
+                                                            }}
+                                                        >
+                                                            Booking Information
+                                                        </h4>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Booking ID:
+                                                            </strong>{" "}
+                                                            {
+                                                                booking?.id ||
+                                                                "N/A"
+                                                            }
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                From Date:
+                                                            </strong>{" "}
+                                                            {
+                                                                booking?.fromDate ||
+                                                                "N/A"
+                                                            }
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                To Date:
+                                                            </strong>{" "}
+                                                            {
+                                                                booking?.toDate ||
+                                                                "N/A"
+                                                            }
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Total Amount:
+                                                            </strong>{" "}
+                                                            ₹
+                                                            {
+                                                                booking?.totalAmount ??
+                                                                payment?.amount ??
+                                                                0
+                                                            }
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Pickup Address:
+                                                            </strong>{" "}
+                                                            {
+                                                                booking?.pickupAddress ||
+                                                                "N/A"
+                                                            }
+                                                        </p>
+
+                                                    </div>
+
+
+                                                    {/* VEHICLE */}
+
+                                                    <div
+                                                        style={{
+                                                            backgroundColor:
+                                                                "white",
+                                                            borderRadius:
+                                                                "8px",
+                                                            padding:
+                                                                "18px",
+                                                            border:
+                                                                "1px solid #eee"
+                                                        }}
+                                                    >
+
+                                                        <h4
+                                                            style={{
+                                                                margin:
+                                                                    "0 0 15px",
+                                                                fontSize:
+                                                                    "18px"
+                                                            }}
+                                                        >
+                                                            Vehicle Information
+                                                        </h4>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Car:
+                                                            </strong>{" "}
+                                                            {
+                                                                carVariant?.variantName ||
+                                                                "N/A"
+                                                            }
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Fuel Type:
+                                                            </strong>{" "}
+                                                            {
+                                                                carVariant?.fuelType ||
+                                                                "N/A"
+                                                            }
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Price Per Day:
+                                                            </strong>{" "}
+                                                            ₹
+                                                            {
+                                                                carVariant?.pricePerDay ||
+                                                                0
+                                                            }
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Registration Number:
+                                                            </strong>{" "}
+                                                            {
+                                                                car?.registrationNumber ||
+                                                                "Not Assigned"
+                                                            }
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Color:
+                                                            </strong>{" "}
+                                                            {
+                                                                car?.color ||
+                                                                "N/A"
+                                                            }
+                                                        </p>
+
+                                                    </div>
+
+                                                </div>
+
+
+                                                {/* =================================================
+                                                    RAZORPAY DETAILS
+                                                ================================================= */}
+
+                                                <div
+                                                    style={{
+                                                        backgroundColor:
+                                                            "#f8fafc",
+                                                        border:
+                                                            "1px solid #e2e8f0",
+                                                        borderRadius:
+                                                            "8px",
+                                                        padding:
+                                                            "18px",
+                                                        marginTop:
+                                                            "15px"
+                                                    }}
+                                                >
+
+                                                    <h4
+                                                        style={{
+                                                            margin:
+                                                                "0 0 15px",
+                                                            fontSize:
+                                                                "18px"
+                                                        }}
+                                                    >
+                                                        Razorpay Transaction Details
+                                                    </h4>
+
+
+                                                    <div
+                                                        style={{
+                                                            display:
+                                                                "grid",
+                                                            gridTemplateColumns:
+                                                                "1fr 1fr",
+                                                            gap:
+                                                                "12px"
+                                                        }}
+                                                    >
+
+                                                        <p>
+                                                            <strong>
+                                                                Razorpay Order ID:
+                                                            </strong>
+                                                            <br />
+
+                                                            <span
+                                                                style={{
+                                                                    wordBreak:
+                                                                        "break-all",
+                                                                    color:
+                                                                        "#555"
+                                                                }}
+                                                            >
+                                                                {
+                                                                    payment?.razorpayOrderId ||
+                                                                    "N/A"
+                                                                }
+                                                            </span>
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Razorpay Payment ID:
+                                                            </strong>
+                                                            <br />
+
+                                                            <span
+                                                                style={{
+                                                                    wordBreak:
+                                                                        "break-all",
+                                                                    color:
+                                                                        "#555"
+                                                                }}
+                                                            >
+                                                                {
+                                                                    payment?.razorpayPaymentId ||
+                                                                    "N/A"
+                                                                }
+                                                            </span>
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                Razorpay Signature:
+                                                            </strong>
+                                                            <br />
+
+                                                            <span
+                                                                style={{
+                                                                    wordBreak:
+                                                                        "break-all",
+                                                                    color:
+                                                                        "#555"
+                                                                }}
+                                                            >
+                                                                {
+                                                                    payment?.razorpaySignature ||
+                                                                    "N/A"
+                                                                }
+                                                            </span>
+                                                        </p>
+
+
+                                                        <p>
+                                                            <strong>
+                                                                UTR / Transaction ID:
+                                                            </strong>
+                                                            <br />
+
+                                                            <span
+                                                                style={{
+                                                                    wordBreak:
+                                                                        "break-all",
+                                                                    color:
+                                                                        "#555"
+                                                                }}
+                                                            >
+                                                                {
+                                                                    payment?.upiTransactionId ||
+                                                                    "N/A"
+                                                                }
+                                                            </span>
+                                                        </p>
+
+                                                    </div>
+
+                                                </div>
+
+
+                                                {/* =================================================
+                                                    PAYMENT VERIFIED
+                                                ================================================= */}
+
+                                                {
+                                                    paymentStatus ===
+                                                    "PAID" && (
 
                                                         <div
                                                             style={{
                                                                 marginTop:
                                                                     "15px",
-
                                                                 padding:
-                                                                    "10px",
-
+                                                                    "12px",
                                                                 backgroundColor:
                                                                     "#e8f5e9",
-
                                                                 color:
-                                                                    "green",
-
+                                                                    "#15803d",
                                                                 borderRadius:
-                                                                    "5px",
-
+                                                                    "6px",
                                                                 fontWeight:
                                                                     "600",
-
                                                                 textAlign:
                                                                     "center"
                                                             }}
                                                         >
-                                                            ✓ Payment Verified
+                                                            ✓ Razorpay Payment Verified
                                                         </div>
 
                                                     )
-                                            }
+                                                }
 
 
-                                            {/* REJECTED MESSAGE */}
+                                                {/* =================================================
+                                                    PAYMENT FAILED
+                                                ================================================= */}
 
-                                            {
-                                                payment.paymentStatus ===
-                                                    "REJECTED"
-
-                                                    &&
-
-                                                    (
+                                                {
+                                                    paymentStatus ===
+                                                    "FAILED" && (
 
                                                         <div
                                                             style={{
                                                                 marginTop:
-                                                                    "15px",
-
+                                                                    "12px",
                                                                 padding:
-                                                                    "10px",
-
+                                                                    "12px",
                                                                 backgroundColor:
                                                                     "#ffebee",
-
                                                                 color:
-                                                                    "red",
-
+                                                                    "#dc2626",
                                                                 borderRadius:
-                                                                    "5px",
-
+                                                                    "6px",
                                                                 fontWeight:
                                                                     "600",
+                                                                textAlign:
+                                                                    "center"
+                                                            }}
+                                                        >
+                                                            ✕ Payment Failed
+                                                        </div>
 
+                                                    )
+                                                }
+
+
+                                                {/* =================================================
+                                                    PAYMENT REJECTED
+                                                ================================================= */}
+
+                                                {
+                                                    paymentStatus ===
+                                                    "REJECTED" && (
+
+                                                        <div
+                                                            style={{
+                                                                marginTop:
+                                                                    "12px",
+                                                                padding:
+                                                                    "12px",
+                                                                backgroundColor:
+                                                                    "#ffebee",
+                                                                color:
+                                                                    "#dc2626",
+                                                                borderRadius:
+                                                                    "6px",
+                                                                fontWeight:
+                                                                    "600",
                                                                 textAlign:
                                                                     "center"
                                                             }}
@@ -2035,35 +2700,136 @@ function AdminDashboard() {
                                                         </div>
 
                                                     )
-                                            }
+                                                }
 
-                                        </div>
 
-                                    )
+                                                {/* =================================================
+                                                    REFUND
+                                                ================================================= */}
+
+                                                {
+                                                    paymentStatus ===
+                                                    "PAID" && (
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                rejectPayment(
+                                                                    payment.id
+                                                                )
+                                                            }
+                                                            style={{
+                                                                width:
+                                                                    "100%",
+                                                                padding:
+                                                                    "11px",
+                                                                marginTop:
+                                                                    "10px",
+                                                                backgroundColor:
+                                                                    "#dc2626",
+                                                                color:
+                                                                    "white",
+                                                                border:
+                                                                    "none",
+                                                                borderRadius:
+                                                                    "6px",
+                                                                cursor:
+                                                                    "pointer",
+                                                                fontWeight:
+                                                                    "700"
+                                                            }}
+                                                        >
+                                                            Refund / Reject Payment
+                                                        </button>
+
+                                                    )
+                                                }
+
+
+                                                {/* =================================================
+                                                    PDF
+                                                ================================================= */}
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        downloadPaymentPDF(
+                                                            payment
+                                                        )
+                                                    }
+                                                    style={{
+                                                        width:
+                                                            "100%",
+                                                        padding:
+                                                            "11px",
+                                                        marginTop:
+                                                            "10px",
+                                                        backgroundColor:
+                                                            "#111827",
+                                                        color:
+                                                            "white",
+                                                        border:
+                                                            "none",
+                                                        borderRadius:
+                                                            "6px",
+                                                        cursor:
+                                                            "pointer",
+                                                        fontWeight:
+                                                            "700"
+                                                    }}
+                                                >
+                                                    Download Payment Details
+                                                </button>
+
+                                            </div>
+
+                                        );
+
+                                    }
                                 )
+                            }
 
-                            )
-                    }
+                        </div>
 
-                </section>
+                    )
+                }
 
-            </div>
+            </section>
 
 
-            {/* ==========================================
-                RESPONSIVE STYLE
-            ========================================== */}
+            {/* =================================================
+                RESPONSIVE CSS
+            ================================================= */}
 
             <style>
                 {`
 
+                    .admin-customer-payment-grid {
+                        grid-template-columns:
+                            repeat(2, minmax(0, 1fr));
+                    }
+
+
+                    @media (max-width: 1100px) {
+
+                        .admin-stat-grid {
+                            grid-template-columns:
+                                repeat(2, minmax(0, 1fr)) !important;
+                        }
+
+                    }
+
+
                     @media (max-width: 900px) {
 
-                        .admin-management-grid {
-
+                        .admin-customer-payment-grid {
                             grid-template-columns:
                                 1fr !important;
+                        }
 
+                        .admin-quick-grid {
+                            grid-template-columns:
+                                1fr !important;
                         }
 
                     }
@@ -2071,11 +2837,14 @@ function AdminDashboard() {
 
                     @media (max-width: 700px) {
 
-                        .admin-management-grid {
-
+                        .admin-stat-grid {
                             grid-template-columns:
                                 1fr !important;
+                        }
 
+                        .admin-customer-payment-grid {
+                            grid-template-columns:
+                                1fr !important;
                         }
 
                     }
@@ -2083,11 +2852,29 @@ function AdminDashboard() {
 
                     @media (max-width: 600px) {
 
-                        .admin-management-grid {
+                        .admin-customer-payment-grid {
+                            display:
+                                block !important;
+                        }
 
-                            grid-template-columns:
-                                1fr !important;
+                        .admin-customer-payment-grid > div {
+                            margin-bottom:
+                                15px;
+                        }
 
+                    }
+
+
+                    @media (max-width: 500px) {
+
+                        .admin-customer-payment-grid p {
+                            font-size:
+                                14px;
+                        }
+
+                        .admin-customer-payment-grid h4 {
+                            font-size:
+                                17px !important;
                         }
 
                     }
@@ -2095,11 +2882,9 @@ function AdminDashboard() {
                 `}
             </style>
 
-
         </div>
-
     );
-
 }
+
 
 export default AdminDashboard;

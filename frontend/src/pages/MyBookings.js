@@ -108,8 +108,18 @@ function MyBookings() {
                     );
 
 
+                // ==========================================
+                // NEWEST BOOKING FIRST
+                // ==========================================
+
+                const sortedBookings =
+                    [...filteredBookings].sort(
+                        (a, b) => b.id - a.id
+                    );
+
+
                 setBookings(
-                    filteredBookings
+                    sortedBookings
                 );
 
             })
@@ -140,6 +150,7 @@ function MyBookings() {
                     localStorage.removeItem(
                         "token"
                     );
+
 
                     localStorage.removeItem(
                         "customerId"
@@ -223,6 +234,7 @@ function MyBookings() {
                     localStorage.removeItem(
                         "token"
                     );
+
 
                     localStorage.removeItem(
                         "customerId"
@@ -449,6 +461,13 @@ function MyBookings() {
 
                     )
 
+                    // ==========================================
+                    // NEWEST BOOKING FIRST
+                    // ==========================================
+                    .sort(
+                        (a, b) => b.id - a.id
+                    )
+
                     .map(
 
                         (booking) => (
@@ -523,7 +542,9 @@ function MyBookings() {
                                     {" "}
 
                                     {
+
                                         booking.fromDate
+
                                     }
 
                                 </p>
@@ -544,7 +565,9 @@ function MyBookings() {
                                     {" "}
 
                                     {
+
                                         booking.toDate
+
                                     }
 
                                 </p>

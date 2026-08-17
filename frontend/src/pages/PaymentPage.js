@@ -70,8 +70,184 @@ function PaymentPage() {
     ] = useState(false);
 
 
+    // ========================================================
+    // IMPORTANT FLAGS
+    // ========================================================
+
+    /*
+     * Prevent duplicate cancel API calls.
+     */
     const cancelRequestSent =
         useRef(false);
+
+
+    /*
+     * Prevent duplicate create-order API calls.
+     *
+     * This is especially important in React development mode
+     * where useEffect may execute more than once.
+     */
+    const orderCreationStarted =
+        useRef(false);
+
+
+    /*
+     * Store Razorpay instance.
+     */
+    const razorpayInstance =
+        useRef(null);
+
+
+    /*
+     * Prevent multiple navigation calls.
+     */
+    const navigationStarted =
+        useRef(false);
+
+
+    // ========================================================
+    // CLEAN USER-FRIENDLY ERROR MESSAGE
+    // ========================================================
+
+    const getSafeErrorMessage =
+        (error, defaultMessage) => {
+
+            /*
+             * NEVER display raw backend/database errors.
+             *
+             * Examples that should NOT be shown:
+             *
+             * Duplicate entry...
+             * could not execute statement...
+             * SQL...
+             * Hibernate...
+             * org.springframework...
+             */
+
+            const backendMessage =
+                error?.response?.data?.message;
+
+
+            const backendString =
+                typeof backendMessage === "string"
+                    ? backendMessage
+                    : "";
+
+
+            const lowerMessage =
+                backendString.toLowerCase();
+
+
+            // -------------------------------------------------
+            // DATABASE / SQL ERRORS
+            // -------------------------------------------------
+
+            if (
+                lowerMessage.includes(
+                    "duplicate entry"
+                ) ||
+
+                lowerMessage.includes(
+                    "could not execute statement"
+                ) ||
+
+                lowerMessage.includes(
+                    "constraint"
+                ) ||
+
+                lowerMessage.includes(
+                    "sql"
+                ) ||
+
+                lowerMessage.includes(
+                    "hibernate"
+                ) ||
+
+                lowerMessage.includes(
+                    "org.springframework"
+                )
+            ) {
+
+                return defaultMessage;
+            }
+
+
+            // -------------------------------------------------
+            // PAYMENT ALREADY COMPLETED
+            // -------------------------------------------------
+
+            if (
+                lowerMessage.includes(
+                    "payment already completed"
+                )
+            ) {
+
+                return "This booking has already been paid.";
+            }
+
+
+            // -------------------------------------------------
+            // BOOKING NOT FOUND
+            // -------------------------------------------------
+
+            if (
+                lowerMessage.includes(
+                    "booking not found"
+                )
+            ) {
+
+                return "Booking could not be found.";
+            }
+
+
+            // -------------------------------------------------
+            // INVALID BOOKING
+            // -------------------------------------------------
+
+            if (
+                lowerMessage.includes(
+                    "booking is not waiting"
+                )
+            ) {
+
+                return "This booking is not currently available for payment.";
+            }
+
+
+            // -------------------------------------------------
+            // INVALID PAYMENT
+            // -------------------------------------------------
+
+            if (
+                lowerMessage.includes(
+                    "invalid booking amount"
+                )
+            ) {
+
+                return "The booking amount is invalid. Please contact support.";
+            }
+
+
+            // -------------------------------------------------
+            // PAYMENT VERIFICATION
+            // -------------------------------------------------
+
+            if (
+                lowerMessage.includes(
+                    "invalid razorpay"
+                )
+            ) {
+
+                return "Payment verification failed. Please try again.";
+            }
+
+
+            // -------------------------------------------------
+            // DO NOT DISPLAY UNKNOWN BACKEND ERRORS
+            // -------------------------------------------------
+
+            return defaultMessage;
+        };
 
 
     // ========================================================
@@ -84,6 +260,10 @@ function PaymentPage() {
             return new Promise(
                 (resolve) => {
 
+                    // ------------------------------------------------
+                    // ALREADY LOADED
+                    // ------------------------------------------------
+
                     if (
                         window.Razorpay
                     ) {
@@ -94,13 +274,19 @@ function PaymentPage() {
                     }
 
 
+                    // ------------------------------------------------
+                    // EXISTING SCRIPT
+                    // ------------------------------------------------
+
                     const existingScript =
                         document.querySelector(
                             `script[src="${RAZORPAY_SCRIPT}"]`
                         );
 
 
-                    if (existingScript) {
+                    if (
+                        existingScript
+                    ) {
 
                         existingScript.onload =
                             () => resolve(true);
@@ -111,6 +297,10 @@ function PaymentPage() {
                         return;
                     }
 
+
+                    // ------------------------------------------------
+                    // CREATE SCRIPT
+                    // ------------------------------------------------
 
                     const script =
                         document.createElement(
@@ -143,11 +333,40 @@ function PaymentPage() {
 
 
     // ========================================================
+    // SAFE NAVIGATION
+    // ========================================================
+
+    const goToBookings =
+        () => {
+
+            if (
+                navigationStarted.current
+            ) {
+                return;
+            }
+
+
+            navigationStarted.current =
+                true;
+
+
+            navigate(
+                "/my-bookings"
+            );
+        };
+
+
+    // ========================================================
     // CANCEL PAYMENT
     // ========================================================
 
     const cancelPayment =
         async () => {
+
+            /*
+             * Payment already completed.
+             * Never cancel a successful payment.
+             */
 
             if (
                 paymentCompleted
@@ -156,6 +375,10 @@ function PaymentPage() {
                 return;
             }
 
+
+            /*
+             * Prevent duplicate cancel requests.
+             */
 
             if (
                 cancelRequestSent.current
@@ -171,17 +394,37 @@ function PaymentPage() {
 
             try {
 
+                const token =
+                    localStorage.getItem(
+                        "token"
+                    );
+
+
                 await axios.delete(
                     `http://localhost:8081/payment/cancel/${bookingId}`,
                     {
                         headers: {
                             Authorization:
-                                `Bearer ${localStorage.getItem("token")}`
+                                `Bearer ${token}`
                         }
                     }
                 );
 
+
+                console.log(
+                    "PAYMENT CANCELLED SUCCESSFULLY"
+                );
+
             } catch (error) {
+
+                /*
+                 * Important:
+                 *
+                 * Do NOT show this error to the customer.
+                 *
+                 * The customer does not need to see
+                 * SQL / backend / Hibernate errors.
+                 */
 
                 console.error(
                     "PAYMENT CANCEL ERROR:",
@@ -213,6 +456,10 @@ function PaymentPage() {
                     );
 
 
+                // ------------------------------------------------
+                // VERIFY DATA
+                // ------------------------------------------------
+
                 const verifyData = {
 
                     bookingId:
@@ -240,6 +487,10 @@ function PaymentPage() {
                 );
 
 
+                // ------------------------------------------------
+                // BACKEND VERIFICATION
+                // ------------------------------------------------
+
                 const response =
                     await axios.post(
 
@@ -262,6 +513,10 @@ function PaymentPage() {
                 );
 
 
+                // ------------------------------------------------
+                // SUCCESS
+                // ------------------------------------------------
+
                 if (
                     response.data &&
                     response.data.success
@@ -277,17 +532,19 @@ function PaymentPage() {
                     );
 
 
-                    navigate(
-                        "/my-bookings"
-                    );
+                    goToBookings();
 
 
                     return;
                 }
 
 
+                /*
+                 * If backend does not return success=true,
+                 * treat it as verification failure.
+                 */
+
                 throw new Error(
-                    response.data?.message ||
                     "Payment verification failed."
                 );
 
@@ -304,23 +561,32 @@ function PaymentPage() {
                 );
 
 
-                const message =
-                    error.response?.data?.message ||
-                    error.message ||
-                    "Payment verification failed.";
+                /*
+                 * IMPORTANT:
+                 *
+                 * Never show the raw backend error.
+                 */
+
+                const safeMessage =
+                    getSafeErrorMessage(
+                        error,
+                        "Payment verification failed. Please try again."
+                    );
 
 
-                alert(
-                    message
-                );
-
+                /*
+                 * Cancel the unpaid payment.
+                 */
 
                 await cancelPayment();
 
 
-                navigate(
-                    "/my-bookings"
+                alert(
+                    safeMessage
                 );
+
+
+                goToBookings();
             }
         };
 
@@ -336,17 +602,27 @@ function PaymentPage() {
 
             try {
 
+                // ------------------------------------------------
+                // LOAD SCRIPT
+                // ------------------------------------------------
+
                 const scriptLoaded =
                     await loadRazorpayScript();
 
 
-                if (!scriptLoaded) {
+                if (
+                    !scriptLoaded
+                ) {
 
                     throw new Error(
                         "Unable to load Razorpay Checkout."
                     );
                 }
 
+
+                // ------------------------------------------------
+                // CHECK RAZORPAY
+                // ------------------------------------------------
 
                 if (
                     !window.Razorpay
@@ -363,10 +639,15 @@ function PaymentPage() {
                 );
 
 
+                // ------------------------------------------------
+                // RAZORPAY OPTIONS
+                // ------------------------------------------------
+
                 const options = {
 
                     key:
                         order.keyId,
+
 
                     amount:
                         Math.round(
@@ -375,19 +656,27 @@ function PaymentPage() {
                             ) * 100
                         ),
 
+
                     currency:
                         order.currency ||
                         "INR",
 
+
                     name:
                         "Car Rental System",
+
 
                     description:
                         `Car Rental Booking #${bookingId}`,
 
+
                     order_id:
                         order.razorpayOrderId,
 
+
+                    // ------------------------------------------------
+                    // PAYMENT SUCCESS
+                    // ------------------------------------------------
 
                     handler:
                         async (
@@ -399,6 +688,10 @@ function PaymentPage() {
                             );
                         },
 
+
+                    // ------------------------------------------------
+                    // RAZORPAY MODAL
+                    // ------------------------------------------------
 
                     modal: {
 
@@ -427,13 +720,15 @@ function PaymentPage() {
                                     );
 
 
-                                    navigate(
-                                        "/my-bookings"
-                                    );
+                                    goToBookings();
                                 }
                             }
                     },
 
+
+                    // ------------------------------------------------
+                    // THEME
+                    // ------------------------------------------------
 
                     theme: {
 
@@ -443,10 +738,18 @@ function PaymentPage() {
                 };
 
 
+                // ------------------------------------------------
+                // CREATE RAZORPAY INSTANCE
+                // ------------------------------------------------
+
                 const razorpay =
                     new window.Razorpay(
                         options
                     );
+
+
+                razorpayInstance.current =
+                    razorpay;
 
 
                 // ------------------------------------------------
@@ -473,18 +776,26 @@ function PaymentPage() {
                         );
 
 
+                        /*
+                         * Do NOT show Razorpay's complete
+                         * technical description.
+                         *
+                         * Show a clean customer message.
+                         */
+
                         alert(
-                            response.error?.description ||
-                            "Payment failed."
+                            "Payment failed. Your booking was not confirmed. Please try again."
                         );
 
 
-                        navigate(
-                            "/my-bookings"
-                        );
+                        goToBookings();
                     }
                 );
 
+
+                // ------------------------------------------------
+                // OPEN CHECKOUT
+                // ------------------------------------------------
 
                 razorpay.open();
 
@@ -501,9 +812,20 @@ function PaymentPage() {
                 );
 
 
+                /*
+                 * Convert technical error into
+                 * customer-friendly message.
+                 */
+
+                const safeMessage =
+                    getSafeErrorMessage(
+                        error,
+                        "Unable to open payment gateway. Please try again."
+                    );
+
+
                 setErrorMessage(
-                    error.message ||
-                    "Unable to open Razorpay."
+                    safeMessage
                 );
 
 
@@ -518,6 +840,41 @@ function PaymentPage() {
 
     const createOrder =
         async () => {
+
+            /*
+             * IMPORTANT:
+             *
+             * Do not create another order if one is already
+             * being created or Razorpay is already open.
+             */
+
+            if (
+                orderCreationStarted.current
+            ) {
+
+                console.log(
+                    "CREATE ORDER ALREADY STARTED - SKIPPING DUPLICATE REQUEST"
+                );
+
+                return;
+            }
+
+
+            if (
+                paymentCompleted
+            ) {
+
+                return;
+            }
+
+
+            // ------------------------------------------------
+            // MARK AS STARTED
+            // ------------------------------------------------
+
+            orderCreationStarted.current =
+                true;
+
 
             try {
 
@@ -537,7 +894,13 @@ function PaymentPage() {
                     );
 
 
-                if (!token) {
+                // ------------------------------------------------
+                // LOGIN CHECK
+                // ------------------------------------------------
+
+                if (
+                    !token
+                ) {
 
                     alert(
                         "Please login before making payment."
@@ -552,6 +915,10 @@ function PaymentPage() {
                     return;
                 }
 
+
+                // ------------------------------------------------
+                // BOOKING ID CHECK
+                // ------------------------------------------------
 
                 if (
                     !bookingId
@@ -568,6 +935,10 @@ function PaymentPage() {
                     bookingId
                 );
 
+
+                // ------------------------------------------------
+                // CREATE ORDER
+                // ------------------------------------------------
 
                 const response =
                     await axios.post(
@@ -595,6 +966,10 @@ function PaymentPage() {
                     response.data;
 
 
+                // ------------------------------------------------
+                // VALIDATE RESPONSE
+                // ------------------------------------------------
+
                 if (
                     !data ||
                     !data.razorpayOrderId ||
@@ -603,15 +978,23 @@ function PaymentPage() {
                 ) {
 
                     throw new Error(
-                        "Invalid Razorpay order response from backend."
+                        "Unable to create payment order."
                     );
                 }
 
+
+                // ------------------------------------------------
+                // SAVE ORDER DATA
+                // ------------------------------------------------
 
                 setOrderData(
                     data
                 );
 
+
+                // ------------------------------------------------
+                // OPEN RAZORPAY
+                // ------------------------------------------------
 
                 await openRazorpay(
                     data
@@ -625,10 +1008,17 @@ function PaymentPage() {
                 );
 
 
+                /*
+                 * IMPORTANT:
+                 *
+                 * Never display raw SQL/database errors.
+                 */
+
                 const message =
-                    error.response?.data?.message ||
-                    error.message ||
-                    "Unable to create Razorpay order.";
+                    getSafeErrorMessage(
+                        error,
+                        "Unable to start payment. Please try again."
+                    );
 
 
                 setErrorMessage(
@@ -651,10 +1041,35 @@ function PaymentPage() {
     useEffect(
         () => {
 
+            if (
+                !bookingId
+            ) {
+
+                setErrorMessage(
+                    "Booking ID is missing."
+                );
+
+                setLoading(
+                    false
+                );
+
+                return;
+            }
+
+
+            /*
+             * IMPORTANT:
+             *
+             * orderCreationStarted prevents React StrictMode
+             * from creating two payment orders.
+             */
+
             createOrder();
 
         },
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
+
         [
             bookingId
         ]
@@ -669,6 +1084,7 @@ function PaymentPage() {
 
         <div
             style={{
+
                 minHeight:
                     "calc(100vh - 80px)",
 
@@ -691,6 +1107,7 @@ function PaymentPage() {
 
             <div
                 style={{
+
                     width:
                         "100%",
 
@@ -720,6 +1137,7 @@ function PaymentPage() {
 
                 <div
                     style={{
+
                         fontSize:
                             "50px",
 
@@ -737,6 +1155,7 @@ function PaymentPage() {
 
                 <h1
                     style={{
+
                         margin:
                             "0 0 10px",
 
@@ -754,6 +1173,7 @@ function PaymentPage() {
 
                 <p
                     style={{
+
                         color:
                             "#64748b",
 
@@ -761,10 +1181,13 @@ function PaymentPage() {
                             "20px"
                     }}
                 >
+
                     Booking ID:{" "}
+
                     <strong>
                         {bookingId}
                     </strong>
+
                 </p>
 
 
@@ -774,6 +1197,7 @@ function PaymentPage() {
 
                 <div
                     style={{
+
                         background:
                             "#eff6ff",
 
@@ -793,6 +1217,7 @@ function PaymentPage() {
 
                     <div
                         style={{
+
                             fontSize:
                                 "11px",
 
@@ -812,6 +1237,7 @@ function PaymentPage() {
 
                     <div
                         style={{
+
                             fontSize:
                                 "30px",
 
@@ -824,6 +1250,7 @@ function PaymentPage() {
                     >
 
                         ₹
+
                         {
                             Number(
                                 orderData?.amount ||
@@ -848,6 +1275,7 @@ function PaymentPage() {
 
                         <div
                             style={{
+
                                 padding:
                                     "20px",
 
@@ -875,6 +1303,7 @@ function PaymentPage() {
 
                         <div
                             style={{
+
                                 padding:
                                     "20px",
 
@@ -914,6 +1343,7 @@ function PaymentPage() {
 
                         <div
                             style={{
+
                                 background:
                                     "#fef2f2",
 
@@ -933,7 +1363,10 @@ function PaymentPage() {
                                     "15px",
 
                                 fontWeight:
-                                    "700"
+                                    "700",
+
+                                lineHeight:
+                                    "1.5"
                             }}
                         >
 
@@ -955,10 +1388,37 @@ function PaymentPage() {
                             type="button"
 
                             onClick={
-                                createOrder
+                                () => {
+
+                                    /*
+                                     * Allow another order attempt
+                                     * after a genuine error.
+                                     */
+
+                                    orderCreationStarted.current =
+                                        false;
+
+                                    cancelRequestSent.current =
+                                        false;
+
+                                    navigationStarted.current =
+                                        false;
+
+                                    setErrorMessage(
+                                        ""
+                                    );
+
+                                    createOrder();
+                                }
+                            }
+
+                            disabled={
+                                loading ||
+                                paymentOpening
                             }
 
                             style={{
+
                                 width:
                                     "100%",
 
@@ -981,13 +1441,24 @@ function PaymentPage() {
                                     "900",
 
                                 cursor:
-                                    "pointer",
+                                    loading ||
+                                    paymentOpening
+                                        ? "not-allowed"
+                                        : "pointer",
 
                                 marginBottom:
-                                    "10px"
+                                    "10px",
+
+                                opacity:
+                                    loading ||
+                                    paymentOpening
+                                        ? 0.6
+                                        : 1
                             }}
                         >
+
                             🔄 Try Payment Again
+
                         </button>
                     )
                 }
@@ -1005,9 +1476,8 @@ function PaymentPage() {
 
                             await cancelPayment();
 
-                            navigate(
-                                "/my-bookings"
-                            );
+
+                            goToBookings();
                         }
                     }
 
@@ -1016,6 +1486,7 @@ function PaymentPage() {
                     }
 
                     style={{
+
                         width:
                             "100%",
 
@@ -1043,7 +1514,9 @@ function PaymentPage() {
                                 : "pointer"
                     }}
                 >
+
                     ← Back to My Bookings
+
                 </button>
 
 
@@ -1053,6 +1526,7 @@ function PaymentPage() {
 
                 <p
                     style={{
+
                         fontSize:
                             "11px",
 
@@ -1066,9 +1540,11 @@ function PaymentPage() {
                             "1.5"
                     }}
                 >
+
                     🔒 Your payment is processed securely by
                     Razorpay. Your booking is confirmed only
                     after the payment is verified by the backend.
+
                 </p>
 
             </div>

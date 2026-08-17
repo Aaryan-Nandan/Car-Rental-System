@@ -1,252 +1,602 @@
-import {
-    Link,
-    useNavigate
-}
-from "react-router-dom";
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 function Navbar() {
 
-    const navigate =
-        useNavigate();
+    const navigate = useNavigate();
 
-    const token =
-        localStorage.getItem(
-            "token"
-        );
+
+    // =========================================================
+    // AUTHENTICATION
+    // =========================================================
+
+    const customerToken =
+        localStorage.getItem("token");
 
     const adminToken =
-        localStorage.getItem(
-            "adminToken"
-        );
+        localStorage.getItem("adminToken");
 
-    const handleLogout = () => {
 
-        localStorage.removeItem(
-            "token"
-        );
+    // =========================================================
+    // CUSTOMER LOGOUT
+    // =========================================================
 
-        localStorage.removeItem(
-            "customerId"
-        );
+    const handleCustomerLogout = () => {
 
-        localStorage.removeItem(
-            "adminToken"
-        );
+        localStorage.removeItem("token");
 
-        alert(
-            "Logout Successful"
-        );
+        localStorage.removeItem("customerId");
+
+        localStorage.removeItem("customerEmail");
+
+        localStorage.removeItem("customerName");
 
         navigate("/login");
+
     };
+
+
+    // =========================================================
+    // ADMIN LOGOUT
+    // =========================================================
+
+    const handleAdminLogout = () => {
+
+        localStorage.removeItem("adminToken");
+
+        localStorage.removeItem("adminEmail");
+
+        navigate("/admin-login");
+
+    };
+
+
+    // =========================================================
+    // AUTH STATUS
+    // =========================================================
+
+    const isAdmin =
+        !!adminToken;
+
+    const isCustomer =
+        !!customerToken &&
+        !isAdmin;
+
 
     return (
 
-        <div
-            style={{
+        <>
 
-                background:
-                    "linear-gradient(90deg,#000,#222)",
+            <style>
+                {`
 
-                padding:
-                    "15px 30px",
+                /* =================================================
+                   NAVBAR
+                ================================================= */
 
-                display:
-                    "flex",
+                .car-rental-navbar {
 
-                justifyContent:
-                    "space-between",
+                    width: 100%;
 
-                alignItems:
-                    "center",
+                    height: 50px;
 
-                boxShadow:
-                    "0px 2px 10px rgba(0,0,0,0.3)"
-            }}
-        >
+                    background: #ffffff;
 
-            {/* LOGO */}
+                    display: flex;
 
-            <div
-                style={{
-                    color: "white",
-                    fontSize: "26px",
-                    fontWeight: "bold"
-                }}
-            >
+                    align-items: center;
 
-                🚗 CarRental
+                    justify-content: space-between;
 
-            </div>
+                    padding: 0 42px;
 
-            {/* MENU */}
+                    box-sizing: border-box;
 
-            <div
-                style={{
-                    display: "flex",
-                    gap: "25px",
-                    alignItems: "center"
-                }}
-            >
+                    position: relative;
+
+                    z-index: 1000;
+
+                    border: none;
+
+                    box-shadow:
+                        0 2px 10px
+                        rgba(0, 0, 0, 0.06);
+
+                }
+
+
+                /* =================================================
+                   BRAND
+                ================================================= */
+
+                .car-rental-brand {
+
+                    display: flex;
+
+                    align-items: center;
+
+                    text-decoration: none;
+
+                    color: #111827;
+
+                    font-size: 27px;
+
+                    font-weight: 900;
+
+                    white-space: nowrap;
+
+                }
+
+
+                .car-rental-brand-icon {
+
+                    font-size: 27px;
+
+                    margin-right: 8px;
+
+                }
+
+
+                /* =================================================
+                   NAVIGATION
+                ================================================= */
+
+                .car-rental-nav {
+
+                    display: flex;
+
+                    align-items: center;
+
+                    gap: 27px;
+
+                    height: 100%;
+
+                }
+
+
+                .car-rental-nav-link {
+
+                    position: relative;
+
+                    display: flex;
+
+                    align-items: center;
+
+                    justify-content: center;
+
+                    height: 100%;
+
+                    text-decoration: none;
+
+                    color: #111827;
+
+                    font-size: 15px;
+
+                    font-weight: 750;
+
+                    cursor: pointer;
+
+                    white-space: nowrap;
+
+                    transition:
+                        color 0.25s ease;
+
+                }
+
+
+                /* =================================================
+                   HOVER UNDERLINE
+                ================================================= */
+
+                .car-rental-nav-link::after {
+
+                    content: "";
+
+                    position: absolute;
+
+                    left: 0;
+
+                    right: 0;
+
+                    bottom: 9px;
+
+                    height: 3px;
+
+                    background: #2563eb;
+
+                    border-radius: 10px;
+
+                    transform:
+                        scaleX(0);
+
+                    transition:
+                        transform 0.25s ease;
+
+                }
+
+
+                .car-rental-nav-link:hover {
+
+                    color: #2563eb;
+
+                }
+
+
+                .car-rental-nav-link:hover::after {
+
+                    transform:
+                        scaleX(1);
+
+                }
+
+
+                /* =================================================
+                   ADMIN DASHBOARD LINK
+                ================================================= */
+
+                .admin-dashboard-link {
+
+                    font-weight: 850;
+
+                }
+
+
+                /* =================================================
+                   LOGOUT BUTTON
+                ================================================= */
+
+                .car-rental-logout {
+
+                    border: none;
+
+                    background: #ef4444;
+
+                    color: white;
+
+                    padding: 8px 16px;
+
+                    border-radius: 8px;
+
+                    font-size: 14px;
+
+                    font-weight: 800;
+
+                    cursor: pointer;
+
+                    transition:
+                        all 0.25s ease;
+
+                }
+
+
+                .car-rental-logout:hover {
+
+                    background: #dc2626;
+
+                    transform:
+                        translateY(-2px);
+
+                }
+
+
+                /* =================================================
+                   ADMIN LOGOUT
+                ================================================= */
+
+                .admin-logout {
+
+                    background: #111827;
+
+                }
+
+
+                .admin-logout:hover {
+
+                    background: #000000;
+
+                }
+
+
+                /* =================================================
+                   RESPONSIVE
+                ================================================= */
+
+                @media (max-width: 900px) {
+
+                    .car-rental-navbar {
+
+                        height: 62px;
+
+                        padding: 0 25px;
+
+                    }
+
+
+                    .car-rental-brand {
+
+                        font-size: 24px;
+
+                    }
+
+
+                    .car-rental-brand-icon {
+
+                        font-size: 24px;
+
+                    }
+
+
+                    .car-rental-nav {
+
+                        gap: 18px;
+
+                    }
+
+
+                    .car-rental-nav-link {
+
+                        font-size: 14px;
+
+                    }
+
+                }
+
+
+                @media (max-width: 650px) {
+
+                    .car-rental-navbar {
+
+                        height: auto;
+
+                        min-height: 68px;
+
+                        padding: 10px 15px;
+
+                        flex-direction: column;
+
+                        gap: 8px;
+
+                    }
+
+
+                    .car-rental-nav {
+
+                        height: auto;
+
+                        flex-wrap: wrap;
+
+                        justify-content: center;
+
+                    }
+
+
+                    .car-rental-nav-link {
+
+                        height: 30px;
+
+                    }
+
+
+                    .car-rental-nav-link::after {
+
+                        bottom: 0;
+
+                    }
+
+                }
+
+                `}
+            </style>
+
+
+            {/* =================================================
+                NAVBAR
+            ================================================= */}
+
+            <nav className="car-rental-navbar">
+
+
+                {/* =================================================
+                   BRAND
+                ================================================= */}
 
                 <Link
-                    to="/"
-                    style={{
-                        color: "white",
-                        textDecoration: "none",
-                        fontWeight: "bold"
-                    }}
+                    to={
+                        isAdmin
+                            ? "/admin-dashboard"
+                            : "/"
+                    }
+
+                    className="car-rental-brand"
                 >
-                    Home
+
+                    <span
+                        className=
+                            "car-rental-brand-icon"
+                    >
+                      
+                    </span>
+
+                    CarRental
+
                 </Link>
 
-                {
-                    !token &&
-                    !adminToken && (
+
+                {/* =================================================
+                   NAVIGATION
+                ================================================= */}
+
+                <div
+                    className=
+                        "car-rental-nav"
+                >
+
+
+                    {/* =================================================
+                       ADMIN NAVIGATION
+                    ================================================= */}
+
+                    {isAdmin && (
+
+                        <>
+
+                            {/* ADMIN HOME
+                                Opens the normal customer Home page */}
+
+                            <Link
+                                to="/"
+                                className=
+                                    "car-rental-nav-link"
+                            >
+                                Home
+                            </Link>
+
+
+                            {/* ADMIN DASHBOARD */}
+
+                            <Link
+                                to="/admin-dashboard"
+                                className=
+                                    "car-rental-nav-link admin-dashboard-link"
+                            >
+                                Admin Dashboard
+                            </Link>
+
+
+                            {/* ADMIN LOGOUT */}
+
+                            <button
+                                type="button"
+                                className=
+                                    "car-rental-logout admin-logout"
+                                onClick={
+                                    handleAdminLogout
+                                }
+                            >
+                                Logout
+                            </button>
+
+                        </>
+
+                    )}
+
+
+                    {/* =================================================
+                       CUSTOMER NAVIGATION
+                    ================================================= */}
+
+                    {isCustomer && (
 
                         <>
 
                             <Link
+                                to="/"
+                                className=
+                                    "car-rental-nav-link"
+                            >
+                                Home
+                            </Link>
+
+
+                            <Link
+                                to="/profile"
+                                className=
+                                    "car-rental-nav-link"
+                            >
+                                Profile
+                            </Link>
+
+
+                            <Link
+                                to="/my-bookings"
+                                className=
+                                    "car-rental-nav-link"
+                            >
+                                My Bookings
+                            </Link>
+
+
+                            <Link
+                                to="/my-payments"
+                                className=
+                                    "car-rental-nav-link"
+                            >
+                                My Payments
+                            </Link>
+
+
+                            <button
+                                type="button"
+                                className=
+                                    "car-rental-logout"
+                                onClick={
+                                    handleCustomerLogout
+                                }
+                            >
+                                Logout
+                            </button>
+
+                        </>
+
+                    )}
+
+
+                    {/* =================================================
+                       PUBLIC NAVIGATION
+                    ================================================= */}
+
+                    {!isAdmin &&
+                        !isCustomer && (
+
+                        <>
+
+                            <Link
+                                to="/"
+                                className=
+                                    "car-rental-nav-link"
+                            >
+                                Home
+                            </Link>
+
+
+                            <Link
                                 to="/register"
-                                style={{
-                                    color: "white",
-                                    textDecoration: "none",
-                                    fontWeight: "bold"
-                                }}
+                                className=
+                                    "car-rental-nav-link"
                             >
                                 Register
                             </Link>
 
+
                             <Link
                                 to="/login"
-                                style={{
-                                    color: "white",
-                                    textDecoration: "none",
-                                    fontWeight: "bold"
-                                }}
+                                className=
+                                    "car-rental-nav-link"
                             >
                                 Login
                             </Link>
 
+
                             <Link
                                 to="/admin-login"
-                                style={{
-                                    color: "white",
-                                    textDecoration: "none",
-                                    fontWeight: "bold"
-                                }}
+                                className=
+                                    "car-rental-nav-link"
                             >
                                 Admin Login
                             </Link>
 
                         </>
-                    )
-                }
 
-                {
-                    token && (
+                    )}
 
-                        <>
+                </div>
 
-                            <Link
-                                to="/profile"
-                                style={{
-                                    color: "white",
-                                    textDecoration: "none",
-                                    fontWeight: "bold"
-                                }}
-                            >
-                                Profile
-                            </Link>
+            </nav>
 
-                            <Link
-                                to="/my-bookings"
-                                style={{
-                                    color: "white",
-                                    textDecoration: "none",
-                                    fontWeight: "bold"
-                                }}
-                            >
-                                My Bookings
-                            </Link>
+        </>
 
-                            <Link
-                                to="/my-payments"
-                                style={{
-                                    color: "white",
-                                    textDecoration: "none",
-                                    fontWeight: "bold"
-                                }}
-                            >
-                                My Payments
-                            </Link>
-
-                        </>
-                    )
-                }
-
-                {
-                    adminToken && (
-
-                        <Link
-                            to="/admin-dashboard"
-                            style={{
-                                color: "#4CAF50",
-                                textDecoration: "none",
-                                fontWeight: "bold"
-                            }}
-                        >
-                            Admin Dashboard
-                        </Link>
-
-                    )
-                }
-
-                {
-                    (token || adminToken) && (
-
-                        <button
-
-                            onClick={
-                                handleLogout
-                            }
-
-                            style={{
-
-                                backgroundColor:
-                                    "#f44336",
-
-                                color:
-                                    "white",
-
-                                border:
-                                    "none",
-
-                                padding:
-                                    "10px 15px",
-
-                                borderRadius:
-                                    "8px",
-
-                                fontWeight:
-                                    "bold",
-
-                                cursor:
-                                    "pointer"
-                            }}
-                        >
-
-                            Logout
-
-                        </button>
-
-                    )
-                }
-
-            </div>
-
-        </div>
     );
+
 }
 
 export default Navbar;

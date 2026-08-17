@@ -61,6 +61,7 @@ from "./pages/SuccessRegistration";
 
 import "./App.css";
 
+
 function App() {
 
     return (
@@ -76,30 +77,36 @@ function App() {
                     element={<Home />}
                 />
 
+
                 <Route
                     path="/register"
                     element={<RegisterPage />}
                 />
+
 
                 <Route
                     path="/login"
                     element={<LoginPage />}
                 />
 
+
                 <Route
                     path="/forgot-password"
                     element={<ForgotPasswordPage />}
                 />
+
 
                 <Route
                     path="/admin-login"
                     element={<AdminLogin />}
                 />
 
+
                 <Route
                     path="/registration-success"
                     element={<SuccessRegistration />}
                 />
+
 
                 <Route
                     path="/booking/:id"
@@ -110,6 +117,7 @@ function App() {
                     }
                 />
 
+
                 <Route
                     path="/my-bookings"
                     element={
@@ -118,6 +126,7 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
+
 
                 <Route
                     path="/my-payments"
@@ -128,6 +137,7 @@ function App() {
                     }
                 />
 
+
                 <Route
                     path="/profile"
                     element={
@@ -136,6 +146,7 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
+
 
                 <Route
                     path="/payment/:bookingId/:amount"
@@ -146,6 +157,7 @@ function App() {
                     }
                 />
 
+
                 <Route
                     path="/review/:variantId"
                     element={
@@ -154,6 +166,7 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
+
 
                 <Route
                     path="/admin-dashboard"
@@ -164,6 +177,7 @@ function App() {
                     }
                 />
 
+
                 <Route
                     path="/manage-cars"
                     element={
@@ -172,6 +186,7 @@ function App() {
                         </AdminProtectedRoute>
                     }
                 />
+
 
                 <Route
                     path="/manage-reviews"
@@ -185,7 +200,10 @@ function App() {
             </Routes>
 
         </BrowserRouter>
+
     );
+
 }
+
 
 export default App;
