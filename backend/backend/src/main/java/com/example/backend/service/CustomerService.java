@@ -12,14 +12,18 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+
 @Service
 public class CustomerService {
+
 
     @Autowired
     private CustomerRepository customerRepository;
 
+
     @Autowired
     private JwtUtil jwtUtil;
+
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -37,6 +41,7 @@ public class CustomerService {
                 customerRepository.findByEmail(
                         customer.getEmail()
                 );
+
 
         if (existingCustomer != null) {
 
@@ -60,7 +65,7 @@ public class CustomerService {
         // =====================================================
         // SAVE CUSTOMER
         //
-        // This saves:
+        // Saves:
         //
         // name
         // email
@@ -111,10 +116,12 @@ public class CustomerService {
             Customer updatedCustomer
     ) {
 
+
         Customer customer =
                 customerRepository
                         .findById(id)
                         .orElse(null);
+
 
         if (customer == null) {
 
@@ -129,7 +136,8 @@ public class CustomerService {
         if (
                 updatedCustomer.getName() != null
                         &&
-                        !updatedCustomer.getName()
+                        !updatedCustomer
+                                .getName()
                                 .trim()
                                 .isEmpty()
         ) {
@@ -143,23 +151,12 @@ public class CustomerService {
 
 
         // =====================================================
-        // UPDATE PHONE
+        // PHONE
+        //
+        // DO NOT UPDATE PHONE HERE.
+        //
+        // Phone is read-only from Profile page.
         // =====================================================
-
-        if (
-                updatedCustomer.getPhone() != null
-                        &&
-                        !updatedCustomer.getPhone()
-                                .trim()
-                                .isEmpty()
-        ) {
-
-            customer.setPhone(
-                    updatedCustomer
-                            .getPhone()
-                            .trim()
-            );
-        }
 
 
         // =====================================================
@@ -167,13 +164,16 @@ public class CustomerService {
         // =====================================================
 
         if (
-                updatedCustomer.getAlternatePhone() != null
+                updatedCustomer
+                        .getAlternatePhone() != null
         ) {
 
             customer.setAlternatePhone(
+
                     updatedCustomer
                             .getAlternatePhone()
                             .trim()
+
             );
         }
 
@@ -183,18 +183,22 @@ public class CustomerService {
         // =====================================================
 
         if (
-                updatedCustomer.getBloodGroup() != null
-                        &&
-                        !updatedCustomer.getBloodGroup()
-                                .trim()
-                                .isEmpty()
+                updatedCustomer
+                        .getBloodGroup() != null
         ) {
 
-            customer.setBloodGroup(
+            String bloodGroup =
                     updatedCustomer
                             .getBloodGroup()
-                            .trim()
-            );
+                            .trim();
+
+
+            if (!bloodGroup.isEmpty()) {
+
+                customer.setBloodGroup(
+                        bloodGroup
+                );
+            }
         }
 
 
@@ -203,13 +207,16 @@ public class CustomerService {
         // =====================================================
 
         if (
-                updatedCustomer.getAddress() != null
+                updatedCustomer
+                        .getAddress() != null
         ) {
 
             customer.setAddress(
+
                     updatedCustomer
                             .getAddress()
                             .trim()
+
             );
         }
 
@@ -219,12 +226,15 @@ public class CustomerService {
         // =====================================================
 
         if (
-                updatedCustomer.getProfilePhoto() != null
+                updatedCustomer
+                        .getProfilePhoto() != null
         ) {
 
             customer.setProfilePhoto(
+
                     updatedCustomer
                             .getProfilePhoto()
+
             );
         }
 
@@ -261,10 +271,12 @@ public class CustomerService {
             LoginRequest loginRequest
     ) {
 
+
         Customer customer =
                 customerRepository.findByEmail(
                         loginRequest.getEmail()
                 );
+
 
         if (customer == null) {
 
@@ -316,4 +328,5 @@ public class CustomerService {
 
         );
     }
+
 }

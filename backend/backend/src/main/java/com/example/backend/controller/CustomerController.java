@@ -10,12 +10,16 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
 @RestController
 @RequestMapping("/customer")
+
 @CrossOrigin(
         origins = "http://localhost:3000"
 )
+
 public class CustomerController {
+
 
     @Autowired
     private CustomerService customerService;
@@ -42,7 +46,9 @@ public class CustomerController {
             @PathVariable Long id
     ) {
 
-        return customerService.getCustomerById(id);
+        return customerService.getCustomerById(
+                id
+        );
     }
 
 
@@ -53,6 +59,7 @@ public class CustomerController {
     @PutMapping("/{id}")
     public Customer updateProfile(
             @PathVariable Long id,
+
             @RequestBody Customer customer
     ) {
 
@@ -76,4 +83,5 @@ public class CustomerController {
                 loginRequest
         );
     }
+
 }
