@@ -10,4 +10,10 @@ public interface BookingRepository
             String bookingStatus
     );
 
+    // =========================================================
+    // CHECK WHETHER A CAR IS USED IN ANY BOOKING
+    // =========================================================
+    boolean existsByCarId(
+            Long carId
+    );
 }
