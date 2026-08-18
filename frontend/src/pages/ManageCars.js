@@ -448,7 +448,7 @@ function ManageCars() {
                 );
 
                 alert(
-                    "Unable to delete car."
+                    "Cannot Delete Car: This car has booking history."
                 );
 
             });

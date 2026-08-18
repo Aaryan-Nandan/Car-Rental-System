@@ -10,10 +10,17 @@ import {
     getAllVariants
 } from "../services/ApiService";
 
+import heroVideo from "../assets/hero.mp4";
+
 import cretaImage from "../assets/creta.jpg";
 import venueImage from "../assets/venue.jpg";
 import i20Image from "../assets/i20.jpg";
-import heroVideo from "../assets/hero.mp4";
+import vernaImage from "../assets/verna.jpg";
+import seltosImage from "../assets/seltos.jpg";
+import nexonImage from "../assets/nexon.jpg";
+import scorpioImage from "../assets/scorpio.jpg";
+import fortunerImage from "../assets/fortuner.jpg";
+import tharImage from "../assets/thar.jpg";
 
 
 function Home() {
@@ -136,31 +143,55 @@ function Home() {
 
     const getCarImage = (variant) => {
 
-        const name = (
-            variant?.variantName || ""
-        ).toLowerCase();
+    const name = (
+        variant?.variantName || ""
+    ).toLowerCase();
 
-        if (
-            variant?.imageUrl &&
-            variant.imageUrl.trim() !== ""
-        ) {
-            return variant.imageUrl;
-        }
+    // if (
+    //     variant?.imageUrl &&
+    //     variant.imageUrl.trim() !== ""
+    // ) {
+    //     return variant.imageUrl;
+    //}
 
-        if (name.includes("creta")) {
-            return cretaImage;
-        }
-
-        if (name.includes("venue")) {
-            return venueImage;
-        }
-
-        if (name.includes("i20")) {
-            return i20Image;
-        }
-
+    if (name.includes("creta")) {
         return cretaImage;
-    };
+    }
+
+    if (name.includes("venue")) {
+        return venueImage;
+    }
+
+    if (name.includes("i20")) {
+        return i20Image;
+    }
+
+    if (name.includes("verna")) {
+        return vernaImage;
+    }
+
+    if (name.includes("seltos")) {
+        return seltosImage;
+    }
+
+    if (name.includes("nexon")) {
+        return nexonImage;
+    }
+
+    if (name.includes("scorpio")) {
+        return scorpioImage;
+    }
+
+    if (name.includes("fortuner")) {
+        return fortunerImage;
+    }
+
+    if (name.includes("thar")) {
+        return tharImage;
+    }
+
+    return cretaImage;
+};
 
 
     // =========================================================
@@ -241,6 +272,16 @@ function Home() {
     const filteredVariants = useMemo(() => {
 
         let result = [...variants];
+         
+           // Hide old Creta Diesel and Venue Petrol variants
+    result = result.filter(
+        variant =>
+            variant.id !== 2 &&
+            variant.id !== 3
+    );
+
+
+
 
         const search =
             searchText
@@ -405,10 +446,10 @@ function Home() {
     // =========================================================
 
     const totalVariants =
-        variants.length;
+        filteredVariants.length;
 
     const availableCars =
-        variants.reduce(
+        filteredVariants.reduce(
             (total, variant) =>
                 total +
                 getAvailableCars(variant),
@@ -2528,7 +2569,7 @@ function Home() {
                                 fontSize: "45px"
                             }}
                         >
-                            🚘
+                            
                         </div>
 
                         <h3>
