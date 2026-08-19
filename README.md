@@ -1,6 +1,6 @@
-# 🚗 Car Rental System
+# 🚗 CarRental
 
-A Full Stack Car Rental System developed using **Spring Boot**, **React.js**, and **MySQL**. The application allows customers to browse available cars, book vehicles online, and enables administrators to manage cars and bookings.
+A Full Stack CarRental developed using **Spring Boot**, **React.js**, and **MySQL**. The application allows customers to browse available cars, book vehicles online, and enables administrators to manage cars and bookings.
 
 ---
 
