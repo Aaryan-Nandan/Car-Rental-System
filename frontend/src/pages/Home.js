@@ -23,6 +23,19 @@ import fortunerImage from "../assets/fortuner.jpg";
 import tharImage from "../assets/thar.jpg";
 
 
+
+import mgZsEvImage from "../assets/mg-zs-ev.jpg";
+import mgWindsorEvImage from "../assets/mg-windsor-ev.jpg";
+import xuv400EvImage from "../assets/xuv400-ev.jpg";
+import ertigaImage from "../assets/ertiga.jpg";
+import exterImage from "../assets/exter.jpg";
+import punchImage from "../assets/punch.jpg";
+import defenderImage from "../assets/defender.jpg";
+import mercedesCClassImage from "../assets/mercedes-c-class.jpg";
+import porscheCayenneImage from "../assets/porsche-cayenne.jpg";
+
+
+
 function Home() {
 
     // =========================================================
@@ -189,8 +202,45 @@ function Home() {
     if (name.includes("thar")) {
         return tharImage;
     }
+        if (name.includes("mg zs ev")) {
+        return mgZsEvImage;
+    }
+
+    if (name.includes("mg windsor ev")) {
+        return mgWindsorEvImage;
+    }
+
+    if (name.includes("xuv400 ev")) {
+        return xuv400EvImage;
+    }
+
+    if (name.includes("ertiga")) {
+        return ertigaImage;
+    }
+
+    if (name.includes("exter")) {
+        return exterImage;
+    }
+
+    if (name.includes("punch")) {
+        return punchImage;
+    }
+
+    if (name.includes("defender")) {
+        return defenderImage;
+    }
+
+    if (name.includes("mercedes-benz c-class")) {
+        return mercedesCClassImage;
+    }
+
+    if (name.includes("porsche cayenne")) {
+        return porscheCayenneImage;
+    }
 
     return cretaImage;
+
+    
 };
 
 
@@ -248,7 +298,7 @@ function Home() {
 
         return (
             variant?.carCompany?.companyName ||
-            "Car Rental"
+            "CarRental"
         );
     };
 
@@ -464,7 +514,7 @@ function Home() {
 
 
     // =========================================================
-    // 25 COMING SOON CARS
+    // 18 COMING SOON CARS
     // =========================================================
 
     const comingSoonCars = [
@@ -507,7 +557,7 @@ function Home() {
             icon: "⚡"
         },
         {
-            name: "Mahindra XUV400 EV",
+            name: "Xev 9e",
             company: "Mahindra",
             fuel: "ELECTRIC",
             seats: 5,
@@ -617,44 +667,44 @@ function Home() {
 
         // PETROL
 
-        {
-            name: "Hyundai Verna",
-            company: "Hyundai",
-            fuel: "PETROL",
-            seats: 5,
-            icon: "⛽"
-        },
-        {
-            name: "Kia Seltos",
-            company: "Kia",
-            fuel: "PETROL",
-            seats: 5,
-            icon: "⛽"
-        },
-        {
-            name: "Hyundai Creta",
-            company: "Hyundai",
-            fuel: "PETROL",
-            seats: 5,
-            icon: "⛽"
-        },
+        // {
+        //     name: "Hyundai Verna",
+        //     company: "Hyundai",
+        //     fuel: "PETROL",
+        //     seats: 5,
+        //     icon: "⛽"
+        // },
+        // {
+        //     name: "Kia Seltos",
+        //     company: "Kia",
+        //     fuel: "PETROL",
+        //     seats: 5,
+        //     icon: "⛽"
+        // },
+        // {
+        //     name: "Hyundai Creta",
+        //     company: "Hyundai",
+        //     fuel: "PETROL",
+        //     seats: 5,
+        //     icon: "⛽"
+        // },
 
-        // DIESEL
+         // DIESEL
 
-        {
-            name: "Mahindra Scorpio",
-            company: "Mahindra",
-            fuel: "DIESEL",
-            seats: 7,
-            icon: "🛢️"
-        },
-        {
-            name: "Toyota Fortuner",
-            company: "Toyota",
-            fuel: "DIESEL",
-            seats: 7,
-            icon: "🛢️"
-        }
+        // {
+        //     name: "Mahindra Scorpio",
+        //     company: "Mahindra",
+        //     fuel: "DIESEL",
+        //     seats: 7,
+        //     icon: "🛢️"
+        // },
+        // {
+        //     name: "Toyota Fortuner",
+        //     company: "Toyota",
+        //     fuel: "DIESEL",
+        //     seats: 7,
+        //     icon: "🛢️"
+        // }
     ];
 
 
@@ -2140,7 +2190,7 @@ function Home() {
                                     fontSize: "21px"
                                 }}
                             >
-                                ⚡
+                                
                             </span>
                         )}
 
@@ -2151,7 +2201,7 @@ function Home() {
 
                         <span className="feature">
                             {electric
-                                ? "⚡ EV"
+                                ? " EV"
                                 : ` ${fuel}`
                             }
                         </span>
@@ -2205,7 +2255,7 @@ function Home() {
                             }
                         >
                             {electric
-                                ? "⚡ Book EV"
+                                ? " Book EV"
                                 : " Book Now"
                             }
                         </Link>
@@ -2420,7 +2470,7 @@ function Home() {
                 <div className="stat-card">
 
                     <span className="stat-number">
-                        25
+                        20
                     </span>
 
                     <span className="stat-label">
@@ -2860,14 +2910,14 @@ function Home() {
                         </h2>
 
                         <p>
-                            25 future vehicles planned
+                            20 future vehicles planned
                             for our rental collection.
                         </p>
 
                     </div>
 
                     <div className="coming-count">
-                        25 Cars Planned
+                        20 Cars Planned
                     </div>
 
                 </div>
@@ -2954,7 +3004,7 @@ function Home() {
                 <div className="why-box">
 
                     <h2>
-                         Why Choose Our Car Rental?
+                         Why Choose Our CarRental?
                     </h2>
 
                     <p>
@@ -3219,7 +3269,7 @@ function Home() {
 
                 <div className="footer-bottom">
 
-                    © 2026 Car Rental System.
+                    © 2026 CarRental System.
                     All Rights Reserved.
 
                 </div>

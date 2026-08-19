@@ -766,9 +766,9 @@ function MyPayments() {
             );
 
 
-            // // =================================================
-            // // CUSTOMER DETAILS
-            // // =================================================
+             // =================================================
+            // CUSTOMER DETAILS
+             // =================================================
 
             // const customerStartY =
             //     doc.lastAutoTable.finalY +
@@ -1127,7 +1127,7 @@ function MyPayments() {
 
 
             doc.text(
-                "😊 Have a safe and happy journey! ",
+                "_______________________________________",
                 105,
                 footerY + 7,
                 {
@@ -1374,7 +1374,7 @@ function MyPayments() {
                                         "10px"
                                 }}
                             >
-                                💳
+                                
                             </div>
 
 
@@ -2220,7 +2220,7 @@ function MyPayments() {
                                                             "pointer"
                                                     }}
                                                 >
-                                                    📄 Download Detailed Invoice PDF
+                                                     Download Detailed Invoice PDF
                                                 </button>
 
                                             </div>

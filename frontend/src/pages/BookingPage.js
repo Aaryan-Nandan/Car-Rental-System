@@ -17,6 +17,17 @@ import {
 } from "@react-google-maps/api";
 
 
+import cretaImage from "../assets/creta.jpg";
+import venueImage from "../assets/venue.jpg";
+import i20Image from "../assets/i20.jpg";
+import vernaImage from "../assets/verna.jpg";
+import seltosImage from "../assets/seltos.jpg";
+import nexonImage from "../assets/nexon.jpg";
+import scorpioImage from "../assets/scorpio.jpg";
+import fortunerImage from "../assets/fortuner.jpg";
+import tharImage from "../assets/thar.jpg";
+
+
 // ============================================================
 // GOOGLE MAP SETTINGS
 // ============================================================
@@ -77,6 +88,7 @@ function GoogleMapView({
             GOOGLE_MAP_LIBRARIES
 
     });
+
 
     useEffect(() => {
 
@@ -916,7 +928,7 @@ function BookingPage() {
 
             setSearchMessage(
                 successMessage ||
-                "✅ Address found. Check the details and confirm the location."
+                " Address found. Check the details and confirm the location."
             );
 
             return true;
@@ -996,7 +1008,7 @@ function BookingPage() {
             setLocationConfirmed(false);
 
             setSearchMessage(
-                "✅ Address found. Check the details and confirm the location."
+                " Address found. Check the details and confirm the location."
             );
 
             console.log(
@@ -1059,7 +1071,7 @@ function BookingPage() {
                 !Number.isFinite(longitude)
             ) {
                 setSearchMessage(
-                    "❌ Invalid pickup coordinates."
+                    " Invalid pickup coordinates."
                 );
 
                 return false;
@@ -1068,7 +1080,7 @@ function BookingPage() {
             setAddressLoading(true);
             setLocationConfirmed(false);
             setSearchMessage(
-                "📍 Finding exact address..."
+                " Finding exact address..."
             );
 
             try {
@@ -1152,7 +1164,7 @@ function BookingPage() {
                     setLocationConfirmed(false);
 
                     setSearchMessage(
-                        "❌ Address could not be detected. Drag the marker or search the address manually."
+                        " Address could not be detected. Drag the marker or search the address manually."
                     );
 
                     return false;
@@ -1210,7 +1222,7 @@ function BookingPage() {
 
 
             setSearchMessage(
-                "📍 Detecting your current location..."
+                " Detecting your current location..."
             );
 
 
@@ -1365,7 +1377,7 @@ function BookingPage() {
             setSearchLoading(true);
             setLocationConfirmed(false);
             setSearchMessage(
-                "🔎 Searching Google Maps..."
+                " Searching Google Maps..."
             );
 
             try {
@@ -1390,7 +1402,7 @@ function BookingPage() {
                     response.results.length === 0
                 ) {
                     setSearchMessage(
-                        "❌ Location not found. Try adding city, district or pincode."
+                        " Location not found. Try adding city, district or pincode."
                     );
                     return;
                 }
@@ -1417,7 +1429,7 @@ function BookingPage() {
                 );
 
                 setSearchMessage(
-                    "✅ Location found. Drag the marker to your exact building if needed."
+                    " Location found. Drag the marker to your exact building if needed."
                 );
 
             } catch (error) {
@@ -1489,7 +1501,7 @@ function BookingPage() {
                     );
 
                     setSearchMessage(
-                        "✅ Location found. Drag the marker to your exact building if needed."
+                        " Location found. Drag the marker to your exact building if needed."
                     );
 
                 } catch (fallbackError) {
@@ -1500,7 +1512,7 @@ function BookingPage() {
                     );
 
                     setSearchMessage(
-                        "❌ Unable to find this location. Try adding city, district or pincode."
+                        " Unable to find this location. Try adding city, district or pincode."
                     );
 
                 }
@@ -1630,7 +1642,7 @@ function BookingPage() {
             setLocationConfirmed(true);
 
             setSearchMessage(
-                "✅ Pickup location confirmed."
+                " Pickup location confirmed."
             );
         };
 
@@ -2181,7 +2193,23 @@ navigate(
 
     }
 
+const getCarImage = (variant) => {
+    const name = (
+        variant?.variantName || ""
+    ).toLowerCase();
 
+    if (name.includes("creta")) return cretaImage;
+    if (name.includes("venue")) return venueImage;
+    if (name.includes("i20")) return i20Image;
+    if (name.includes("verna")) return vernaImage;
+    if (name.includes("seltos")) return seltosImage;
+    if (name.includes("nexon")) return nexonImage;
+    if (name.includes("scorpio")) return scorpioImage;
+    if (name.includes("fortuner")) return fortunerImage;
+    if (name.includes("thar")) return tharImage;
+
+    return cretaImage;
+};
     // ========================================================
     // MAIN PAGE
     // ========================================================
@@ -2248,7 +2276,13 @@ navigate(
                             "18px",
 
                         boxShadow:
-                            "0 10px 30px rgba(15,23,42,0.14)"
+    "0 10px 30px rgba(15,23,42,0.14)",
+
+position:
+    "relative",
+
+overflow:
+    "hidden"
 
                     }}
                 >
@@ -2271,7 +2305,7 @@ navigate(
                         }}
                     >
 
-                        CAR RENTAL SYSTEM
+                        CarRental
 
                     </div>
 
@@ -2284,13 +2318,31 @@ navigate(
 
                             fontSize:
                                 "27px"
+                            }}
+                            >
 
-                        }}
-                    >
+                        Complete Your Booking 
+                        </h1>
+ 
+                     {carVariant && (
+    <img
+        src={getCarImage(carVariant)}
+        alt={carVariant.variantName}
+        style={{
+            position: "absolute",
+            right: "25px",
+            bottom: "0px",
+            width: "240px",
+            height: "140px",
+            objectFit: "contain",
+            zIndex: 1,
+            filter:
+                "drop-shadow(0 10px 12px rgba(0,0,0,0.35))"
+        }}
+    />
+)}
 
-                        Complete Your Booking 🚗
-
-                    </h1>
+                    
 
 
                     {
@@ -2383,157 +2435,11 @@ navigate(
                 >
 
 
-                    {/* =================================================
-                        CAR SUMMARY
-                    ================================================= */}
 
-                    {
-                        carVariant && (
-
-                            <div
-                                style={{
-
-                                    display:
-                                        "grid",
-
-                                    gridTemplateColumns:
-                                        "190px 1fr",
-
-                                    gap:
-                                        "17px",
-
-                                    background:
-                                        "#f8fafc",
-
-                                    padding:
-                                        "12px",
-
-                                    border:
-                                        "1px solid #e2e8f0",
-
-                                    borderRadius:
-                                        "13px",
-
-                                    marginBottom:
-                                        "25px"
-
-                                }}
-                            >
-
-                                <img
-
-                                    src={
-                                        carVariant.imageUrl
-                                    }
-
-                                    alt={
-                                        carVariant.variantName
-                                    }
-
-                                    style={{
-
-                                        width:
-                                            "100%",
-
-                                        height:
-                                            "120px",
-
-                                        objectFit:
-                                            "cover",
-
-                                        borderRadius:
-                                            "9px"
-
-                                    }}
-
-                                />
-
-
-                                <div>
-
-                                    <h2
-                                        style={{
-
-                                            margin:
-                                                "3px 0 9px",
-
-                                            fontSize:
-                                                "20px"
-
-                                        }}
-                                    >
-
-                                        {
-                                            carVariant.variantName
-                                        }
-
-                                    </h2>
-
-
-                                    <div
-                                        style={{
-
-                                            display:
-                                                "grid",
-
-                                            gridTemplateColumns:
-                                                "repeat(3,1fr)",
-
-                                            gap:
-                                                "7px"
-
-                                        }}
-                                    >
-
-                                        <SmallInfo
-
-                                            title="Fuel"
-
-                                            value={
-                                                carVariant.fuelType ||
-                                                "N/A"
-                                            }
-
-                                        />
-
-
-                                        <SmallInfo
-
-                                            title="Per Day"
-
-                                            value={
-                                                `₹${carVariant.pricePerDay}`
-                                            }
-
-                                        />
-
-
-                                        <SmallInfo
-
-                                            title="Available"
-
-                                            value={
-                                                carVariant.availableCars
-                                            }
-
-                                        />
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        )
-                    }
-
-
-                    {/* =================================================
-                        DATES
-                    ================================================= */}
+                    
 
                     <SectionTitle
-                        icon="📅"
+                        icon=""
                         title="Rental Dates"
                     />
 
@@ -2602,7 +2508,7 @@ navigate(
                     ================================================= */}
 
                     <SectionTitle
-                        icon="📍"
+                        icon=""
                         title="Pickup Location"
                     />
 
@@ -2690,9 +2596,9 @@ navigate(
                                 {
                                     locationLoading
 
-                                        ? "📍 Detecting..."
+                                        ? " Detecting..."
 
-                                        : "📍 Use Current Location"
+                                        : " Use Current Location"
 
                                 }
 
@@ -2712,7 +2618,7 @@ navigate(
                                 }
                             >
 
-                                🔎 Search Location
+                                 Search Location
 
                             </button>
 
@@ -3139,7 +3045,7 @@ navigate(
                                     }}
                                 >
 
-                                    💡 Drag the marker to your exact building or pickup gate.
+                                     Drag the marker to your exact building or pickup gate.
 
                                 </div>
 
@@ -3205,15 +3111,15 @@ navigate(
                                     {
                                         addressLoading
 
-                                            ? "🔍 Getting Address..."
+                                            ? " Getting Address..."
 
                                             : locationConfirmed
 
-                                                ? "✅ Pickup Location Confirmed"
+                                                ? " Pickup Location Confirmed"
 
                                                 : pickupAddress
-                                                ? "📍 Confirm This Location"
-                                                : "📍 Get Address & Confirm"
+                                                ? " Confirm This Location"
+                                                : " Get Address & Confirm"
 
                                     }
 
@@ -3281,7 +3187,7 @@ navigate(
                                             }}
                                         >
 
-                                            📍 Selected Pickup Location
+                                             Selected Pickup Location
 
                                         </strong>
 
@@ -3381,7 +3287,7 @@ navigate(
                                             }}
                                         >
 
-                                            🏠{" "}
+                                            {" "}
                                             {
                                                 pickupAddress
                                             }
@@ -3521,7 +3427,7 @@ navigate(
                     ================================================= */}
 
                     <SectionTitle
-                        icon="🪪"
+                        icon=""
                         title="Driving License"
                     />
 
@@ -3784,9 +3690,9 @@ navigate(
 
                                 : !position || !pickupAddress
 
-                                    ? "📍 Select Pickup Location First"
+                                    ? " Select Pickup Location First"
 
-                                    : "🚗 Confirm Booking"
+                                    : " Confirm Booking"
 
                         }
 
@@ -3811,7 +3717,7 @@ navigate(
                         }}
                     >
 
-                        Pickup location is required. Booking will be sent to the admin for approval.
+                        Pickup location is required. 
 
                     </div>
 
@@ -4007,70 +3913,70 @@ function DateInput({
 // SMALL INFO
 // ============================================================
 
-function SmallInfo({
-    title,
-    value
-}) {
+// function SmallInfo({
+//     title,
+//     value
+// }) {
 
-    return (
+//     return (
 
-        <div
-            style={{
+//         <div
+//             style={{
 
-                background:
-                    "white",
+//                 background:
+//                     "white",
 
-                border:
-                    "1px solid #e2e8f0",
+//                 border:
+//                     "1px solid #e2e8f0",
 
-                borderRadius:
-                    "7px",
+//                 borderRadius:
+//                     "7px",
 
-                padding:
-                    "7px"
+//                 padding:
+//                     "7px"
 
-            }}
-        >
+//             }}
+//         >
 
-            <div
-                style={{
+//             <div
+//                 style={{
 
-                    fontSize:
-                        "9px",
+//                     fontSize:
+//                         "9px",
 
-                    color:
-                        "#64748b"
+//                     color:
+//                         "#64748b"
 
-                }}
-            >
+//                 }}
+//             >
 
-                {
-                    title
-                }
+//                 {
+//                     title
+//                 }
 
-            </div>
+//             </div>
 
 
-            <strong
-                style={{
+//             <strong
+//                 style={{
 
-                    fontSize:
-                        "12px"
+//                     fontSize:
+//                         "12px"
 
-                }}
-            >
+//                 }}
+//             >
 
-                {
-                    value
-                }
+//                 {
+//                     value
+//                 }
 
-            </strong>
+//             </strong>
 
-        </div>
+//         </div>
 
-    );
+//     );
 
-}
+// }
 
 
 // ============================================================

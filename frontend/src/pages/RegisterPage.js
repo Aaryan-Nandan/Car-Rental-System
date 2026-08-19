@@ -2036,7 +2036,7 @@ function RegisterPage() {
                                         }}
                                     >
 
-                                        ✅ Email Verified Successfully
+                                         Email Verified Successfully
 
                                     </div>
 

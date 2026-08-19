@@ -60,6 +60,7 @@ import SuccessRegistration
 from "./pages/SuccessRegistration";
 
 import "./App.css";
+import ChatBot from "./components/ChatBot";
 
 
 function App() {
@@ -69,7 +70,7 @@ function App() {
         <BrowserRouter>
 
             <Navbar />
-
+ <ChatBot />
             <Routes>
 
                 <Route

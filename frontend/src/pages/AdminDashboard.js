@@ -1215,8 +1215,10 @@ const downloadPaymentPDF = (payment) => {
                     payment?.upiTransactionId ||
                     "N/A"
                 ]
+                
 
             ]
+            
         }
     );
 

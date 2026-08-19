@@ -100,7 +100,7 @@ function ReviewPage() {
 
             <h1>
 
-                 Write Review
+                 Feedback
 
             </h1>
 
@@ -138,31 +138,31 @@ function ReviewPage() {
 
                 <option value="5">
 
-                    ⭐⭐⭐⭐⭐ Excellent
+                    ⭐⭐⭐⭐⭐ 
 
                 </option>
 
                 <option value="4">
 
-                    ⭐⭐⭐⭐ Very Good
+                    ⭐⭐⭐⭐ 
 
                 </option>
 
                 <option value="3">
 
-                    ⭐⭐⭐ Good
+                    ⭐⭐⭐ 
 
                 </option>
 
                 <option value="2">
 
-                    ⭐⭐ Average
+                    ⭐⭐ 
 
                 </option>
 
                 <option value="1">
 
-                    ⭐ Poor
+                    ⭐ 
 
                 </option>
 
@@ -173,7 +173,7 @@ function ReviewPage() {
 
             <label>
 
-                Review
+                Feedback
 
             </label>
 

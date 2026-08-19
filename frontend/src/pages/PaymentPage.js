@@ -663,11 +663,11 @@ function PaymentPage() {
 
 
                     name:
-                        "Car Rental System",
+                        "CarRental System",
 
 
                     description:
-                        `Car Rental Booking #${bookingId}`,
+                        `CarRental Booking #${bookingId}`,
 
 
                     order_id:

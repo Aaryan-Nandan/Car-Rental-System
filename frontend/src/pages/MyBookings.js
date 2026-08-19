@@ -387,16 +387,16 @@ function MyBookings() {
                 </option>
 
 
-                <option value="PENDING">
+                <option value="PAYMENT_FAILED">
 
-                    Pending
+                    Payment Failed
 
                 </option>
 
 
-                <option value="APPROVED">
+                <option value="CONFIRMED">
 
-                    Approved
+                    Confirmed
 
                 </option>
 
@@ -614,12 +614,12 @@ function MyBookings() {
                                             color:
 
                                                 booking.bookingStatus ===
-                                                "APPROVED"
+                                                "CONFIRMED"
 
                                                     ? "green"
 
                                                     : booking.bookingStatus ===
-                                                      "REJECTED"
+                                                      "PAYMENT_FAILED"
 
                                                         ? "red"
 
@@ -679,7 +679,7 @@ function MyBookings() {
 
                                             <>
 
-                                                <button
+                                                {/* <button
 
                                                     disabled
 
@@ -710,9 +710,9 @@ function MyBookings() {
 
                                                 >
 
-                                                    PAID
+                                                    
 
-                                                </button>
+                                                </button> */}
 
 
                                                 <button
@@ -751,7 +751,7 @@ function MyBookings() {
 
                                                 >
 
-                                                    Write Review
+                                                    FEEDBACK❤️
 
                                                 </button>
 
@@ -802,7 +802,7 @@ function MyBookings() {
 
                                                 >
 
-                                                    Pay Now
+                                                    
 
                                                 </button>
 

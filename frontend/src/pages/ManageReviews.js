@@ -93,7 +93,7 @@ function ManageReviews() {
                     marginBottom: "20px"
                 }}
             >
-                ⭐ Manage Reviews
+                 Manage Feedback
             </h1>
 
             <input
@@ -169,7 +169,7 @@ function ManageReviews() {
 
                                 <h2>
 
-                                    🚗 {
+                                     {
 
                                         review.carVariant
                                             ?.variantName
@@ -182,7 +182,7 @@ function ManageReviews() {
 
                                     <b>
 
-                                        Customer :
+                                        Customer Name:
 
                                     </b>
 
@@ -273,7 +273,7 @@ function ManageReviews() {
                                             "none",
 
                                         padding:
-                                            "10px 20px",
+                                            "5px 10px",
 
                                         borderRadius:
                                             "5px",
@@ -288,7 +288,7 @@ function ManageReviews() {
 
                                 >
 
-                                    🗑 Delete Review
+                                     Delete Feedback
 
                                 </button>
 

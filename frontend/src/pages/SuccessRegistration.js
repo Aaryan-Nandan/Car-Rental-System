@@ -47,7 +47,7 @@ function SuccessRegistration() {
 
                 <p>
 
-                    Welcome to Car Rental System
+                    Welcome to CarRental ☺️...
 
                 </p>
 
