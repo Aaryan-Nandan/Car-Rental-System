@@ -11,7 +11,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/customer")
-@CrossOrigin(origins = "http://localhost:3000")
+//@CrossOrigin(origins = "http://localhost:3000")
 public class RegistrationOtpController {
 
     @Autowired
