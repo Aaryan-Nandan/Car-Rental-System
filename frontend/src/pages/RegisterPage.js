@@ -6,6 +6,7 @@ import OtpInput from "../components/OtpInput";
 import PasswordStrength from "../components/PasswordStrength";
 import LoadingSpinner from "../components/LoadingSpinner";
 
+import API_URL from "../config"; 
 
 function RegisterPage() {
 
@@ -491,6 +492,7 @@ function RegisterPage() {
         axios
             .post(
                 "http://localhost:8081/customer/send-registration-otp",
+                 `${API_URL}/customer/send-registration-otp`,
                 {
                     email:
                         email
@@ -601,6 +603,7 @@ function RegisterPage() {
         axios
             .post(
                 "http://localhost:8081/customer/verify-registration-otp",
+                `${API_URL}/customer/verify-registration-otp`,
                 {
                     email:
                         email,
@@ -800,6 +803,7 @@ function RegisterPage() {
             .post(
 
                 "http://localhost:8081/customer/register-with-otp",
+                 `${API_URL}/customer/register-with-otp`,
 
                 registrationData
 
