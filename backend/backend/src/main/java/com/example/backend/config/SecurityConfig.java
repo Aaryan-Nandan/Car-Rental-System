@@ -42,7 +42,9 @@ public class SecurityConfig {
 
         configuration.setAllowedOrigins(
                 Arrays.asList(
-                        "http://localhost:3000"
+                        "http://localhost:3000",
+                        "https://car-rental-com-six.vercel.app"
+
                 )
         );
 
