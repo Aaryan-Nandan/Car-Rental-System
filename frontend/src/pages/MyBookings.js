@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
+import API_URL from "../config";
 
 function MyBookings() {
 
@@ -71,7 +71,7 @@ function MyBookings() {
 
             .get(
 
-                "http://localhost:8081/booking/all",
+                `${API_URL}/booking/all`,
 
                 {
 
@@ -184,7 +184,7 @@ function MyBookings() {
 
             .get(
 
-                "http://localhost:8081/payment/all",
+                `${API_URL}/payment/all`,
 
                 {
 

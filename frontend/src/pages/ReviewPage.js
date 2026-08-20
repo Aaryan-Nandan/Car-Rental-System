@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import API_URL from "../config";
 
 function ReviewPage() {
 
@@ -64,7 +65,7 @@ function ReviewPage() {
 
             .post(
 
-                "http://localhost:8081/review/add",
+                `${API_URL}/review/add`,
 
                 reviewData
             )

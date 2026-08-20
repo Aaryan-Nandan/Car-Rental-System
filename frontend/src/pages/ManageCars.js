@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-
-
 import API_URL from "../config";
 
 function ManageCars() {
@@ -217,7 +215,7 @@ function ManageCars() {
 
         axios
             .post(
-                "http://localhost:8081/car/add",
+                `${API_URL}/car/add`,
                 carData
             )
             .then(() => {
@@ -356,7 +354,7 @@ function ManageCars() {
 
         axios
             .put(
-                `http://localhost:8081/car/update/${editId}`,
+                `${API_URL}/car/update/${editId}`,
                 carData
             )
             .then(() => {
@@ -434,7 +432,7 @@ function ManageCars() {
 
         axios
             .delete(
-                `http://localhost:8081/car/delete/${id}`
+                `${API_URL}/car/delete/${id}`
             )
             .then(() => {
 
@@ -471,7 +469,7 @@ function ManageCars() {
 
         axios
             .put(
-                `http://localhost:8081/car/availability/${id}`
+                `${API_URL}/car/availability/${id}`
             )
             .then(() => {
 

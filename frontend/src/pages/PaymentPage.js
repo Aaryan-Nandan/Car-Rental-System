@@ -6,6 +6,8 @@ import React, {
 
 import axios from "axios";
 
+import API_URL from "../config";
+
 import {
     useNavigate,
     useParams
@@ -401,7 +403,7 @@ function PaymentPage() {
 
 
                 await axios.delete(
-                    `http://localhost:8081/payment/cancel/${bookingId}`,
+                    `${API_URL}/payment/cancel/${bookingId}`,
                     {
                         headers: {
                             Authorization:
@@ -494,7 +496,7 @@ function PaymentPage() {
                 const response =
                     await axios.post(
 
-                        "http://localhost:8081/payment/verify",
+                        `${API_URL}/payment/verify`,
 
                         verifyData,
 
@@ -943,7 +945,7 @@ function PaymentPage() {
                 const response =
                     await axios.post(
 
-                        `http://localhost:8081/payment/create-order/${bookingId}`,
+                        `${API_URL}/payment/create-order/${bookingId}`,
 
                         {},
 

@@ -5,6 +5,7 @@ import {
 
 import axios from "axios";
 
+import API_URL from "../config";
 import jsPDF from "jspdf";
 
 import autoTable
@@ -219,7 +220,7 @@ function MyPayments() {
                 const response =
                     await axios.get(
 
-                        "http://localhost:8081/payment/all",
+                        `${API_URL}/payment/all`,
 
                         {
                             headers: {

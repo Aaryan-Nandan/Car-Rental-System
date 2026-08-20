@@ -10,6 +10,8 @@ import {
     useNavigate
 } from "react-router-dom";
 
+import API_URL from "../config";
+
 import DashboardCharts
     from "../components/charts/DashboardCharts";
 
@@ -71,8 +73,7 @@ function AdminDashboard() {
 
     const navigate = useNavigate();
 
-    const API =
-        "http://localhost:8081";
+    const API = API_URL;
 
 
     // =====================================================

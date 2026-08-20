@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import API_URL from "../config";
 
 function ForgotPasswordPage() {
 
@@ -30,7 +31,7 @@ function ForgotPasswordPage() {
         axios
 
             .post(
-                "http://localhost:8081/forgot-password/send-otp",
+                `${API_URL}/forgot-password/send-otp`,
                 {
                     email: email
                 }
@@ -68,7 +69,7 @@ function ForgotPasswordPage() {
         axios
 
             .post(
-                "http://localhost:8081/forgot-password/verify-otp",
+                `${API_URL}/forgot-password/verify-otp`,
                 {
                     email: email,
                     otp: otp
@@ -107,7 +108,7 @@ function ForgotPasswordPage() {
         axios
 
             .post(
-                "http://localhost:8081/forgot-password/reset-password",
+                `${API_URL}/forgot-password/reset-password`,
                 {
                     email: email,
                     otp: otp,

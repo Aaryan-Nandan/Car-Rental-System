@@ -4,7 +4,7 @@ import React, {
 } from "react";
 
 import axios from "axios";
-
+import API_URL from "../config";
 
 function ProfilePage() {
 
@@ -101,7 +101,7 @@ function ProfilePage() {
 
             const response =
                 await axios.get(
-                    `http://localhost:8081/customer/${customerId}`,
+                    `${API_URL}/customer/${customerId}`,
                     {
                         headers: {
                             Authorization:
@@ -274,7 +274,7 @@ function ProfilePage() {
 
                 const response =
                     await axios.put(
-                        `http://localhost:8081/customer/${customerId}`,
+                        `${API_URL}/customer/${customerId}`,
                         {
                             profilePhoto:
                                 base64Image
@@ -379,7 +379,7 @@ function ProfilePage() {
 
             const response =
                 await axios.put(
-                    `http://localhost:8081/customer/${customerId}`,
+                    `${API_URL}/customer/${customerId}`,
 
                     {
                         name:

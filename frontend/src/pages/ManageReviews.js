@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import axios from "axios";
+import API_URL from "../config";
 
 function ManageReviews() {
 
@@ -21,7 +22,7 @@ function ManageReviews() {
         axios
 
             .get(
-                "http://localhost:8081/review/all"
+                `${API_URL}/review/all`
             )
 
             .then((response) => {
@@ -53,7 +54,7 @@ function ManageReviews() {
         axios
 
             .delete(
-                `http://localhost:8081/review/delete/${id}`
+                `${API_URL}/review/delete/${id}`
             )
 
             .then(() => {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import API_URL from "../config";
 
 function AdminLogin() {
 
@@ -39,7 +40,7 @@ function AdminLogin() {
 
             const response =
                 await axios.post(
-                    "http://localhost:8081/admin/login",
+                    `${API_URL}/admin/login`,
                     loginData
                 );
 

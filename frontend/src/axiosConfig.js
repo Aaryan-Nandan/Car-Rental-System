@@ -3,15 +3,17 @@ import API_URL from "./config";
 
 axios.interceptors.request.use(
   (config) => {
-    if (
-      process.env.NODE_ENV === "production" &&
-      config.url &&
-      config.url.startsWith("http://localhost:8081")
+    if (!config || !config.url) {
+      return config;
+    }
+
+    const LOCALHOST_BASE = "http://localhost:8081";
+
+    if (  
+      config.url.startsWith(LOCALHOST_BASE) &&
+      API_URL !== LOCALHOST_BASE
     ) {
-      config.url = config.url.replace(
-        "http://localhost:8081",
-        API_URL
-      );
+      config.url = config.url.replace(LOCALHOST_BASE, API_URL);
     }
 
     return config;

@@ -5,6 +5,8 @@ import React, {
 
 import axios from "axios";
 
+import API_URL from "../config";
+
 import {
     useNavigate,
     useParams
@@ -33,7 +35,7 @@ import tharImage from "../assets/thar.jpg";
 // ============================================================
 
 const GOOGLE_MAPS_CONFIG_URL =
-    "http://localhost:8081/google-maps/config";
+    `${API_URL}/google-maps/config`;
 
 const GOOGLE_MAP_LIBRARIES = [
     "places"
@@ -480,7 +482,7 @@ function BookingPage() {
 
         axios
             .get(
-                "http://localhost:8081/variant/all"
+                `${API_URL}/variant/all`
             )
 
             .then(
@@ -1943,7 +1945,7 @@ function BookingPage() {
                 const response =
                     await axios.post(
 
-                        "http://localhost:8081/booking/add",
+                        `${API_URL}/booking/add`,
 
                         bookingData,
 
