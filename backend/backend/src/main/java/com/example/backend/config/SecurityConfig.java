@@ -45,8 +45,7 @@ public class SecurityConfig {
 //                        "http://localhost:3000",
 //                      //  "https://car-rental-com-six.vercel.app"
 //                        "https://car-rental-q1wadgws7-aaryan-nandan1.vercel.app/"
-                        "http://localhost:3000",
-                        "https://car-rental-com-six.vercel.app",
+                      //  "http://localhost:3000",
                         "https://car-rental-com-git-main-aaryan-nandan1.vercel.app",
                         "https://car-rental-q1wadgws7-aaryan-nandan1.vercel.app"
                 )
