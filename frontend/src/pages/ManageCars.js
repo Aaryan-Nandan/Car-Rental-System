@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+
+import API_URL from "../config";
+
 function ManageCars() {
 
     // =========================================================
@@ -52,8 +55,11 @@ function ManageCars() {
 
         axios
             .get(
-                "http://localhost:8081/car/all"
-            )
+                //"http://localhost:8081/car/all"
+                
+            `${API_URL}/car/all`
+)
+            
             .then((response) => {
 
                 const carData =
@@ -95,7 +101,9 @@ function ManageCars() {
 
         axios
             .get(
-                "http://localhost:8081/variant/all"
+                //"http://localhost:8081/variant/all"
+
+                `${API_URL}/car/variant/all`
             )
             .then((response) => {
 
