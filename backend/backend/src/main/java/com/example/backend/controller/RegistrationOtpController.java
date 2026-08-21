@@ -29,21 +29,15 @@ public class RegistrationOtpController {
     public ApiResponse sendRegistrationOtp(
             @RequestBody Map<String, String> request) {
 
-        // -------------------------------------------------
-        // GET EMAIL
-        // -------------------------------------------------
-
-        String email = request.get("email");
+        String email =
+                request.get("email");
 
         System.out.println(
                 "SEND OTP REQUEST EMAIL: " + email
         );
 
-        // -------------------------------------------------
-        // VALIDATE EMAIL
-        // -------------------------------------------------
-
-        if (email == null || email.trim().isEmpty()) {
+        if (email == null ||
+                email.trim().isEmpty()) {
 
             return new ApiResponse(
                     false,
@@ -53,14 +47,12 @@ public class RegistrationOtpController {
 
         email = email.trim();
 
-        // -------------------------------------------------
-        // SEND OTP
-        // -------------------------------------------------
-
         try {
 
             ApiResponse response =
-                    registrationOtpService.sendOtp(email);
+                    registrationOtpService.sendOtp(
+                            email
+                    );
 
             System.out.println(
                     "SEND OTP RESPONSE SUCCESS: "
@@ -103,16 +95,8 @@ public class RegistrationOtpController {
     public ApiResponse verifyRegistrationOtp(
             @RequestBody Map<String, String> request) {
 
-        // -------------------------------------------------
-        // GET EMAIL
-        // -------------------------------------------------
-
         String email =
                 request.get("email");
-
-        // -------------------------------------------------
-        // GET OTP
-        // -------------------------------------------------
 
         String otp =
                 request.get("otp");
@@ -127,10 +111,6 @@ public class RegistrationOtpController {
                         + otp
         );
 
-        // -------------------------------------------------
-        // VALIDATE EMAIL
-        // -------------------------------------------------
-
         if (email == null ||
                 email.trim().isEmpty()) {
 
@@ -139,10 +119,6 @@ public class RegistrationOtpController {
                     "Email is required."
             );
         }
-
-        // -------------------------------------------------
-        // VALIDATE OTP
-        // -------------------------------------------------
 
         if (otp == null ||
                 otp.trim().isEmpty()) {
@@ -155,10 +131,6 @@ public class RegistrationOtpController {
 
         email = email.trim();
         otp = otp.trim();
-
-        // -------------------------------------------------
-        // VERIFY OTP
-        // -------------------------------------------------
 
         try {
 
@@ -209,61 +181,36 @@ public class RegistrationOtpController {
     public ApiResponse registerCustomer(
             @RequestBody Map<String, Object> request) {
 
-        // -------------------------------------------------
-        // CREATE CUSTOMER
-        // -------------------------------------------------
-
-        Customer customer =
-                new Customer();
-
-        // -------------------------------------------------
-        // GET NAME
-        // -------------------------------------------------
-
         String name =
                 (String) request.get("name");
-
-        // -------------------------------------------------
-        // GET EMAIL
-        // -------------------------------------------------
 
         String email =
                 (String) request.get("email");
 
-        // -------------------------------------------------
-        // GET PHONE
-        // -------------------------------------------------
-
         String phone =
                 (String) request.get("phone");
-
-        // -------------------------------------------------
-        // GET PASSWORD
-        // -------------------------------------------------
 
         String password =
                 (String) request.get("password");
 
-        // -------------------------------------------------
-        // GET OTP
-        // -------------------------------------------------
-
         String otp =
                 (String) request.get("otp");
 
-        System.out.println(
-                "REGISTER REQUEST EMAIL: "
-                        + email
-        );
 
         System.out.println(
                 "REGISTER REQUEST NAME: "
                         + name
         );
 
-        // -------------------------------------------------
-        // VALIDATE NAME
-        // -------------------------------------------------
+        System.out.println(
+                "REGISTER REQUEST EMAIL: "
+                        + email
+        );
+
+
+        // ==========================================
+        // VALIDATION
+        // ==========================================
 
         if (name == null ||
                 name.trim().isEmpty()) {
@@ -274,10 +221,6 @@ public class RegistrationOtpController {
             );
         }
 
-        // -------------------------------------------------
-        // VALIDATE EMAIL
-        // -------------------------------------------------
-
         if (email == null ||
                 email.trim().isEmpty()) {
 
@@ -286,10 +229,6 @@ public class RegistrationOtpController {
                     "Email is required."
             );
         }
-
-        // -------------------------------------------------
-        // VALIDATE PHONE
-        // -------------------------------------------------
 
         if (phone == null ||
                 phone.trim().isEmpty()) {
@@ -300,10 +239,6 @@ public class RegistrationOtpController {
             );
         }
 
-        // -------------------------------------------------
-        // VALIDATE PASSWORD
-        // -------------------------------------------------
-
         if (password == null ||
                 password.isEmpty()) {
 
@@ -312,10 +247,6 @@ public class RegistrationOtpController {
                     "Password is required."
             );
         }
-
-        // -------------------------------------------------
-        // VALIDATE OTP
-        // -------------------------------------------------
 
         if (otp == null ||
                 otp.trim().isEmpty()) {
@@ -326,9 +257,10 @@ public class RegistrationOtpController {
             );
         }
 
-        // -------------------------------------------------
+
+        // ==========================================
         // CLEAN VALUES
-        // -------------------------------------------------
+        // ==========================================
 
         name =
                 name.trim();
@@ -342,9 +274,13 @@ public class RegistrationOtpController {
         otp =
                 otp.trim();
 
-        // -------------------------------------------------
-        // SET CUSTOMER DATA
-        // -------------------------------------------------
+
+        // ==========================================
+        // CREATE CUSTOMER
+        // ==========================================
+
+        Customer customer =
+                new Customer();
 
         customer.setName(
                 name
@@ -362,9 +298,10 @@ public class RegistrationOtpController {
                 password
         );
 
-        // -------------------------------------------------
+
+        // ==========================================
         // REGISTER CUSTOMER
-        // -------------------------------------------------
+        // ==========================================
 
         try {
 

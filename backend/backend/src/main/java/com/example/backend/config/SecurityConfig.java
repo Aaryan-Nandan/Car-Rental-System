@@ -5,16 +5,10 @@ import org.springframework.context.annotation.Configuration;
 
 import org.springframework.http.HttpMethod;
 
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-
-import java.util.Arrays;
 
 @Configuration
 public class SecurityConfig {
@@ -27,53 +21,8 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
 
         return new BCryptPasswordEncoder();
-
     }
 
-    // ==========================================
-    // CORS CONFIGURATION
-    // ==========================================
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-
-        CorsConfiguration configuration =
-                new CorsConfiguration();
-
-        configuration.setAllowedOrigins(
-                Arrays.asList(
-                        "http://localhost:3000",
-                        "https://car-rental-com-git-main-aaryan-nandan1.vercel.app",
-                        "https://car-rental-q1wadgws7-aaryan-nandan1.vercel.app"
-                )
-        );
-
-        configuration.setAllowedMethods(
-                Arrays.asList(
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE",
-                        "OPTIONS"
-                )
-        );
-
-        configuration.setAllowedHeaders(
-                Arrays.asList("*")
-        );
-
-        configuration.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-
-        source.registerCorsConfiguration(
-                "/**",
-                configuration
-        );
-
-        return source;
-    }
 
     // ==========================================
     // SECURITY FILTER CHAIN
@@ -94,15 +43,23 @@ public class SecurityConfig {
                         csrf -> csrf.disable()
                 )
 
+
                 // ==================================
                 // CORS
                 // ==================================
 
+                /*
+                 * CorsConfig.java contains the single
+                 * CorsConfigurationSource bean.
+                 *
+                 * Spring Security will use that bean
+                 * automatically.
+                 */
+
                 .cors(
-                        cors -> cors.configurationSource(
-                                corsConfigurationSource()
-                        )
+                        cors -> {}
                 )
+
 
                 // ==================================
                 // AUTHORIZATION
@@ -111,9 +68,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         auth -> auth
 
-                                // --------------------------
+
+                                // ==================================
                                 // CORS OPTIONS
-                                // --------------------------
+                                // ==================================
 
                                 .requestMatchers(
                                         HttpMethod.OPTIONS,
@@ -121,9 +79,10 @@ public class SecurityConfig {
                                 )
                                 .permitAll()
 
-                                // --------------------------
+
+                                // ==================================
                                 // CUSTOMER AUTHENTICATION
-                                // --------------------------
+                                // ==================================
 
                                 .requestMatchers(
                                         "/customer/login",
@@ -134,18 +93,20 @@ public class SecurityConfig {
                                 )
                                 .permitAll()
 
-                                // --------------------------
+
+                                // ==================================
                                 // FORGOT PASSWORD
-                                // --------------------------
+                                // ==================================
 
                                 .requestMatchers(
                                         "/forgot-password/**"
                                 )
                                 .permitAll()
 
-                                // --------------------------
+
+                                // ==================================
                                 // ADMIN AUTHENTICATION
-                                // --------------------------
+                                // ==================================
 
                                 .requestMatchers(
                                         "/admin/login",
@@ -153,56 +114,65 @@ public class SecurityConfig {
                                 )
                                 .permitAll()
 
-                                // --------------------------
+
+                                // ==================================
                                 // CAR VARIANTS
-                                // --------------------------
+                                // ==================================
 
                                 .requestMatchers(
                                         "/variant/**"
                                 )
                                 .permitAll()
 
-                                // --------------------------
+
+                                // ==================================
                                 // BOOKINGS
-                                // --------------------------
+                                // ==================================
 
                                 .requestMatchers(
                                         "/booking/all"
                                 )
                                 .permitAll()
 
-                                // --------------------------
+
+                                // ==================================
                                 // PAYMENTS
-                                // --------------------------
+                                // ==================================
 
                                 .requestMatchers(
                                         "/payment/all"
                                 )
                                 .permitAll()
 
-                                // --------------------------
+
+                                // ==================================
                                 // EVERYTHING ELSE
-                                // --------------------------
+                                // ==================================
 
                                 .anyRequest()
                                 .permitAll()
                 )
+
 
                 // ==================================
                 // HTTP BASIC DISABLED
                 // ==================================
 
                 .httpBasic(
-                        httpBasic -> httpBasic.disable()
+                        httpBasic ->
+                                httpBasic.disable()
                 )
+
 
                 // ==================================
                 // FORM LOGIN DISABLED
                 // ==================================
 
                 .formLogin(
-                        formLogin -> formLogin.disable()
+                        formLogin ->
+                                formLogin.disable()
                 );
+
 
         return http.build();
     }

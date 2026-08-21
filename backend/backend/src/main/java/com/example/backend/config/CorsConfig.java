@@ -39,7 +39,7 @@ public class CorsConfig {
         );
 
         // ==========================================
-        // ALLOWED HTTP METHODS
+        // ALLOWED METHODS
         // ==========================================
 
         config.setAllowedMethods(
@@ -64,7 +64,7 @@ public class CorsConfig {
         );
 
         // ==========================================
-        // EXPOSE HEADERS
+        // EXPOSED HEADERS
         // ==========================================
 
         config.setExposedHeaders(
@@ -75,7 +75,7 @@ public class CorsConfig {
         );
 
         // ==========================================
-        // ALLOW CREDENTIALS
+        // CREDENTIALS
         // ==========================================
 
         config.setAllowCredentials(true);
