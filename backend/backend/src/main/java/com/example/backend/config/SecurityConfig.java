@@ -42,10 +42,7 @@ public class SecurityConfig {
 
         configuration.setAllowedOrigins(
                 Arrays.asList(
-//                        "http://localhost:3000",
-//                      //  "https://car-rental-com-six.vercel.app"
-//                        "https://car-rental-q1wadgws7-aaryan-nandan1.vercel.app/"
-                      //  "http://localhost:3000",
+                        "http://localhost:3000",
                         "https://car-rental-com-git-main-aaryan-nandan1.vercel.app",
                         "https://car-rental-q1wadgws7-aaryan-nandan1.vercel.app"
                 )
@@ -62,9 +59,7 @@ public class SecurityConfig {
         );
 
         configuration.setAllowedHeaders(
-                Arrays.asList(
-                        "*"
-                )
+                Arrays.asList("*")
         );
 
         configuration.setAllowCredentials(true);
@@ -104,10 +99,9 @@ public class SecurityConfig {
                 // ==================================
 
                 .cors(
-                        cors -> cors
-                                .configurationSource(
-                                        corsConfigurationSource()
-                                )
+                        cors -> cors.configurationSource(
+                                corsConfigurationSource()
+                        )
                 )
 
                 // ==================================
@@ -170,7 +164,6 @@ public class SecurityConfig {
 
                                 // --------------------------
                                 // BOOKINGS
-                                // TEMPORARILY PUBLIC
                                 // --------------------------
 
                                 .requestMatchers(
@@ -180,7 +173,6 @@ public class SecurityConfig {
 
                                 // --------------------------
                                 // PAYMENTS
-                                // TEMPORARILY PUBLIC
                                 // --------------------------
 
                                 .requestMatchers(
@@ -201,8 +193,7 @@ public class SecurityConfig {
                 // ==================================
 
                 .httpBasic(
-                        httpBasic ->
-                                httpBasic.disable()
+                        httpBasic -> httpBasic.disable()
                 )
 
                 // ==================================
@@ -210,8 +201,7 @@ public class SecurityConfig {
                 // ==================================
 
                 .formLogin(
-                        formLogin ->
-                                formLogin.disable()
+                        formLogin -> formLogin.disable()
                 );
 
         return http.build();

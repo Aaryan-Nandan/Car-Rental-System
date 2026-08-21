@@ -2,32 +2,96 @@ package com.example.backend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.cors.CorsConfiguration;
 
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
+
+import java.util.Arrays;
 
 @Configuration
 public class CorsConfig {
 
-    @Bean
-    public CorsFilter corsFilter() {
+    // ==========================================
+    // CORS CONFIGURATION
+    // ==========================================
 
-        CorsConfiguration config = new CorsConfiguration();
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+
+        CorsConfiguration config =
+                new CorsConfiguration();
+
+        // ==========================================
+        // ALLOWED FRONTEND ORIGINS
+        // ==========================================
+
+        config.setAllowedOrigins(
+                Arrays.asList(
+                        "http://localhost:3000",
+
+                        "https://car-rental-com-git-main-aaryan-nandan1.vercel.app",
+
+                        "https://car-rental-q1wadgws7-aaryan-nandan1.vercel.app",
+
+                        "https://car-rental-com-six.vercel.app"
+                )
+        );
+
+        // ==========================================
+        // ALLOWED HTTP METHODS
+        // ==========================================
+
+        config.setAllowedMethods(
+                Arrays.asList(
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "DELETE",
+                        "OPTIONS",
+                        "PATCH"
+                )
+        );
+
+        // ==========================================
+        // ALLOWED HEADERS
+        // ==========================================
+
+        config.setAllowedHeaders(
+                Arrays.asList(
+                        "*"
+                )
+        );
+
+        // ==========================================
+        // EXPOSE HEADERS
+        // ==========================================
+
+        config.setExposedHeaders(
+                Arrays.asList(
+                        "Authorization",
+                        "Content-Type"
+                )
+        );
+
+        // ==========================================
+        // ALLOW CREDENTIALS
+        // ==========================================
 
         config.setAllowCredentials(true);
 
-      //  config.addAllowedOrigin("http://localhost:3000");
-
-        config.addAllowedHeader("*");
-
-        config.addAllowedMethod("*");
+        // ==========================================
+        // REGISTER CORS CONFIGURATION
+        // ==========================================
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration("/**", config);
+        source.registerCorsConfiguration(
+                "/**",
+                config
+        );
 
-        return new CorsFilter(source);
+        return source;
     }
 }

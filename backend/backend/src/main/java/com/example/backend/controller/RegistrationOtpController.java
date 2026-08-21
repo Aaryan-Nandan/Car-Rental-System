@@ -11,20 +11,27 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/customer")
-//@CrossOrigin(origins = "http://localhost:3000")
 public class RegistrationOtpController {
 
     @Autowired
     private RegistrationOtpService registrationOtpService;
 
 
-    // ==========================================
+    // =====================================================
     // SEND REGISTRATION OTP
-    // ==========================================
+    // =====================================================
 
-    @PostMapping("/send-registration-otp")
+    @PostMapping(
+            value = "/send-registration-otp",
+            consumes = "application/json",
+            produces = "application/json"
+    )
     public ApiResponse sendRegistrationOtp(
             @RequestBody Map<String, String> request) {
+
+        // -------------------------------------------------
+        // GET EMAIL
+        // -------------------------------------------------
 
         String email = request.get("email");
 
@@ -32,100 +39,366 @@ public class RegistrationOtpController {
                 "SEND OTP REQUEST EMAIL: " + email
         );
 
-        ApiResponse response =
-                registrationOtpService.sendOtp(email);
+        // -------------------------------------------------
+        // VALIDATE EMAIL
+        // -------------------------------------------------
 
-        System.out.println(
-                "SEND OTP RESPONSE SUCCESS: "
-                        + response.isSuccess()
-        );
+        if (email == null || email.trim().isEmpty()) {
 
-        System.out.println(
-                "SEND OTP RESPONSE MESSAGE: "
-                        + response.getMessage()
-        );
+            return new ApiResponse(
+                    false,
+                    "Email is required."
+            );
+        }
 
-        return response;
+        email = email.trim();
+
+        // -------------------------------------------------
+        // SEND OTP
+        // -------------------------------------------------
+
+        try {
+
+            ApiResponse response =
+                    registrationOtpService.sendOtp(email);
+
+            System.out.println(
+                    "SEND OTP RESPONSE SUCCESS: "
+                            + response.isSuccess()
+            );
+
+            System.out.println(
+                    "SEND OTP RESPONSE MESSAGE: "
+                            + response.getMessage()
+            );
+
+            return response;
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "SEND OTP ERROR: "
+                            + e.getMessage()
+            );
+
+            e.printStackTrace();
+
+            return new ApiResponse(
+                    false,
+                    "Unable to send OTP. Please try again later."
+            );
+        }
     }
 
 
-    // ==========================================
+    // =====================================================
     // VERIFY REGISTRATION OTP
-    // ==========================================
+    // =====================================================
 
-    @PostMapping("/verify-registration-otp")
+    @PostMapping(
+            value = "/verify-registration-otp",
+            consumes = "application/json",
+            produces = "application/json"
+    )
     public ApiResponse verifyRegistrationOtp(
             @RequestBody Map<String, String> request) {
 
-        String email = request.get("email");
+        // -------------------------------------------------
+        // GET EMAIL
+        // -------------------------------------------------
 
-        String otp = request.get("otp");
+        String email =
+                request.get("email");
 
-        ApiResponse response =
-                registrationOtpService.verifyOtp(
-                        email,
-                        otp
-                );
+        // -------------------------------------------------
+        // GET OTP
+        // -------------------------------------------------
+
+        String otp =
+                request.get("otp");
 
         System.out.println(
-                "VERIFY OTP SUCCESS: "
-                        + response.isSuccess()
+                "VERIFY OTP REQUEST EMAIL: "
+                        + email
         );
 
         System.out.println(
-                "VERIFY OTP MESSAGE: "
-                        + response.getMessage()
+                "VERIFY OTP REQUEST OTP: "
+                        + otp
         );
 
-        return response;
+        // -------------------------------------------------
+        // VALIDATE EMAIL
+        // -------------------------------------------------
+
+        if (email == null ||
+                email.trim().isEmpty()) {
+
+            return new ApiResponse(
+                    false,
+                    "Email is required."
+            );
+        }
+
+        // -------------------------------------------------
+        // VALIDATE OTP
+        // -------------------------------------------------
+
+        if (otp == null ||
+                otp.trim().isEmpty()) {
+
+            return new ApiResponse(
+                    false,
+                    "OTP is required."
+            );
+        }
+
+        email = email.trim();
+        otp = otp.trim();
+
+        // -------------------------------------------------
+        // VERIFY OTP
+        // -------------------------------------------------
+
+        try {
+
+            ApiResponse response =
+                    registrationOtpService.verifyOtp(
+                            email,
+                            otp
+                    );
+
+            System.out.println(
+                    "VERIFY OTP SUCCESS: "
+                            + response.isSuccess()
+            );
+
+            System.out.println(
+                    "VERIFY OTP MESSAGE: "
+                            + response.getMessage()
+            );
+
+            return response;
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "VERIFY OTP ERROR: "
+                            + e.getMessage()
+            );
+
+            e.printStackTrace();
+
+            return new ApiResponse(
+                    false,
+                    "Unable to verify OTP. Please try again."
+            );
+        }
     }
 
 
-    // ==========================================
-    // REGISTER CUSTOMER
-    // ==========================================
+    // =====================================================
+    // REGISTER CUSTOMER WITH OTP
+    // =====================================================
 
-    @PostMapping("/register-with-otp")
+    @PostMapping(
+            value = "/register-with-otp",
+            consumes = "application/json",
+            produces = "application/json"
+    )
     public ApiResponse registerCustomer(
             @RequestBody Map<String, Object> request) {
 
-        Customer customer = new Customer();
+        // -------------------------------------------------
+        // CREATE CUSTOMER
+        // -------------------------------------------------
 
-        customer.setName(
-                (String) request.get("name")
-        );
+        Customer customer =
+                new Customer();
 
-        customer.setEmail(
-                (String) request.get("email")
-        );
+        // -------------------------------------------------
+        // GET NAME
+        // -------------------------------------------------
 
-        customer.setPhone(
-                (String) request.get("phone")
-        );
+        String name =
+                (String) request.get("name");
 
-        customer.setPassword(
-                (String) request.get("password")
-        );
+        // -------------------------------------------------
+        // GET EMAIL
+        // -------------------------------------------------
+
+        String email =
+                (String) request.get("email");
+
+        // -------------------------------------------------
+        // GET PHONE
+        // -------------------------------------------------
+
+        String phone =
+                (String) request.get("phone");
+
+        // -------------------------------------------------
+        // GET PASSWORD
+        // -------------------------------------------------
+
+        String password =
+                (String) request.get("password");
+
+        // -------------------------------------------------
+        // GET OTP
+        // -------------------------------------------------
 
         String otp =
                 (String) request.get("otp");
 
-        ApiResponse response =
-                registrationOtpService.registerCustomer(
-                        customer,
-                        otp
-                );
-
         System.out.println(
-                "REGISTER SUCCESS: "
-                        + response.isSuccess()
+                "REGISTER REQUEST EMAIL: "
+                        + email
         );
 
         System.out.println(
-                "REGISTER MESSAGE: "
-                        + response.getMessage()
+                "REGISTER REQUEST NAME: "
+                        + name
         );
 
-        return response;
+        // -------------------------------------------------
+        // VALIDATE NAME
+        // -------------------------------------------------
+
+        if (name == null ||
+                name.trim().isEmpty()) {
+
+            return new ApiResponse(
+                    false,
+                    "Name is required."
+            );
+        }
+
+        // -------------------------------------------------
+        // VALIDATE EMAIL
+        // -------------------------------------------------
+
+        if (email == null ||
+                email.trim().isEmpty()) {
+
+            return new ApiResponse(
+                    false,
+                    "Email is required."
+            );
+        }
+
+        // -------------------------------------------------
+        // VALIDATE PHONE
+        // -------------------------------------------------
+
+        if (phone == null ||
+                phone.trim().isEmpty()) {
+
+            return new ApiResponse(
+                    false,
+                    "Phone number is required."
+            );
+        }
+
+        // -------------------------------------------------
+        // VALIDATE PASSWORD
+        // -------------------------------------------------
+
+        if (password == null ||
+                password.isEmpty()) {
+
+            return new ApiResponse(
+                    false,
+                    "Password is required."
+            );
+        }
+
+        // -------------------------------------------------
+        // VALIDATE OTP
+        // -------------------------------------------------
+
+        if (otp == null ||
+                otp.trim().isEmpty()) {
+
+            return new ApiResponse(
+                    false,
+                    "OTP is required."
+            );
+        }
+
+        // -------------------------------------------------
+        // CLEAN VALUES
+        // -------------------------------------------------
+
+        name =
+                name.trim();
+
+        email =
+                email.trim();
+
+        phone =
+                phone.trim();
+
+        otp =
+                otp.trim();
+
+        // -------------------------------------------------
+        // SET CUSTOMER DATA
+        // -------------------------------------------------
+
+        customer.setName(
+                name
+        );
+
+        customer.setEmail(
+                email
+        );
+
+        customer.setPhone(
+                phone
+        );
+
+        customer.setPassword(
+                password
+        );
+
+        // -------------------------------------------------
+        // REGISTER CUSTOMER
+        // -------------------------------------------------
+
+        try {
+
+            ApiResponse response =
+                    registrationOtpService.registerCustomer(
+                            customer,
+                            otp
+                    );
+
+            System.out.println(
+                    "REGISTER SUCCESS: "
+                            + response.isSuccess()
+            );
+
+            System.out.println(
+                    "REGISTER MESSAGE: "
+                            + response.getMessage()
+            );
+
+            return response;
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "REGISTER ERROR: "
+                            + e.getMessage()
+            );
+
+            e.printStackTrace();
+
+            return new ApiResponse(
+                    false,
+                    "Unable to register customer. Please try again."
+            );
+        }
     }
 }
