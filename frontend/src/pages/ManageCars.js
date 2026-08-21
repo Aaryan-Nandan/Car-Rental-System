@@ -101,7 +101,8 @@ function ManageCars() {
             .get(
                 //"http://localhost:8081/variant/all"
 
-                `${API_URL}/car/variant/all`
+              //  `${API_URL}/car/variant/all`
+              `${API_URL}/variant/all`
             )
             .then((response) => {
 
