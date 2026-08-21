@@ -1,33 +1,61 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+
 import API_URL from "../config";
 
 import OtpInput from "../components/OtpInput";
 import PasswordStrength from "../components/PasswordStrength";
 import LoadingSpinner from "../components/LoadingSpinner";
 
+
+// =============================================================
+// REGISTER PAGE
+// =============================================================
+
 function RegisterPage() {
 
     const navigate = useNavigate();
+
+
+    // =====================================================
+    // BACKEND URL
+    // =====================================================
+
+    const BACKEND_URL =
+        String(API_URL || "").replace(/\/+$/, "");
+
 
     // =====================================================
     // USER INFORMATION
     // =====================================================
 
     const [name, setName] = useState("");
+
     const [email, setEmail] = useState("");
+
     const [phone, setPhone] = useState("");
-    const [alternatePhone, setAlternatePhone] = useState("");
-    const [bloodGroup, setBloodGroup] = useState("");
-    const [address, setAddress] = useState("");
-    const [password, setPassword] = useState("");
+
+    const [alternatePhone, setAlternatePhone] =
+        useState("");
+
+    const [bloodGroup, setBloodGroup] =
+        useState("");
+
+    const [address, setAddress] =
+        useState("");
+
+    const [password, setPassword] =
+        useState("");
+
 
     // =====================================================
     // OTP
     // =====================================================
 
-    const [otp, setOtp] = useState([
+    const [
+        otp,
+        setOtp
+    ] = useState([
         "",
         "",
         "",
@@ -36,31 +64,72 @@ function RegisterPage() {
         ""
     ]);
 
-    const [otpSent, setOtpSent] = useState(false);
-    const [otpVerified, setOtpVerified] = useState(false);
+
+    const [
+        otpSent,
+        setOtpSent
+    ] = useState(false);
+
+
+    const [
+        otpVerified,
+        setOtpVerified
+    ] = useState(false);
+
 
     // =====================================================
     // UI
     // =====================================================
 
-    const [loading, setLoading] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
+    const [
+        loading,
+        setLoading
+    ] = useState(false);
+
+
+    const [
+        showPassword,
+        setShowPassword
+    ] = useState(false);
+
 
     // =====================================================
     // TIMERS
     // =====================================================
 
-    const [resendTimer, setResendTimer] = useState(60);
-    const [otpExpiryTimer, setOtpExpiryTimer] = useState(300);
+    const [
+        resendTimer,
+        setResendTimer
+    ] = useState(60);
+
+
+    const [
+        otpExpiryTimer,
+        setOtpExpiryTimer
+    ] = useState(300);
+
 
     // =====================================================
     // VALIDATION
     // =====================================================
 
-    const [emailValid, setEmailValid] = useState(false);
-    const [phoneValid, setPhoneValid] = useState(false);
-    const [alternatePhoneValid, setAlternatePhoneValid] =
-        useState(true);
+    const [
+        emailValid,
+        setEmailValid
+    ] = useState(false);
+
+
+    const [
+        phoneValid,
+        setPhoneValid
+    ] = useState(false);
+
+
+    const [
+        alternatePhoneValid,
+        setAlternatePhoneValid
+    ] = useState(true);
+
 
     // =====================================================
     // EMAIL VALIDATION
@@ -77,6 +146,7 @@ function RegisterPage() {
 
     }, [email]);
 
+
     // =====================================================
     // MOBILE VALIDATION
     // =====================================================
@@ -92,6 +162,7 @@ function RegisterPage() {
 
     }, [phone]);
 
+
     // =====================================================
     // ALTERNATE PHONE VALIDATION
     // OPTIONAL
@@ -99,14 +170,19 @@ function RegisterPage() {
 
     useEffect(() => {
 
-        if (alternatePhone.trim() === "") {
+        if (
+            alternatePhone.trim() === ""
+        ) {
 
             setAlternatePhoneValid(true);
+
             return;
         }
 
+
         const regex =
             /^[6-9]\d{9}$/;
+
 
         setAlternatePhoneValid(
             regex.test(alternatePhone)
@@ -114,14 +190,17 @@ function RegisterPage() {
 
     }, [alternatePhone]);
 
+
     // =====================================================
     // OTP TIMER
     // =====================================================
 
     useEffect(() => {
 
-        let resendInterval;
-        let expiryInterval;
+        let resendInterval = null;
+
+        let expiryInterval = null;
+
 
         // -------------------------------------------------
         // RESEND TIMER
@@ -141,7 +220,9 @@ function RegisterPage() {
                     );
 
                 }, 1000);
+
         }
+
 
         // -------------------------------------------------
         // OTP EXPIRY TIMER
@@ -158,14 +239,30 @@ function RegisterPage() {
                     setOtpExpiryTimer(
                         previous => {
 
-                            if (previous <= 1) {
+                            if (
+                                previous <= 1
+                            ) {
+
+                                if (
+                                    expiryInterval
+                                ) {
+
+                                    clearInterval(
+                                        expiryInterval
+                                    );
+
+                                }
+
 
                                 alert(
                                     "OTP Expired. Please Resend OTP."
                                 );
 
+
                                 setOtpVerified(false);
+
                                 setOtpSent(false);
+
 
                                 setOtp([
                                     "",
@@ -176,27 +273,47 @@ function RegisterPage() {
                                     ""
                                 ]);
 
+
                                 setResendTimer(60);
+
 
                                 return 300;
                             }
 
+
                             return previous - 1;
+
                         }
                     );
 
                 }, 1000);
+
         }
+
 
         return () => {
 
-            if (resendInterval) {
-                clearInterval(resendInterval);
+            if (
+                resendInterval
+            ) {
+
+                clearInterval(
+                    resendInterval
+                );
+
             }
 
-            if (expiryInterval) {
-                clearInterval(expiryInterval);
+
+            if (
+                expiryInterval
+            ) {
+
+                clearInterval(
+                    expiryInterval
+                );
+
             }
+
         };
 
     }, [
@@ -204,6 +321,56 @@ function RegisterPage() {
         resendTimer,
         otpExpiryTimer
     ]);
+
+
+    // =====================================================
+    // HELPER
+    // SAFE RESPONSE MESSAGE
+    // =====================================================
+
+    const getResponseMessage = (
+        data,
+        defaultMessage
+    ) => {
+
+        if (!data) {
+            return defaultMessage;
+        }
+
+
+        if (
+            typeof data.message === "string" &&
+            data.message.trim() !== ""
+        ) {
+
+            return data.message;
+
+        }
+
+
+        if (
+            typeof data.error === "string" &&
+            data.error.trim() !== ""
+        ) {
+
+            return data.error;
+
+        }
+
+
+        if (
+            typeof data.detail === "string" &&
+            data.detail.trim() !== ""
+        ) {
+
+            return data.detail;
+
+        }
+
+
+        return defaultMessage;
+    };
+
 
     // =====================================================
     // SEND OTP
@@ -215,7 +382,9 @@ function RegisterPage() {
         // NAME
         // -------------------------------------------------
 
-        if (!name.trim()) {
+        if (
+            !name.trim()
+        ) {
 
             alert(
                 "Please enter your full name."
@@ -224,11 +393,14 @@ function RegisterPage() {
             return;
         }
 
+
         // -------------------------------------------------
         // EMAIL
         // -------------------------------------------------
 
-        if (!emailValid) {
+        if (
+            !emailValid
+        ) {
 
             alert(
                 "Please enter a valid email address."
@@ -237,11 +409,14 @@ function RegisterPage() {
             return;
         }
 
+
         // -------------------------------------------------
         // MOBILE
         // -------------------------------------------------
 
-        if (!phoneValid) {
+        if (
+            !phoneValid
+        ) {
 
             alert(
                 "Please enter a valid 10-digit mobile number."
@@ -250,12 +425,15 @@ function RegisterPage() {
             return;
         }
 
+
         // -------------------------------------------------
         // ALTERNATE PHONE
         // OPTIONAL
         // -------------------------------------------------
 
-        if (!alternatePhoneValid) {
+        if (
+            !alternatePhoneValid
+        ) {
 
             alert(
                 "Please enter a valid alternate phone number."
@@ -264,11 +442,14 @@ function RegisterPage() {
             return;
         }
 
+
         // -------------------------------------------------
         // BLOOD GROUP
         // -------------------------------------------------
 
-        if (!bloodGroup) {
+        if (
+            !bloodGroup
+        ) {
 
             alert(
                 "Please select your blood group."
@@ -277,11 +458,14 @@ function RegisterPage() {
             return;
         }
 
+
         // -------------------------------------------------
         // ADDRESS
         // -------------------------------------------------
 
-        if (!address.trim()) {
+        if (
+            !address.trim()
+        ) {
 
             alert(
                 "Please enter your address."
@@ -290,11 +474,14 @@ function RegisterPage() {
             return;
         }
 
+
         // -------------------------------------------------
         // PASSWORD
         // -------------------------------------------------
 
-        if (!password) {
+        if (
+            !password
+        ) {
 
             alert(
                 "Please enter your password."
@@ -303,54 +490,211 @@ function RegisterPage() {
             return;
         }
 
-        // =================================================
-        // SEND REQUEST
-        // =================================================
+
+        // -------------------------------------------------
+        // BACKEND URL CHECK
+        // -------------------------------------------------
+
+        if (
+            !BACKEND_URL ||
+            BACKEND_URL === "undefined"
+        ) {
+
+            alert(
+                "Backend URL is not configured. Please check config.js."
+            );
+
+            return;
+        }
+
+
+        // -------------------------------------------------
+        // FULL ENDPOINT
+        // -------------------------------------------------
+
+        const endpoint =
+            `${BACKEND_URL}/customer/send-registration-otp`;
+
+
+        console.log(
+            "===================================="
+        );
+
+        console.log(
+            "SEND OTP"
+        );
+
+        console.log(
+            "EMAIL:",
+            email.trim()
+        );
+
+        console.log(
+            "BACKEND URL:",
+            BACKEND_URL
+        );
+
+        console.log(
+            "OTP ENDPOINT:",
+            endpoint
+        );
+
+        console.log(
+            "===================================="
+        );
+
 
         setLoading(true);
 
+
         try {
 
-            console.log(
-                "SENDING OTP TO:",
-                email.trim()
-            );
+            // =================================================
+            // EXPLICIT JSON REQUEST
+            // =================================================
 
-            console.log(
-                "BACKEND URL:",
-                `${API_URL}/customer/send-registration-otp`
-            );
+            const response =
+                await fetch(
+                    endpoint,
+                    {
+                        method: "POST",
 
-            const response = await axios.post(
+                        headers: {
+                            "Content-Type":
+                                "application/json",
 
-                `${API_URL}/customer/send-registration-otp`,
+                            "Accept":
+                                "application/json"
+                        },
 
-                {
-                    email: email.trim()
-                },
-
-                {
-                    headers: {
-                        "Content-Type":
-                            "application/json",
-
-                        "Accept":
-                            "application/json"
+                        body: JSON.stringify({
+                            email:
+                                email.trim()
+                        })
                     }
-                }
+                );
+
+
+            console.log(
+                "SEND OTP HTTP STATUS:",
+                response.status
             );
+
+
+            // -------------------------------------------------
+            // READ RESPONSE
+            // -------------------------------------------------
+
+            const contentType =
+                response.headers.get(
+                    "content-type"
+                ) || "";
+
+
+            let data = null;
+
+
+            if (
+                contentType.includes(
+                    "application/json"
+                )
+            ) {
+
+                data =
+                    await response.json();
+
+            } else {
+
+                const text =
+                    await response.text();
+
+                console.log(
+                    "NON JSON RESPONSE:",
+                    text
+                );
+
+
+                data = {
+                    message: text
+                };
+
+            }
+
 
             console.log(
                 "SEND OTP RESPONSE:",
-                response.data
+                data
             );
 
-            if (response.data?.success) {
 
-                alert(
-                    response.data.message ||
-                    "OTP sent successfully."
+            // -------------------------------------------------
+            // HTTP ERROR
+            // -------------------------------------------------
+
+            if (
+                !response.ok
+            ) {
+
+                let message =
+                    getResponseMessage(
+                        data,
+                        `Unable to send OTP. Server returned ${response.status}.`
+                    );
+
+
+                if (
+                    response.status === 415
+                ) {
+
+                    message =
+                        "Server rejected the request format (415). The frontend is now sending application/json. Check that the deployed backend has the latest code.";
+
+                }
+
+
+                if (
+                    response.status === 500
+                ) {
+
+                    message =
+                        getResponseMessage(
+                            data,
+                            "Backend error while sending OTP. Check the Render logs and Gmail SMTP configuration."
+                        );
+
+                }
+
+
+                throw new Error(
+                    message
                 );
+
+            }
+
+
+            // -------------------------------------------------
+            // SUCCESS
+            // -------------------------------------------------
+
+            const success =
+                data &&
+                (
+                    data.success === true ||
+                    data.success === "true"
+                );
+
+
+            alert(
+                getResponseMessage(
+                    data,
+                    "OTP sent successfully."
+                )
+            );
+
+
+            if (
+                success
+            ) {
 
                 setOtpSent(true);
 
@@ -360,12 +704,22 @@ function RegisterPage() {
 
                 setOtpExpiryTimer(300);
 
+                setOtp([
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                ]);
+
             } else {
 
-                alert(
-                    response.data?.message ||
-                    "Unable to send OTP."
+                console.warn(
+                    "Backend returned unsuccessful OTP response:",
+                    data
                 );
+
             }
 
         } catch (error) {
@@ -375,35 +729,20 @@ function RegisterPage() {
                 error
             );
 
-            console.error(
-                "STATUS:",
-                error.response?.status
+
+            alert(
+                error?.message ||
+                "Unable to send OTP."
             );
-
-            console.error(
-                "DATA:",
-                error.response?.data
-            );
-
-            if (error.response) {
-
-                alert(
-                    error.response.data?.message ||
-                    `Unable to send OTP. Server returned ${error.response.status}.`
-                );
-
-            } else {
-
-                alert(
-                    "Unable to connect to the backend."
-                );
-            }
 
         } finally {
 
             setLoading(false);
+
         }
+
     };
+
 
     // =====================================================
     // VERIFY OTP
@@ -414,7 +753,14 @@ function RegisterPage() {
         const enteredOtp =
             otp.join("");
 
-        if (enteredOtp.length !== 6) {
+
+        // -------------------------------------------------
+        // OTP LENGTH
+        // -------------------------------------------------
+
+        if (
+            enteredOtp.length !== 6
+        ) {
 
             alert(
                 "Please enter the complete 6-digit OTP."
@@ -423,58 +769,137 @@ function RegisterPage() {
             return;
         }
 
+
+        if (
+            !emailValid
+        ) {
+
+            alert(
+                "Please enter a valid email address."
+            );
+
+            return;
+        }
+
+
+        const endpoint =
+            `${BACKEND_URL}/customer/verify-registration-otp`;
+
+
+        console.log(
+            "VERIFY OTP ENDPOINT:",
+            endpoint
+        );
+
+
         setLoading(true);
+
 
         try {
 
-            console.log(
-                "VERIFY OTP REQUEST:",
-                {
-                    email: email.trim(),
-                    otp: enteredOtp
-                }
-            );
+            const response =
+                await fetch(
+                    endpoint,
+                    {
+                        method: "POST",
 
-            const response = await axios.post(
+                        headers: {
+                            "Content-Type":
+                                "application/json",
 
-                `${API_URL}/customer/verify-registration-otp`,
+                            "Accept":
+                                "application/json"
+                        },
 
-                {
-                    email: email.trim(),
-                    otp: enteredOtp
-                },
+                        body: JSON.stringify({
+                            email:
+                                email.trim(),
 
-                {
-                    headers: {
-                        "Content-Type":
-                            "application/json",
-
-                        "Accept":
-                            "application/json"
+                            otp:
+                                enteredOtp
+                        })
                     }
-                }
-            );
-
-            console.log(
-                "VERIFY OTP RESPONSE:",
-                response.data
-            );
-
-            if (response.data?.success) {
-
-                alert(
-                    response.data.message ||
-                    "OTP verified successfully."
                 );
 
-                setOtpVerified(true);
+
+            console.log(
+                "VERIFY OTP STATUS:",
+                response.status
+            );
+
+
+            const contentType =
+                response.headers.get(
+                    "content-type"
+                ) || "";
+
+
+            let data = null;
+
+
+            if (
+                contentType.includes(
+                    "application/json"
+                )
+            ) {
+
+                data =
+                    await response.json();
 
             } else {
 
-                alert(
-                    response.data?.message ||
-                    "Invalid or expired OTP."
+                const text =
+                    await response.text();
+
+                data = {
+                    message: text
+                };
+
+            }
+
+
+            console.log(
+                "VERIFY OTP RESPONSE:",
+                data
+            );
+
+
+            if (
+                !response.ok
+            ) {
+
+                throw new Error(
+                    getResponseMessage(
+                        data,
+                        `OTP verification failed. Server returned ${response.status}.`
+                    )
                 );
+
+            }
+
+
+            alert(
+                getResponseMessage(
+                    data,
+                    "OTP verified successfully."
+                )
+            );
+
+
+            const success =
+                data &&
+                (
+                    data.success === true ||
+                    data.success === "true"
+                );
+
+
+            if (
+                success
+            ) {
+
+                setOtpVerified(true);
+
             }
 
         } catch (error) {
@@ -484,35 +909,20 @@ function RegisterPage() {
                 error
             );
 
-            console.error(
-                "STATUS:",
-                error.response?.status
+
+            alert(
+                error?.message ||
+                "Invalid or expired OTP."
             );
-
-            console.error(
-                "DATA:",
-                error.response?.data
-            );
-
-            if (error.response) {
-
-                alert(
-                    error.response.data?.message ||
-                    `OTP verification failed. Server returned ${error.response.status}.`
-                );
-
-            } else {
-
-                alert(
-                    "Unable to connect to the backend."
-                );
-            }
 
         } finally {
 
             setLoading(false);
+
         }
+
     };
+
 
     // =====================================================
     // REGISTER CUSTOMER
@@ -521,10 +931,12 @@ function RegisterPage() {
     const registerCustomer = async () => {
 
         // -------------------------------------------------
-        // OTP VERIFICATION
+        // OTP
         // -------------------------------------------------
 
-        if (!otpVerified) {
+        if (
+            !otpVerified
+        ) {
 
             alert(
                 "Please verify OTP first."
@@ -533,11 +945,14 @@ function RegisterPage() {
             return;
         }
 
+
         // -------------------------------------------------
         // NAME
         // -------------------------------------------------
 
-        if (!name.trim()) {
+        if (
+            !name.trim()
+        ) {
 
             alert(
                 "Please enter your full name."
@@ -546,11 +961,14 @@ function RegisterPage() {
             return;
         }
 
+
         // -------------------------------------------------
         // EMAIL
         // -------------------------------------------------
 
-        if (!emailValid) {
+        if (
+            !emailValid
+        ) {
 
             alert(
                 "Please enter a valid email."
@@ -559,11 +977,14 @@ function RegisterPage() {
             return;
         }
 
+
         // -------------------------------------------------
-        // MOBILE
+        // PHONE
         // -------------------------------------------------
 
-        if (!phoneValid) {
+        if (
+            !phoneValid
+        ) {
 
             alert(
                 "Please enter a valid mobile number."
@@ -572,11 +993,14 @@ function RegisterPage() {
             return;
         }
 
+
         // -------------------------------------------------
         // BLOOD GROUP
         // -------------------------------------------------
 
-        if (!bloodGroup) {
+        if (
+            !bloodGroup
+        ) {
 
             alert(
                 "Please select blood group."
@@ -585,11 +1009,14 @@ function RegisterPage() {
             return;
         }
 
+
         // -------------------------------------------------
         // ADDRESS
         // -------------------------------------------------
 
-        if (!address.trim()) {
+        if (
+            !address.trim()
+        ) {
 
             alert(
                 "Please enter your address."
@@ -597,6 +1024,23 @@ function RegisterPage() {
 
             return;
         }
+
+
+        // -------------------------------------------------
+        // PASSWORD
+        // -------------------------------------------------
+
+        if (
+            !password
+        ) {
+
+            alert(
+                "Please enter your password."
+            );
+
+            return;
+        }
+
 
         // =================================================
         // REGISTRATION DATA
@@ -627,92 +1071,153 @@ function RegisterPage() {
 
             otp:
                 otp.join("")
+
         };
+
 
         console.log(
             "REGISTRATION DATA:",
-            registrationData
+            {
+                ...registrationData,
+                password: "********"
+            }
         );
+
+
+        const endpoint =
+            `${BACKEND_URL}/customer/register-with-otp`;
+
 
         setLoading(true);
 
+
         try {
 
-            const response = await axios.post(
+            const response =
+                await fetch(
+                    endpoint,
+                    {
+                        method: "POST",
 
-                `${API_URL}/customer/register-with-otp`,
+                        headers: {
+                            "Content-Type":
+                                "application/json",
 
-                registrationData,
+                            "Accept":
+                                "application/json"
+                        },
 
-                {
-                    headers: {
-                        "Content-Type":
-                            "application/json",
-
-                        "Accept":
-                            "application/json"
+                        body:
+                            JSON.stringify(
+                                registrationData
+                            )
                     }
-                }
-            );
-
-            console.log(
-                "REGISTER RESPONSE:",
-                response.data
-            );
-
-            if (response.data?.success) {
-
-                alert(
-                    response.data.message ||
-                    "Registration successful."
                 );
 
-                navigate("/login");
+
+            console.log(
+                "REGISTER STATUS:",
+                response.status
+            );
+
+
+            const contentType =
+                response.headers.get(
+                    "content-type"
+                ) || "";
+
+
+            let data = null;
+
+
+            if (
+                contentType.includes(
+                    "application/json"
+                )
+            ) {
+
+                data =
+                    await response.json();
 
             } else {
 
-                alert(
-                    response.data?.message ||
-                    "Registration failed."
+                const text =
+                    await response.text();
+
+                data = {
+                    message: text
+                };
+
+            }
+
+
+            console.log(
+                "REGISTER RESPONSE:",
+                data
+            );
+
+
+            if (
+                !response.ok
+            ) {
+
+                throw new Error(
+                    getResponseMessage(
+                        data,
+                        `Registration failed. Server returned ${response.status}.`
+                    )
                 );
+
+            }
+
+
+            alert(
+                getResponseMessage(
+                    data,
+                    "Registration successful."
+                )
+            );
+
+
+            const success =
+                data &&
+                (
+                    data.success === true ||
+                    data.success === "true"
+                );
+
+
+            if (
+                success
+            ) {
+
+                navigate(
+                    "/login"
+                );
+
             }
 
         } catch (error) {
 
             console.error(
-                "REGISTER ERROR:",
+                "REGISTRATION ERROR:",
                 error
             );
 
-            console.error(
-                "STATUS:",
-                error.response?.status
+
+            alert(
+                error?.message ||
+                "Registration Failed"
             );
-
-            console.error(
-                "DATA:",
-                error.response?.data
-            );
-
-            if (error.response) {
-
-                alert(
-                    error.response.data?.message ||
-                    `Registration failed. Server returned ${error.response.status}.`
-                );
-
-            } else {
-
-                alert(
-                    "Unable to connect to the backend."
-                );
-            }
 
         } finally {
 
             setLoading(false);
+
         }
+
     };
+
 
     // =====================================================
     // RESEND OTP
@@ -720,11 +1225,13 @@ function RegisterPage() {
 
     const resendOtp = () => {
 
-        if (resendTimer > 0) {
+        if (
+            resendTimer > 0
+        ) {
+
             return;
         }
 
-        setOtpVerified(false);
 
         setOtp([
             "",
@@ -735,8 +1242,18 @@ function RegisterPage() {
             ""
         ]);
 
+
+        setOtpVerified(false);
+
+        setOtpExpiryTimer(300);
+
+        setResendTimer(60);
+
+
         sendOtp();
+
     };
+
 
     // =====================================================
     // INPUT STYLE
@@ -770,7 +1287,9 @@ function RegisterPage() {
 
         background:
             "white"
+
     };
+
 
     // =====================================================
     // LABEL STYLE
@@ -792,7 +1311,9 @@ function RegisterPage() {
 
         marginBottom:
             "6px"
+
     };
+
 
     // =====================================================
     // MAIN PAGE
@@ -826,6 +1347,7 @@ function RegisterPage() {
 
                 boxSizing:
                     "border-box"
+
             }}
         >
 
@@ -859,6 +1381,7 @@ function RegisterPage() {
 
                     border:
                         "1px solid #e2e8f0"
+
                 }}
             >
 
@@ -874,6 +1397,7 @@ function RegisterPage() {
 
                         marginBottom:
                             "22px"
+
                     }}
                 >
 
@@ -906,10 +1430,14 @@ function RegisterPage() {
 
                             fontSize:
                                 "25px"
+
                         }}
                     >
+
                         🚗
+
                     </div>
+
 
                     <h1
                         style={{
@@ -922,10 +1450,14 @@ function RegisterPage() {
 
                             fontSize:
                                 "28px"
+
                         }}
                     >
+
                         Create Account
+
                     </h1>
+
 
                     <p
                         style={{
@@ -938,12 +1470,16 @@ function RegisterPage() {
 
                             fontSize:
                                 "12px"
+
                         }}
                     >
+
                         Register to book your favourite car
+
                     </p>
 
                 </div>
+
 
                 {/* =================================================
                     PERSONAL INFORMATION
@@ -956,8 +1492,11 @@ function RegisterPage() {
                     <div
                         style={sectionTitleStyle}
                     >
+
                         Personal Information
+
                     </div>
+
 
                     {/* FULL NAME */}
 
@@ -969,11 +1508,11 @@ function RegisterPage() {
                     >
 
                         <label
-                            style={
-                                labelStyle
-                            }
+                            style={labelStyle}
                         >
+
                             Full Name
+
                             <span
                                 style={
                                     requiredStyle
@@ -981,23 +1520,33 @@ function RegisterPage() {
                             >
                                 {" "}*
                             </span>
+
                         </label>
+
 
                         <input
                             type="text"
+
                             placeholder="Enter Full Name"
-                            value={name}
-                            onChange={(e) =>
-                                setName(
-                                    e.target.value
-                                )
+
+                            value={
+                                name
                             }
+
+                            onChange={
+                                (e) =>
+                                    setName(
+                                        e.target.value
+                                    )
+                            }
+
                             style={
                                 inputStyle
                             }
                         />
 
                     </div>
+
 
                     {/* EMAIL */}
 
@@ -1013,7 +1562,9 @@ function RegisterPage() {
                                 labelStyle
                             }
                         >
+
                             Email Address
+
                             <span
                                 style={
                                     requiredStyle
@@ -1021,18 +1572,30 @@ function RegisterPage() {
                             >
                                 {" "}*
                             </span>
+
                         </label>
+
 
                         <input
                             type="email"
+
                             placeholder="Enter Email"
-                            disabled={otpSent}
-                            value={email}
-                            onChange={(e) =>
-                                setEmail(
-                                    e.target.value
-                                )
+
+                            disabled={
+                                otpSent
                             }
+
+                            value={
+                                email
+                            }
+
+                            onChange={
+                                (e) =>
+                                    setEmail(
+                                        e.target.value
+                                    )
+                            }
+
                             style={{
                                 ...inputStyle,
 
@@ -1041,7 +1604,9 @@ function RegisterPage() {
                                         ? "#f1f5f9"
                                         : "white"
                             }}
+
                         />
+
 
                         {
                             email.length > 0 && (
@@ -1062,20 +1627,23 @@ function RegisterPage() {
                                             emailValid
                                                 ? "#15803d"
                                                 : "#dc2626"
+
                                     }}
                                 >
 
                                     {
                                         emailValid
-                                            ? "Valid Email"
-                                            : "Invalid Email"
+                                            ? "✓ Valid Email"
+                                            : "✗ Invalid Email"
                                     }
 
                                 </div>
+
                             )
                         }
 
                     </div>
+
 
                     {/* MOBILE + ALTERNATE */}
 
@@ -1093,6 +1661,7 @@ function RegisterPage() {
 
                             marginBottom:
                                 "13px"
+
                         }}
                     >
 
@@ -1105,7 +1674,9 @@ function RegisterPage() {
                                     labelStyle
                                 }
                             >
+
                                 Mobile Number
+
                                 <span
                                     style={
                                         requiredStyle
@@ -1113,25 +1684,37 @@ function RegisterPage() {
                                 >
                                     {" "}*
                                 </span>
+
                             </label>
+
 
                             <input
                                 type="text"
+
                                 maxLength="10"
+
                                 placeholder="10-digit mobile"
-                                value={phone}
-                                onChange={(e) =>
-                                    setPhone(
-                                        e.target.value.replace(
-                                            /\D/g,
-                                            ""
-                                        )
-                                    )
+
+                                value={
+                                    phone
                                 }
+
+                                onChange={
+                                    (e) =>
+                                        setPhone(
+                                            e.target.value.replace(
+                                                /\D/g,
+                                                ""
+                                            )
+                                        )
+                                }
+
                                 style={
                                     inputStyle
                                 }
+
                             />
+
 
                             {
                                 phone.length > 0 && (
@@ -1152,20 +1735,23 @@ function RegisterPage() {
                                                 phoneValid
                                                     ? "#15803d"
                                                     : "#dc2626"
+
                                         }}
                                     >
 
                                         {
                                             phoneValid
-                                                ? "Valid"
-                                                : "Invalid"
+                                                ? "✓ Valid"
+                                                : "✗ Invalid"
                                         }
 
                                     </div>
+
                                 )
                             }
 
                         </div>
+
 
                         {/* ALTERNATE PHONE */}
 
@@ -1176,6 +1762,7 @@ function RegisterPage() {
                                     labelStyle
                                 }
                             >
+
                                 Alternate Phone
 
                                 <span
@@ -1186,31 +1773,42 @@ function RegisterPage() {
 
                                         fontWeight:
                                             "500"
+
                                     }}
                                 >
                                     {" "}(Optional)
                                 </span>
+
                             </label>
+
 
                             <input
                                 type="text"
+
                                 maxLength="10"
+
                                 placeholder="Optional"
+
                                 value={
                                     alternatePhone
                                 }
-                                onChange={(e) =>
-                                    setAlternatePhone(
-                                        e.target.value.replace(
-                                            /\D/g,
-                                            ""
+
+                                onChange={
+                                    (e) =>
+                                        setAlternatePhone(
+                                            e.target.value.replace(
+                                                /\D/g,
+                                                ""
+                                            )
                                         )
-                                    )
                                 }
+
                                 style={
                                     inputStyle
                                 }
+
                             />
+
 
                             {
                                 alternatePhone.length > 0 && (
@@ -1231,22 +1829,25 @@ function RegisterPage() {
                                                 alternatePhoneValid
                                                     ? "#15803d"
                                                     : "#dc2626"
+
                                         }}
                                     >
 
                                         {
                                             alternatePhoneValid
-                                                ? "Valid"
-                                                : "Invalid"
+                                                ? "✓ Valid"
+                                                : "✗ Invalid"
                                         }
 
                                     </div>
+
                                 )
                             }
 
                         </div>
 
                     </div>
+
 
                     {/* BLOOD GROUP */}
 
@@ -1255,6 +1856,7 @@ function RegisterPage() {
 
                             marginBottom:
                                 "13px"
+
                         }}
                     >
 
@@ -1263,6 +1865,7 @@ function RegisterPage() {
                                 labelStyle
                             }
                         >
+
                             Blood Group
 
                             <span
@@ -1272,17 +1875,22 @@ function RegisterPage() {
                             >
                                 {" "}*
                             </span>
+
                         </label>
+
 
                         <select
                             value={
                                 bloodGroup
                             }
-                            onChange={(e) =>
-                                setBloodGroup(
-                                    e.target.value
-                                )
+
+                            onChange={
+                                (e) =>
+                                    setBloodGroup(
+                                        e.target.value
+                                    )
                             }
+
                             style={
                                 inputStyle
                             }
@@ -1328,6 +1936,7 @@ function RegisterPage() {
 
                     </div>
 
+
                     {/* ADDRESS */}
 
                     <div>
@@ -1337,6 +1946,7 @@ function RegisterPage() {
                                 labelStyle
                             }
                         >
+
                             Address
 
                             <span
@@ -1346,19 +1956,27 @@ function RegisterPage() {
                             >
                                 {" "}*
                             </span>
+
                         </label>
 
+
                         <textarea
+
                             placeholder="Enter your complete address"
+
                             value={
                                 address
                             }
-                            onChange={(e) =>
-                                setAddress(
-                                    e.target.value
-                                )
+
+                            onChange={
+                                (e) =>
+                                    setAddress(
+                                        e.target.value
+                                    )
                             }
+
                             rows="3"
+
                             style={{
 
                                 width:
@@ -1387,32 +2005,43 @@ function RegisterPage() {
 
                                 outline:
                                     "none"
+
                             }}
+
                         />
 
                     </div>
 
                 </div>
 
+
                 {/* =================================================
-                    ACCOUNT SECURITY
+                    PASSWORD
                 ================================================= */}
 
                 <div
-                    style={sectionStyle}
+                    style={
+                        sectionStyle
+                    }
                 >
 
                     <div
-                        style={sectionTitleStyle}
+                        style={
+                            sectionTitleStyle
+                        }
                     >
+
                         Account Security
+
                     </div>
+
 
                     <label
                         style={
                             labelStyle
                         }
                     >
+
                         Password
 
                         <span
@@ -1422,7 +2051,9 @@ function RegisterPage() {
                         >
                             {" "}*
                         </span>
+
                     </label>
+
 
                     <div
                         style={{
@@ -1435,39 +2066,51 @@ function RegisterPage() {
 
                             gap:
                                 "7px"
+
                         }}
                     >
 
                         <input
+
                             type={
                                 showPassword
                                     ? "text"
                                     : "password"
                             }
+
                             placeholder="Enter Password"
+
                             value={
                                 password
                             }
-                            onChange={(e) =>
-                                setPassword(
-                                    e.target.value
-                                )
+
+                            onChange={
+                                (e) =>
+                                    setPassword(
+                                        e.target.value
+                                    )
                             }
+
                             style={{
                                 ...inputStyle,
 
                                 flex:
                                     "1"
                             }}
+
                         />
 
+
                         <button
+
                             type="button"
+
                             onClick={() =>
                                 setShowPassword(
                                     !showPassword
                                 )
                             }
+
                             style={{
 
                                 width:
@@ -1487,6 +2130,7 @@ function RegisterPage() {
 
                                 fontSize:
                                     "17px"
+
                             }}
                         >
 
@@ -1500,6 +2144,7 @@ function RegisterPage() {
 
                     </div>
 
+
                     <PasswordStrength
                         password={
                             password
@@ -1507,6 +2152,7 @@ function RegisterPage() {
                     />
 
                 </div>
+
 
                 {/* =================================================
                     LOADING
@@ -1523,12 +2169,17 @@ function RegisterPage() {
 
                                 margin:
                                     "8px 0"
+
                             }}
                         >
+
                             <LoadingSpinner />
+
                         </div>
+
                     )
                 }
+
 
                 {/* =================================================
                     SEND OTP
@@ -1538,13 +2189,17 @@ function RegisterPage() {
                     !otpSent && (
 
                         <button
+
                             type="button"
+
                             onClick={
                                 sendOtp
                             }
+
                             disabled={
                                 loading
                             }
+
                             style={{
 
                                 width:
@@ -1586,12 +2241,17 @@ function RegisterPage() {
 
                                 boxShadow:
                                     "0 5px 12px rgba(25,118,210,0.20)"
+
                             }}
                         >
+
                             Send OTP
+
                         </button>
+
                     )
                 }
+
 
                 {/* =================================================
                     OTP SECTION
@@ -1617,6 +2277,7 @@ function RegisterPage() {
 
                                 borderRadius:
                                     "12px"
+
                             }}
                         >
 
@@ -1637,31 +2298,43 @@ function RegisterPage() {
 
                                     marginBottom:
                                         "10px"
+
                                 }}
                             >
+
                                 Enter OTP
+
                             </div>
 
+
                             <OtpInput
+
                                 otp={
                                     otp
                                 }
+
                                 setOtp={
                                     setOtp
                                 }
+
                             />
+
 
                             {
                                 !otpVerified && (
 
                                     <button
+
                                         type="button"
+
                                         onClick={
                                             verifyOtp
                                         }
+
                                         disabled={
                                             loading
                                         }
+
                                         style={{
 
                                             width:
@@ -1696,12 +2369,17 @@ function RegisterPage() {
 
                                             fontWeight:
                                                 "800"
+
                                         }}
                                     >
+
                                         Verify OTP
+
                                     </button>
+
                                 )
                             }
+
 
                             {
                                 otpVerified && (
@@ -1723,12 +2401,17 @@ function RegisterPage() {
 
                                             fontSize:
                                                 "13px"
+
                                         }}
                                     >
+
                                         Email Verified Successfully
+
                                     </div>
+
                                 )
                             }
+
 
                             {/* OTP TIMER */}
 
@@ -1749,6 +2432,7 @@ function RegisterPage() {
 
                                     fontSize:
                                         "11px"
+
                                 }}
                             >
 
@@ -1760,6 +2444,7 @@ function RegisterPage() {
 
                                         fontWeight:
                                             "800"
+
                                     }}
                                 >
 
@@ -1786,16 +2471,20 @@ function RegisterPage() {
 
                                 </span>
 
+
                                 {
                                     resendTimer === 0
 
                                         ? (
 
                                             <button
+
                                                 type="button"
+
                                                 onClick={
                                                     resendOtp
                                                 }
+
                                                 style={{
 
                                                     border:
@@ -1812,9 +2501,12 @@ function RegisterPage() {
 
                                                     fontWeight:
                                                         "800"
+
                                                 }}
                                             >
+
                                                 Resend OTP
+
                                             </button>
 
                                         )
@@ -1826,35 +2518,48 @@ function RegisterPage() {
 
                                                     color:
                                                         "#64748b"
+
                                                 }}
                                             >
+
                                                 Resend in{" "}
+
                                                 {
                                                     resendTimer
-                                                }s
+                                                }
+
+                                                s
+
                                             </span>
+
                                         )
                                 }
 
                             </div>
 
                         </div>
+
                     )
                 }
+
 
                 {/* =================================================
                     CREATE ACCOUNT
                 ================================================= */}
 
                 <button
+
                     type="button"
+
                     disabled={
                         !otpVerified ||
                         loading
                     }
+
                     onClick={
                         registerCustomer
                     }
+
                     style={{
 
                         width:
@@ -1896,6 +2601,7 @@ function RegisterPage() {
 
                         fontWeight:
                             "900"
+
                     }}
                 >
 
@@ -1906,6 +2612,7 @@ function RegisterPage() {
                     }
 
                 </button>
+
 
                 {/* =================================================
                     LOGIN LINK
@@ -1925,6 +2632,7 @@ function RegisterPage() {
 
                         color:
                             "#64748b"
+
                     }}
                 >
 
@@ -1933,12 +2641,15 @@ function RegisterPage() {
                     {" "}
 
                     <button
+
                         type="button"
+
                         onClick={() =>
                             navigate(
                                 "/login"
                             )
                         }
+
                         style={{
 
                             border:
@@ -1955,9 +2666,12 @@ function RegisterPage() {
 
                             cursor:
                                 "pointer"
+
                         }}
                     >
+
                         Login
+
                     </button>
 
                 </div>
@@ -1965,8 +2679,11 @@ function RegisterPage() {
             </div>
 
         </div>
+
     );
+
 }
+
 
 // =============================================================
 // STYLES
@@ -1988,7 +2705,9 @@ const sectionStyle = {
 
     marginBottom:
         "15px"
+
 };
+
 
 const sectionTitleStyle = {
 
@@ -2009,7 +2728,9 @@ const sectionTitleStyle = {
 
     borderBottom:
         "1px solid #e2e8f0"
+
 };
+
 
 const requiredStyle = {
 
@@ -2018,6 +2739,8 @@ const requiredStyle = {
 
     fontWeight:
         "900"
+
 };
+
 
 export default RegisterPage;
