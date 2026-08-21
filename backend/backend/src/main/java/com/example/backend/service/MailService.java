@@ -13,7 +13,7 @@ public class MailService {
 
 
     // =========================================================
-    // SEND SIMPLE MAIL
+    // SEND EMAIL USING GMAIL SMTP
     // =========================================================
 
     public void sendMail(
@@ -22,10 +22,14 @@ public class MailService {
             String body
     ) {
 
-        if (
-                to == null ||
-                        to.trim().isEmpty()
-        ) {
+        System.out.println("========================================");
+        System.out.println("GMAIL EMAIL START");
+        System.out.println("TO: " + to);
+        System.out.println("SUBJECT: " + subject);
+        System.out.println("========================================");
+
+
+        if (to == null || to.trim().isEmpty()) {
 
             throw new RuntimeException(
                     "Customer email address is missing"
@@ -33,17 +37,78 @@ public class MailService {
         }
 
 
-        SimpleMailMessage message =
-                new SimpleMailMessage();
+        String cleanEmail = to.trim();
 
 
-        message.setTo(to);
+        try {
 
-        message.setSubject(subject);
+            SimpleMailMessage message =
+                    new SimpleMailMessage();
 
-        message.setText(body);
+            message.setFrom(
+                    "g4golden1401@gmail.com"
+            );
+
+            message.setTo(
+                    cleanEmail
+            );
+
+            message.setSubject(
+                    subject
+            );
+
+            message.setText(
+                    body
+            );
 
 
-        mailSender.send(message);
+            mailSender.send(message);
+
+
+            System.out.println(
+                    "========================================"
+            );
+
+            System.out.println(
+                    "EMAIL SENT SUCCESSFULLY"
+            );
+
+            System.out.println(
+                    "EMAIL RECIPIENT: "
+                            + cleanEmail
+            );
+
+            System.out.println(
+                    "========================================"
+            );
+
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "========================================"
+            );
+
+            System.out.println(
+                    "GMAIL EMAIL ERROR"
+            );
+
+            System.out.println(
+                    "ERROR: "
+                            + e.getMessage()
+            );
+
+            e.printStackTrace();
+
+            System.out.println(
+                    "========================================"
+            );
+
+
+            throw new RuntimeException(
+                    "Unable to send email through Gmail",
+                    e
+            );
+        }
     }
 }

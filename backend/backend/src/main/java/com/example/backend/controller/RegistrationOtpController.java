@@ -68,16 +68,11 @@ public class RegistrationOtpController {
 
         } catch (Exception e) {
 
-            System.out.println(
-                    "SEND OTP ERROR: "
-                            + e.getMessage()
-            );
-
             e.printStackTrace();
 
             return new ApiResponse(
                     false,
-                    "Unable to send OTP. Please try again later."
+                    "OTP ERROR: " + e.getMessage()
             );
         }
     }

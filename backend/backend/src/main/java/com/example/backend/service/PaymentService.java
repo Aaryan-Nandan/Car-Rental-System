@@ -689,7 +689,7 @@ public class PaymentService {
 
 
             String subject =
-                    "Car Rental Payment Successful - Payment #"
+                    "CarRental Payment Successful - Payment #"
                             + payment.getId();
 
 
@@ -706,7 +706,7 @@ public class PaymentService {
 
                             +
 
-                            "Your car rental payment has been successfully verified.\n\n"
+                            "Your CarRental payment has been successfully verified.\n\n"
 
                             +
 
@@ -830,7 +830,7 @@ public class PaymentService {
 
                             +
 
-                            "Thank you for choosing Car Rental System.\n\n"
+                            "Thank you for choosing CarRental.\n\n"
 
                             +
 
