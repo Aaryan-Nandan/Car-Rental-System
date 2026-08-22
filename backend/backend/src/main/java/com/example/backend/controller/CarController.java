@@ -15,9 +15,9 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/car")
-@CrossOrigin(
-        origins = "http://localhost:3000"
-)
+//@CrossOrigin(
+//        origins = "http://localhost:3000"
+//)
 public class CarController {
 
     @Autowired
