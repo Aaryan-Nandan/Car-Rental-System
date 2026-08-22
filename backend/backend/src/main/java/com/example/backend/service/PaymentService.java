@@ -219,11 +219,17 @@ public class PaymentService {
                 "INR"
         );
 
+        String receipt =
+                "BOOKING_" +
+                        bookingId +
+                        "_" +
+                        System.currentTimeMillis();
 
         orderRequest.put(
                 "receipt",
-                "BOOKING_" + bookingId
+                receipt
         );
+
 
 
         // -----------------------------------------------------
@@ -957,14 +963,14 @@ public class PaymentService {
         // UPDATE BOOKING
         // -----------------------------------------------------
 
-        booking.setBookingStatus(
-                "PAYMENT_FAILED"
-        );
-
-
-        bookingRepository.save(
-                booking
-        );
+//        booking.setBookingStatus(
+//                "PAYMENT_FAILED"
+//        );
+//
+//
+//        bookingRepository.save(
+//                booking
+//        );
     }
 
 
