@@ -440,12 +440,21 @@ function PaymentPage() {
     // VERIFY PAYMENT
     // ========================================================
 
-    const verifyPayment =
-        async (
-            razorpayResponse
-        ) => {
+const verifyPayment =
+    async (
+        razorpayResponse
+    ) => {
 
-            try {
+        console.log(
+            "========== VERIFY PAYMENT FUNCTION CALLED =========="
+        );
+
+        console.log(
+            "VERIFY PAYMENT RESPONSE:",
+            razorpayResponse
+        );
+
+        try {
 
                 setPaymentOpening(
                     false
@@ -680,15 +689,20 @@ function PaymentPage() {
                     // PAYMENT SUCCESS
                     // ------------------------------------------------
 
-                    handler:
-                        async (
-                            response
-                        ) => {
+                   handler: async (response) => {
 
-                            await verifyPayment(
-                                response
-                            );
-                        },
+    console.log(
+        "========== RAZORPAY SUCCESS HANDLER FIRED =========="
+    );
+
+    console.log(
+        "RAZORPAY SUCCESS RESPONSE:",
+        response
+    );
+
+    await verifyPayment(response);
+
+},
 
 
                     // ------------------------------------------------
