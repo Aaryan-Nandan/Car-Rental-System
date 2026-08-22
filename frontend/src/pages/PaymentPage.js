@@ -96,14 +96,17 @@ function PaymentPage() {
     /*
      * Store Razorpay instance.
      */
-   const razorpayInstance =
-    useRef(null);
+    const razorpayInstance =
+        useRef(null);
 
-const paymentSuccessStarted =
-    useRef(false);
 
-const navigationStarted =
-    useRef(false);
+    const paymentSuccessStarted =
+        useRef(false);
+
+
+    const navigationStarted =
+        useRef(false);
+
 
     // ========================================================
     // CLEAN USER-FRIENDLY ERROR MESSAGE
@@ -342,6 +345,7 @@ const navigationStarted =
             if (
                 navigationStarted.current
             ) {
+
                 return;
             }
 
@@ -438,23 +442,27 @@ const navigationStarted =
     // VERIFY PAYMENT
     // ========================================================
 
-const verifyPayment =
-    async (
-        razorpayResponse
-    ) => {
-
-        paymentSuccessStarted.current = true;
-
-        console.log(
-            "========== VERIFY PAYMENT FUNCTION CALLED =========="
-        );
-
-        console.log(
-            "VERIFY PAYMENT RESPONSE:",
+    const verifyPayment =
+        async (
             razorpayResponse
-        );
+        ) => {
 
-        try {
+            paymentSuccessStarted.current =
+                true;
+
+
+            console.log(
+                "========== VERIFY PAYMENT FUNCTION CALLED =========="
+            );
+
+
+            console.log(
+                "VERIFY PAYMENT RESPONSE:",
+                razorpayResponse
+            );
+
+
+            try {
 
                 setPaymentOpening(
                     false
@@ -558,6 +566,7 @@ const verifyPayment =
                 throw new Error(
                     "Payment verification failed."
                 );
+
 
             } catch (error) {
 
@@ -689,45 +698,58 @@ const verifyPayment =
                     // PAYMENT SUCCESS
                     // ------------------------------------------------
 
-handler: async (response) => {
+                    handler: async (
+                        response
+                    ) => {
 
-    console.log(
-        "========== RAZORPAY SUCCESS HANDLER FIRED =========="
-    );
+                        console.log(
+                            "========== RAZORPAY SUCCESS HANDLER FIRED =========="
+                        );
 
-    console.log(
-        "RAZORPAY SUCCESS RESPONSE:",
-        response
-    );
 
-    if (
-        !response ||
-        !response.razorpay_payment_id ||
-        !response.razorpay_order_id ||
-        !response.razorpay_signature
-    ) {
+                        console.log(
+                            "RAZORPAY SUCCESS RESPONSE:",
+                            response
+                        );
 
-        console.error(
-            "RAZORPAY SUCCESS RESPONSE IS INCOMPLETE:",
-            response
-        );
 
-        setPaymentOpening(false);
+                        if (
+                            !response ||
+                            !response.razorpay_payment_id ||
+                            !response.razorpay_order_id ||
+                            !response.razorpay_signature
+                        ) {
 
-        setErrorMessage(
-            "Payment was received but payment details could not be verified. Please contact support."
-        );
+                            console.error(
+                                "RAZORPAY SUCCESS RESPONSE IS INCOMPLETE:",
+                                response
+                            );
 
-        return;
-    }
 
-    console.log(
-        "STARTING BACKEND PAYMENT VERIFICATION..."
-    );
+                            setPaymentOpening(
+                                false
+                            );
 
-    await verifyPayment(response);
 
-},
+                            setErrorMessage(
+                                "Payment was received but payment details could not be verified. Please contact support."
+                            );
+
+
+                            return;
+                        }
+
+
+                        console.log(
+                            "STARTING BACKEND PAYMENT VERIFICATION..."
+                        );
+
+
+                        await verifyPayment(
+                            response
+                        );
+
+                    },
 
 
                     // ------------------------------------------------
@@ -740,27 +762,121 @@ handler: async (response) => {
                             async () => {
 
                                 console.log(
-                                    "RAZORPAY CHECKOUT CLOSED"
+                                    "========== RAZORPAY CHECKOUT CLOSED =========="
                                 );
 
 
-if (
-    !paymentCompleted &&
-    !paymentSuccessStarted.current
-) {
+                                if (
+                                    paymentCompleted
+                                ) {
 
-    await cancelPayment();
+                                    return;
+                                }
 
-    setPaymentOpening(
-        false
-    );
 
-    alert(
-        "Payment cancelled. Your booking was not confirmed."
-    );
+                                /*
+                                 * IMPORTANT:
+                                 *
+                                 * The customer may have successfully
+                                 * paid and then closed Razorpay.
+                                 *
+                                 * Therefore DO NOT immediately
+                                 * cancel the payment.
+                                 *
+                                 * First ask the backend to check
+                                 * Razorpay's real payment status.
+                                 */
 
-    goToBookings();
-}
+                                try {
+
+                                    const token =
+                                        localStorage.getItem(
+                                            "token"
+                                        );
+
+
+                                    const statusResponse =
+                                        await axios.get(
+                                            `${API_URL}/payment/status/${bookingId}`,
+                                            {
+                                                headers: {
+                                                    Authorization:
+                                                        `Bearer ${token}`
+                                                }
+                                            }
+                                        );
+
+
+                                    console.log(
+                                        "PAYMENT STATUS AFTER RAZORPAY CLOSED:",
+                                        statusResponse.data
+                                    );
+
+
+                                    // ------------------------------------------------
+                                    // PAYMENT SUCCESS
+                                    // ------------------------------------------------
+
+                                    if (
+                                        statusResponse.data &&
+                                        statusResponse.data.paymentStatus &&
+                                        statusResponse.data.paymentStatus
+                                            .toUpperCase() ===
+                                            "PAID"
+                                    ) {
+
+                                        setPaymentCompleted(
+                                            true
+                                        );
+
+
+                                        setPaymentOpening(
+                                            false
+                                        );
+
+
+                                        alert(
+                                            "Payment successful! Your booking is confirmed."
+                                        );
+
+
+                                        goToBookings();
+
+
+                                        return;
+                                    }
+
+
+                                    // ------------------------------------------------
+                                    // PAYMENT NOT CONFIRMED YET
+                                    // ------------------------------------------------
+
+                                    setPaymentOpening(
+                                        false
+                                    );
+
+
+                                    setErrorMessage(
+                                        "Payment status is being checked. Please check My Bookings shortly."
+                                    );
+
+                                } catch (error) {
+
+                                    console.error(
+                                        "PAYMENT STATUS CHECK ERROR:",
+                                        error
+                                    );
+
+
+                                    setPaymentOpening(
+                                        false
+                                    );
+
+
+                                    setErrorMessage(
+                                        "We could not confirm the payment status. Please check My Bookings."
+                                    );
+                                }
                             }
                     },
 
@@ -795,61 +911,73 @@ if (
                 // PAYMENT FAILED EVENT
                 // ------------------------------------------------
 
-               razorpay.on(
-    "payment.failed",
-    (response) => {
+                razorpay.on(
+                    "payment.failed",
+                    (response) => {
 
-        console.error(
-            "========== RAZORPAY PAYMENT FAILED =========="
-        );
+                        console.error(
+                            "========== RAZORPAY PAYMENT FAILED =========="
+                        );
 
-        console.error(
-            "Code:",
-            response?.error?.code
-        );
 
-        console.error(
-            "Description:",
-            response?.error?.description
-        );
+                        console.error(
+                            "Code:",
+                            response?.error?.code
+                        );
 
-        console.error(
-            "Source:",
-            response?.error?.source
-        );
 
-        console.error(
-            "Step:",
-            response?.error?.step
-        );
+                        console.error(
+                            "Description:",
+                            response?.error?.description
+                        );
 
-        console.error(
-            "Reason:",
-            response?.error?.reason
-        );
 
-        console.error(
-            "Order ID:",
-            response?.error?.metadata?.order_id
-        );
+                        console.error(
+                            "Source:",
+                            response?.error?.source
+                        );
 
-        console.error(
-            "Payment ID:",
-            response?.error?.metadata?.payment_id
-        );
 
-        console.error(
-            "Full Razorpay Error:",
-            response
-        );
+                        console.error(
+                            "Step:",
+                            response?.error?.step
+                        );
 
-        setPaymentOpening(false);
 
-        setErrorMessage(
-            "Payment failed. Please try again using another payment method."
-        );
-    }
-);
+                        console.error(
+                            "Reason:",
+                            response?.error?.reason
+                        );
+
+
+                        console.error(
+                            "Order ID:",
+                            response?.error?.metadata?.order_id
+                        );
+
+
+                        console.error(
+                            "Payment ID:",
+                            response?.error?.metadata?.payment_id
+                        );
+
+
+                        console.error(
+                            "Full Razorpay Error:",
+                            response
+                        );
+
+
+                        setPaymentOpening(
+                            false
+                        );
+
+
+                        setErrorMessage(
+                            "Payment failed. Please try again using another payment method."
+                        );
+                    }
+                );
 
 
                 // ------------------------------------------------
@@ -857,6 +985,7 @@ if (
                 // ------------------------------------------------
 
                 razorpay.open();
+
 
             } catch (error) {
 
@@ -914,6 +1043,7 @@ if (
                 console.log(
                     "CREATE ORDER ALREADY STARTED - SKIPPING DUPLICATE REQUEST"
                 );
+
 
                 return;
             }
@@ -1059,6 +1189,7 @@ if (
                     data
                 );
 
+
             } catch (error) {
 
                 console.error(
@@ -1084,6 +1215,7 @@ if (
                     message
                 );
 
+
             } finally {
 
                 setLoading(
@@ -1108,9 +1240,11 @@ if (
                     "Booking ID is missing."
                 );
 
+
                 setLoading(
                     false
                 );
+
 
                 return;
             }
