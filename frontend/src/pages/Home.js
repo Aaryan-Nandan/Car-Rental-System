@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import {
     getAllVariants
 } from "../services/ApiService";
+import api from "../services/axiosConfig";
 
 import heroVideo from "../assets/hero.mp4";
 
@@ -43,11 +44,14 @@ function Home() {
     // =========================================================
 
     const [variants, setVariants] = useState([]);
+
+    const [cars, setCars] = useState([]);
+    const [carsLoaded, setCarsLoaded] = useState(false);
+
     const [searchText, setSearchText] = useState("");
     const [selectedFuel, setSelectedFuel] = useState("ALL");
     const [sortOption, setSortOption] = useState("RECOMMENDED");
     const [activeEvBenefit, setActiveEvBenefit] = useState(0);
-
 
     // =========================================================
     // LOAD CARS
@@ -55,6 +59,7 @@ function Home() {
 
     useEffect(() => {
         loadVariants();
+        loadCars();
     }, []);
 
     const loadVariants = async () => {
@@ -86,6 +91,43 @@ function Home() {
         );
 
         setVariants([]);
+    }
+};
+
+
+const loadCars = async () => {
+
+    try {
+
+        const response =
+            await api.get("/car/all");
+
+        console.log(
+            "Physical cars received from backend:",
+            response.data
+        );
+
+        if (Array.isArray(response.data)) {
+
+            setCars(response.data);
+            setCarsLoaded(true);
+
+        } else {
+
+            setCars([]);
+            setCarsLoaded(false);
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Unable to load physical cars:",
+            error
+        );
+
+        setCars([]);
+        setCarsLoaded(false);
     }
 };
 
@@ -167,12 +209,13 @@ function Home() {
         variant?.variantName || ""
     ).toLowerCase();
 
-    // if (
-    //     variant?.imageUrl &&
-    //     variant.imageUrl.trim() !== ""
-    // ) {
-    //     return variant.imageUrl;
-    //}
+if (
+    variant?.imageUrl &&
+    typeof variant.imageUrl === "string" &&
+    variant.imageUrl.trim() !== ""
+) {
+    return variant.imageUrl;
+}
 
     if (name.includes("creta")) {
         return cretaImage;
@@ -314,12 +357,38 @@ function Home() {
     // AVAILABLE CARS
     // =========================================================
 
-    const getAvailableCars = (variant) => {
+const getAvailableCars = (variant) => {
 
-        return Number(
-            variant?.availableCars || 0
-        );
-    };
+    if (!variant?.id) {
+        return 0;
+    }
+
+    if (carsLoaded) {
+
+        return cars.filter((car) => {
+
+            const carVariantId =
+                car?.carVariant?.id ??
+                car?.variant?.id ??
+                car?.carVariantId ??
+                car?.variantId;
+
+            const isAvailable =
+                car?.available === true;
+
+            return (
+                Number(carVariantId) ===
+                Number(variant.id) &&
+                isAvailable
+            );
+
+        }).length;
+    }
+
+    return Number(
+        variant?.availableCars || 0
+    );
+};
 
 
     // =========================================================
@@ -329,16 +398,6 @@ function Home() {
     const filteredVariants = useMemo(() => {
 
         let result = [...variants];
-         
-           // Hide old Creta Diesel and Venue Petrol variants
-    result = result.filter(
-        variant =>
-            variant.id !== 2 &&
-            variant.id !== 3
-    );
-
-
-
 
         const search =
             searchText
@@ -476,12 +535,14 @@ function Home() {
 
         return result;
 
-    }, [
-        variants,
-        searchText,
-        selectedFuel,
-        sortOption
-    ]);
+}, [
+    variants,
+    cars,
+    carsLoaded,
+    searchText,
+    selectedFuel,
+    sortOption
+]);
 
 
     // =========================================================
