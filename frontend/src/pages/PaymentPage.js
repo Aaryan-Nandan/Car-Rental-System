@@ -772,41 +772,61 @@ const verifyPayment =
                 // PAYMENT FAILED EVENT
                 // ------------------------------------------------
 
-                razorpay.on(
-                    "payment.failed",
-                    async (
-                        response
-                    ) => {
+               razorpay.on(
+    "payment.failed",
+    (response) => {
 
-                        console.error(
-                            "RAZORPAY PAYMENT FAILED:",
-                            response
-                        );
+        console.error(
+            "========== RAZORPAY PAYMENT FAILED =========="
+        );
 
+        console.error(
+            "Code:",
+            response?.error?.code
+        );
 
-                        await cancelPayment();
+        console.error(
+            "Description:",
+            response?.error?.description
+        );
 
+        console.error(
+            "Source:",
+            response?.error?.source
+        );
 
-                        setPaymentOpening(
-                            false
-                        );
+        console.error(
+            "Step:",
+            response?.error?.step
+        );
 
+        console.error(
+            "Reason:",
+            response?.error?.reason
+        );
 
-                        /*
-                         * Do NOT show Razorpay's complete
-                         * technical description.
-                         *
-                         * Show a clean customer message.
-                         */
+        console.error(
+            "Order ID:",
+            response?.error?.metadata?.order_id
+        );
 
-                        alert(
-                            "Payment failed. Your booking was not confirmed. Please try again."
-                        );
+        console.error(
+            "Payment ID:",
+            response?.error?.metadata?.payment_id
+        );
 
+        console.error(
+            "Full Razorpay Error:",
+            response
+        );
 
-                        goToBookings();
-                    }
-                );
+        setPaymentOpening(false);
+
+        setErrorMessage(
+            "Payment failed. Please try again using another payment method."
+        );
+    }
+);
 
 
                 // ------------------------------------------------
