@@ -1,104 +1,3 @@
-//package com.example.backend.config;
-//
-//import org.springframework.context.annotation.Bean;
-//import org.springframework.context.annotation.Configuration;
-//
-//import org.springframework.web.cors.CorsConfiguration;
-//import org.springframework.web.cors.CorsConfigurationSource;
-//import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-//
-//import java.util.Arrays;
-//
-//@Configuration
-//public class CorsConfig {
-//
-//    // ==========================================
-//    // CORS CONFIGURATION
-//    // ==========================================
-//
-//    @Bean
-//    public CorsConfigurationSource corsConfigurationSource() {
-//
-//        CorsConfiguration config =
-//                new CorsConfiguration();
-//
-//        // ==========================================
-//        // ALLOWED FRONTEND ORIGINS
-//        // ==========================================
-//
-//        config.setAllowedOrigins(
-//                Arrays.asList(
-//                        "http://localhost:3000",
-//
-//                        "https://car-rental-com-git-main-aaryan-nandan1.vercel.app",
-//
-//                        "https://car-rental-q1wadgws7-aaryan-nandan1.vercel.app",
-//
-//                        "https://car-rental-com-six.vercel.app"
-//                )
-//        );
-//
-//        // ==========================================
-//        // ALLOWED METHODS
-//        // ==========================================
-//
-//        config.setAllowedMethods(
-//                Arrays.asList(
-//                        "GET",
-//                        "POST",
-//                        "PUT",
-//                        "DELETE",
-//                        "OPTIONS",
-//                        "PATCH"
-//                )
-//        );
-//
-//        // ==========================================
-//        // ALLOWED HEADERS
-//        // ==========================================
-//
-//        config.setAllowedHeaders(
-//                Arrays.asList(
-//                        "*"
-//                )
-//        );
-//
-//        // ==========================================
-//        // EXPOSED HEADERS
-//        // ==========================================
-//
-//        config.setExposedHeaders(
-//                Arrays.asList(
-//                        "Authorization",
-//                        "Content-Type"
-//                )
-//        );
-//
-//        // ==========================================
-//        // CREDENTIALS
-//        // ==========================================
-//
-//        config.setAllowCredentials(true);
-//
-//        // ==========================================
-//        // REGISTER CORS CONFIGURATION
-//        // ==========================================
-//
-//        UrlBasedCorsConfigurationSource source =
-//                new UrlBasedCorsConfigurationSource();
-//
-//        source.registerCorsConfiguration(
-//                "/**",
-//                config
-//        );
-//
-//        return source;
-//    }
-//}
-
-
-
-
 package com.example.backend.config;
 
 import org.springframework.context.annotation.Bean;
@@ -113,36 +12,24 @@ import java.util.Arrays;
 @Configuration
 public class CorsConfig {
 
-    // ==========================================
-    // CORS CONFIGURATION
-    // ==========================================
-
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration config =
-                new CorsConfiguration();
+        CorsConfiguration config = new CorsConfiguration();
 
         // ==========================================
         // ALLOWED FRONTEND ORIGINS
         // ==========================================
 
-        config.setAllowedOrigins(
+        config.setAllowedOriginPatterns(
                 Arrays.asList(
 
-                        // LOCAL REACT
-                        "http://localhost:3000",
-                        "http://localhost:3002",
-                        "http://localhost:3004",
+                        // LOCAL DEVELOPMENT
+                        "http://localhost:*",
+                        "http://127.0.0.1:*",
 
                         // VERCEL
-                        "https://car-rental-com-git-main-aaryan-nandan1.vercel.app",
-
-                        "https://car-rental-q1wadgws7-aaryan-nandan1.vercel.app",
-
-                        "https://car-rental-com-six.vercel.app",
-
-                        "https://car-rental-9790btkzp-aaryan-nandan1.vercel.app"
+                        "https://*.vercel.app"
                 )
         );
 
@@ -166,9 +53,7 @@ public class CorsConfig {
         // ==========================================
 
         config.setAllowedHeaders(
-                Arrays.asList(
-                        "*"
-                )
+                Arrays.asList("*")
         );
 
         // ==========================================
@@ -189,7 +74,7 @@ public class CorsConfig {
         config.setAllowCredentials(true);
 
         // ==========================================
-        // REGISTER CORS CONFIGURATION
+        // REGISTER CORS
         // ==========================================
 
         UrlBasedCorsConfigurationSource source =
