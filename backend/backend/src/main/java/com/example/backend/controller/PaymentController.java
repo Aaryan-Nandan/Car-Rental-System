@@ -106,6 +106,7 @@ public class PaymentController {
 
 
             response.put(
+
                     "paymentId",
                     payment.getId()
             );
@@ -166,7 +167,84 @@ public class PaymentController {
                     .body(response);
         }
     }
+// =========================================================
+// CHECK RAZORPAY PAYMENT STATUS
+// =========================================================
 
+    @GetMapping(
+            "/status/{bookingId}"
+    )
+    public ResponseEntity<?> checkPaymentStatus(
+            @PathVariable Long bookingId
+    ) {
+
+        try {
+
+            Payment payment =
+                    paymentService
+                            .checkPaymentStatus(
+                                    bookingId
+                            );
+
+            Map<String, Object> response =
+                    new HashMap<>();
+
+            response.put(
+                    "success",
+                    true
+            );
+
+            response.put(
+                    "paymentStatus",
+                    payment.getPaymentStatus()
+            );
+
+            if (payment.getBooking() != null) {
+
+                response.put(
+                        "bookingId",
+                        payment
+                                .getBooking()
+                                .getId()
+                );
+
+                response.put(
+                        "bookingStatus",
+                        payment
+                                .getBooking()
+                                .getBookingStatus()
+                );
+            }
+
+            response.put(
+                    "razorpayPaymentId",
+                    payment.getRazorpayPaymentId()
+            );
+
+            return ResponseEntity.ok(
+                    response
+            );
+
+        } catch (Exception e) {
+
+            Map<String, Object> response =
+                    new HashMap<>();
+
+            response.put(
+                    "success",
+                    false
+            );
+
+            response.put(
+                    "message",
+                    e.getMessage()
+            );
+
+            return ResponseEntity
+                    .badRequest()
+                    .body(response);
+        }
+    }
 
     // =========================================================
     // PAYMENT CANCEL / FAILED

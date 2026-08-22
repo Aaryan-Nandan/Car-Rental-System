@@ -610,6 +610,120 @@ public class PaymentService {
         return savedPayment;
     }
 
+    // =========================================================
+// CHECK RAZORPAY PAYMENT STATUS
+// =========================================================
+
+    public Payment checkPaymentStatus(
+            Long bookingId
+    ) throws Exception {
+
+        Payment payment =
+                paymentRepository
+                        .findByBookingId(
+                                bookingId
+                        );
+
+        if (payment == null) {
+            throw new RuntimeException(
+                    "Payment not found for booking: "
+                            + bookingId
+            );
+        }
+
+        if (payment.getRazorpayOrderId() == null
+                ||
+                payment.getRazorpayOrderId()
+                        .trim()
+                        .isEmpty()) {
+
+            throw new RuntimeException(
+                    "Razorpay order ID not found"
+            );
+        }
+
+        RazorpayClient razorpayClient =
+                new RazorpayClient(
+                        razorpayKeyId,
+                        razorpayKeySecret
+                );
+
+        Order razorpayOrder =
+                razorpayClient
+                        .orders
+                        .fetch(
+                                payment
+                                        .getRazorpayOrderId()
+                        );
+
+        String orderStatus =
+                razorpayOrder.get("status");
+
+        Integer amountPaid =
+                razorpayOrder.get("amount_paid");
+
+        Integer orderAmount =
+                razorpayOrder.get("amount");
+
+        System.out.println(
+                "RAZORPAY ORDER STATUS: "
+                        + orderStatus
+        );
+
+        if (
+                "paid".equalsIgnoreCase(orderStatus)
+                        ||
+                        (
+                                amountPaid != null
+                                        &&
+                                        orderAmount != null
+                                        &&
+                                        amountPaid.equals(orderAmount)
+                        )
+        ) {
+
+            if (
+                    !"PAID".equalsIgnoreCase(
+                            payment.getPaymentStatus()
+                    )
+            ) {
+
+                payment.setPaymentStatus("PAID");
+
+                payment.setPaymentDate(
+                        LocalDateTime.now()
+                );
+
+                Booking booking =
+                        payment.getBooking();
+
+                if (booking != null) {
+
+                    booking.setBookingStatus(
+                            "CONFIRMED"
+                    );
+
+                    bookingRepository.save(
+                            booking
+                    );
+                }
+
+                Payment savedPayment =
+                        paymentRepository.save(
+                                payment
+                        );
+
+                sendPaymentSuccessEmail(
+                        savedPayment,
+                        booking
+                );
+
+                return savedPayment;
+            }
+        }
+
+        return payment;
+    }
 
     // =========================================================
     // SEND PAYMENT SUCCESS EMAIL
