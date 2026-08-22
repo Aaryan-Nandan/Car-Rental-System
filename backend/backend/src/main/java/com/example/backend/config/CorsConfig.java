@@ -140,7 +140,9 @@ public class CorsConfig {
 
                         "https://car-rental-q1wadgws7-aaryan-nandan1.vercel.app",
 
-                        "https://car-rental-com-six.vercel.app"
+                        "https://car-rental-com-six.vercel.app",
+
+                        "https://car-rental-9790btkzp-aaryan-nandan1.vercel.app"
                 )
         );
 
