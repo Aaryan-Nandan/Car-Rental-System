@@ -76,26 +76,14 @@ function PaymentPage() {
     // IMPORTANT FLAGS
     // ========================================================
 
-    /*
-     * Prevent duplicate cancel API calls.
-     */
     const cancelRequestSent =
         useRef(false);
 
 
-    /*
-     * Prevent duplicate create-order API calls.
-     *
-     * This is especially important in React development mode
-     * where useEffect may execute more than once.
-     */
     const orderCreationStarted =
         useRef(false);
 
 
-    /*
-     * Store Razorpay instance.
-     */
     const razorpayInstance =
         useRef(null);
 
@@ -109,23 +97,28 @@ function PaymentPage() {
 
 
     // ========================================================
+    // NEW:
+    // PAYMENT STATUS POLLING
+    // ========================================================
+
+    const paymentPollingInterval =
+        useRef(null);
+
+
+    const paymentPollingAttempts =
+        useRef(0);
+
+
+    const paymentPollingActive =
+        useRef(false);
+
+
+    // ========================================================
     // CLEAN USER-FRIENDLY ERROR MESSAGE
     // ========================================================
 
     const getSafeErrorMessage =
         (error, defaultMessage) => {
-
-            /*
-             * NEVER display raw backend/database errors.
-             *
-             * Examples that should NOT be shown:
-             *
-             * Duplicate entry...
-             * could not execute statement...
-             * SQL...
-             * Hibernate...
-             * org.springframework...
-             */
 
             const backendMessage =
                 error?.response?.data?.message;
@@ -140,10 +133,6 @@ function PaymentPage() {
             const lowerMessage =
                 backendString.toLowerCase();
 
-
-            // -------------------------------------------------
-            // DATABASE / SQL ERRORS
-            // -------------------------------------------------
 
             if (
                 lowerMessage.includes(
@@ -175,10 +164,6 @@ function PaymentPage() {
             }
 
 
-            // -------------------------------------------------
-            // PAYMENT ALREADY COMPLETED
-            // -------------------------------------------------
-
             if (
                 lowerMessage.includes(
                     "payment already completed"
@@ -188,10 +173,6 @@ function PaymentPage() {
                 return "This booking has already been paid.";
             }
 
-
-            // -------------------------------------------------
-            // BOOKING NOT FOUND
-            // -------------------------------------------------
 
             if (
                 lowerMessage.includes(
@@ -203,10 +184,6 @@ function PaymentPage() {
             }
 
 
-            // -------------------------------------------------
-            // INVALID BOOKING
-            // -------------------------------------------------
-
             if (
                 lowerMessage.includes(
                     "booking is not waiting"
@@ -216,10 +193,6 @@ function PaymentPage() {
                 return "This booking is not currently available for payment.";
             }
 
-
-            // -------------------------------------------------
-            // INVALID PAYMENT
-            // -------------------------------------------------
 
             if (
                 lowerMessage.includes(
@@ -231,10 +204,6 @@ function PaymentPage() {
             }
 
 
-            // -------------------------------------------------
-            // PAYMENT VERIFICATION
-            // -------------------------------------------------
-
             if (
                 lowerMessage.includes(
                     "invalid razorpay"
@@ -244,10 +213,6 @@ function PaymentPage() {
                 return "Payment verification failed. Please try again.";
             }
 
-
-            // -------------------------------------------------
-            // DO NOT DISPLAY UNKNOWN BACKEND ERRORS
-            // -------------------------------------------------
 
             return defaultMessage;
         };
@@ -263,10 +228,6 @@ function PaymentPage() {
             return new Promise(
                 (resolve) => {
 
-                    // ------------------------------------------------
-                    // ALREADY LOADED
-                    // ------------------------------------------------
-
                     if (
                         window.Razorpay
                     ) {
@@ -276,10 +237,6 @@ function PaymentPage() {
                         return;
                     }
 
-
-                    // ------------------------------------------------
-                    // EXISTING SCRIPT
-                    // ------------------------------------------------
 
                     const existingScript =
                         document.querySelector(
@@ -300,10 +257,6 @@ function PaymentPage() {
                         return;
                     }
 
-
-                    // ------------------------------------------------
-                    // CREATE SCRIPT
-                    // ------------------------------------------------
 
                     const script =
                         document.createElement(
@@ -361,6 +314,395 @@ function PaymentPage() {
 
 
     // ========================================================
+    // STOP PAYMENT POLLING
+    // ========================================================
+
+    const stopPaymentPolling =
+        () => {
+
+            console.log(
+                "========== STOPPING PAYMENT STATUS POLLING =========="
+            );
+
+
+            paymentPollingActive.current =
+                false;
+
+
+            paymentPollingAttempts.current =
+                0;
+
+
+            if (
+                paymentPollingInterval.current
+            ) {
+
+                clearInterval(
+                    paymentPollingInterval.current
+                );
+
+
+                paymentPollingInterval.current =
+                    null;
+            }
+        };
+
+
+    // ========================================================
+    // HANDLE CONFIRMED PAYMENT
+    // ========================================================
+
+    const handlePaymentConfirmed =
+        () => {
+
+            if (
+                paymentCompleted
+            ) {
+
+                return;
+            }
+
+
+            if (
+                paymentSuccessStarted.current
+            ) {
+
+                return;
+            }
+
+
+            paymentSuccessStarted.current =
+                true;
+
+
+            stopPaymentPolling();
+
+
+            setPaymentCompleted(
+                true
+            );
+
+
+            setPaymentOpening(
+                false
+            );
+
+
+            console.log(
+                "========== PAYMENT CONFIRMED BY BACKEND =========="
+            );
+
+
+            /*
+             * Close Razorpay checkout if it is still open.
+             */
+
+            try {
+
+                if (
+                    razorpayInstance.current
+                ) {
+
+                    razorpayInstance.current.close();
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "RAZORPAY CLOSE ERROR:",
+                    error
+                );
+            }
+
+
+            alert(
+                "Payment successful! Your booking is confirmed."
+            );
+
+
+            goToBookings();
+        };
+
+
+    // ========================================================
+    // CHECK PAYMENT STATUS ONCE
+    // ========================================================
+
+    const checkPaymentStatus =
+        async () => {
+
+            if (
+                paymentCompleted
+            ) {
+
+                return true;
+            }
+
+
+            if (
+                paymentSuccessStarted.current
+            ) {
+
+                return true;
+            }
+
+
+            if (
+                !bookingId
+            ) {
+
+                return false;
+            }
+
+
+            try {
+
+                const token =
+                    localStorage.getItem(
+                        "token"
+                    );
+
+
+                const response =
+                    await axios.get(
+
+                        `${API_URL}/payment/status/${bookingId}`,
+
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
+                        }
+                    );
+
+
+                console.log(
+                    "PAYMENT STATUS POLLING RESPONSE:",
+                    response.data
+                );
+
+
+                const paymentStatus =
+                    response?.data?.paymentStatus
+                        ?.toString()
+                        .toUpperCase();
+
+
+                const bookingStatus =
+                    response?.data?.bookingStatus
+                        ?.toString()
+                        .toUpperCase();
+
+
+                console.log(
+                    "PAYMENT STATUS:",
+                    paymentStatus
+                );
+
+
+                console.log(
+                    "BOOKING STATUS:",
+                    bookingStatus
+                );
+
+
+                // ------------------------------------------------
+                // PAYMENT SUCCESS
+                // ------------------------------------------------
+
+                if (
+                    paymentStatus === "PAID"
+                ) {
+
+                    handlePaymentConfirmed();
+
+                    return true;
+                }
+
+
+                /*
+                 * Some backend implementations may update the
+                 * booking first. Therefore also accept a confirmed
+                 * booking when payment is already marked successful.
+                 */
+
+                if (
+                    paymentStatus === "SUCCESS" ||
+                    paymentStatus === "CAPTURED"
+                ) {
+
+                    handlePaymentConfirmed();
+
+                    return true;
+                }
+
+
+                if (
+                    bookingStatus === "CONFIRMED" &&
+                    (
+                        paymentStatus === "PAID" ||
+                        paymentStatus === "SUCCESS" ||
+                        paymentStatus === "CAPTURED"
+                    )
+                ) {
+
+                    handlePaymentConfirmed();
+
+                    return true;
+                }
+
+
+                return false;
+
+
+            } catch (error) {
+
+                console.error(
+                    "PAYMENT STATUS CHECK ERROR:",
+                    error
+                );
+
+
+                /*
+                 * Do NOT cancel payment here.
+                 *
+                 * Network errors, Render cold starts, etc.
+                 * must not be treated as payment failure.
+                 */
+
+                return false;
+            }
+        };
+
+
+    // ========================================================
+    // START PAYMENT STATUS POLLING
+    // ========================================================
+
+    const startPaymentStatusPolling =
+        () => {
+
+            /*
+             * Do not create multiple polling timers.
+             */
+
+            if (
+                paymentPollingActive.current
+            ) {
+
+                return;
+            }
+
+
+            if (
+                paymentCompleted
+            ) {
+
+                return;
+            }
+
+
+            console.log(
+                "========== STARTING PAYMENT STATUS POLLING =========="
+            );
+
+
+            paymentPollingActive.current =
+                true;
+
+
+            paymentPollingAttempts.current =
+                0;
+
+
+            /*
+             * Check immediately once.
+             */
+
+            checkPaymentStatus();
+
+
+            /*
+             * Then check every 3 seconds.
+             *
+             * Maximum:
+             *
+             * 40 attempts × 3 seconds
+             *
+             * ≈ 2 minutes
+             */
+
+            paymentPollingInterval.current =
+                setInterval(
+                    async () => {
+
+                        if (
+                            !paymentPollingActive.current
+                        ) {
+
+                            return;
+                        }
+
+
+                        paymentPollingAttempts.current +=
+                            1;
+
+
+                        console.log(
+                            `PAYMENT STATUS POLLING ATTEMPT ${paymentPollingAttempts.current}/40`
+                        );
+
+
+                        const confirmed =
+                            await checkPaymentStatus();
+
+
+                        if (
+                            confirmed
+                        ) {
+
+                            stopPaymentPolling();
+
+                            return;
+                        }
+
+
+                        /*
+                         * Stop after approximately 2 minutes.
+                         */
+
+                        if (
+                            paymentPollingAttempts.current >=
+                            40
+                        ) {
+
+                            console.log(
+                                "PAYMENT STATUS POLLING TIMEOUT"
+                            );
+
+
+                            stopPaymentPolling();
+
+
+                            setPaymentOpening(
+                                false
+                            );
+
+
+                            setErrorMessage(
+                                "We could not confirm the payment yet. If money was deducted, please check My Bookings before making another payment."
+                            );
+                        }
+
+                    },
+
+                    3000
+                );
+        };
+
+
+    // ========================================================
     // CANCEL PAYMENT
     // ========================================================
 
@@ -368,8 +710,7 @@ function PaymentPage() {
         async () => {
 
             /*
-             * Payment already completed.
-             * Never cancel a successful payment.
+             * Never cancel a confirmed payment.
              */
 
             if (
@@ -381,8 +722,22 @@ function PaymentPage() {
 
 
             /*
-             * Prevent duplicate cancel requests.
+             * Never cancel while payment status polling
+             * is still checking Razorpay.
              */
+
+            if (
+                paymentPollingActive.current
+            ) {
+
+                console.log(
+                    "PAYMENT STATUS IS STILL BEING CHECKED - NOT CANCELLING"
+                );
+
+
+                return;
+            }
+
 
             if (
                 cancelRequestSent.current
@@ -405,7 +760,9 @@ function PaymentPage() {
 
 
                 await axios.delete(
+
                     `${API_URL}/payment/cancel/${bookingId}`,
+
                     {
                         headers: {
                             Authorization:
@@ -419,16 +776,8 @@ function PaymentPage() {
                     "PAYMENT CANCELLED SUCCESSFULLY"
                 );
 
-            } catch (error) {
 
-                /*
-                 * Important:
-                 *
-                 * Do NOT show this error to the customer.
-                 *
-                 * The customer does not need to see
-                 * SQL / backend / Hibernate errors.
-                 */
+            } catch (error) {
 
                 console.error(
                     "PAYMENT CANCEL ERROR:",
@@ -449,6 +798,14 @@ function PaymentPage() {
 
             paymentSuccessStarted.current =
                 true;
+
+
+            /*
+             * Stop polling because Razorpay has already
+             * provided a successful payment response.
+             */
+
+            stopPaymentPolling();
 
 
             console.log(
@@ -474,10 +831,6 @@ function PaymentPage() {
                         "token"
                     );
 
-
-                // ------------------------------------------------
-                // VERIFY DATA
-                // ------------------------------------------------
 
                 const verifyData = {
 
@@ -506,10 +859,6 @@ function PaymentPage() {
                 );
 
 
-                // ------------------------------------------------
-                // BACKEND VERIFICATION
-                // ------------------------------------------------
-
                 const response =
                     await axios.post(
 
@@ -531,10 +880,6 @@ function PaymentPage() {
                     response.data
                 );
 
-
-                // ------------------------------------------------
-                // SUCCESS
-                // ------------------------------------------------
 
                 if (
                     response.data &&
@@ -558,11 +903,6 @@ function PaymentPage() {
                 }
 
 
-                /*
-                 * If backend does not return success=true,
-                 * treat it as verification failure.
-                 */
-
                 throw new Error(
                     "Payment verification failed."
                 );
@@ -584,29 +924,23 @@ function PaymentPage() {
                 /*
                  * IMPORTANT:
                  *
-                 * Never show the raw backend error.
+                 * Verification may fail temporarily because
+                 * the backend/Render may take some time.
+                 *
+                 * Therefore check Razorpay status instead of
+                 * immediately cancelling.
                  */
 
-                const safeMessage =
-                    getSafeErrorMessage(
-                        error,
-                        "Payment verification failed. Please try again."
-                    );
+                paymentSuccessStarted.current =
+                    false;
 
 
-                /*
-                 * Cancel the unpaid payment.
-                 */
-
-                await cancelPayment();
+                startPaymentStatusPolling();
 
 
-                alert(
-                    safeMessage
+                setErrorMessage(
+                    "Payment verification is being checked. Please wait."
                 );
-
-
-                goToBookings();
             }
         };
 
@@ -622,10 +956,6 @@ function PaymentPage() {
 
             try {
 
-                // ------------------------------------------------
-                // LOAD SCRIPT
-                // ------------------------------------------------
-
                 const scriptLoaded =
                     await loadRazorpayScript();
 
@@ -639,10 +969,6 @@ function PaymentPage() {
                     );
                 }
 
-
-                // ------------------------------------------------
-                // CHECK RAZORPAY
-                // ------------------------------------------------
 
                 if (
                     !window.Razorpay
@@ -658,10 +984,6 @@ function PaymentPage() {
                     true
                 );
 
-
-                // ------------------------------------------------
-                // RAZORPAY OPTIONS
-                // ------------------------------------------------
 
                 const options = {
 
@@ -694,9 +1016,9 @@ function PaymentPage() {
                         order.razorpayOrderId,
 
 
-                    // ------------------------------------------------
-                    // PAYMENT SUCCESS
-                    // ------------------------------------------------
+                    // =================================================
+                    // PAYMENT SUCCESS HANDLER
+                    // =================================================
 
                     handler: async (
                         response
@@ -732,8 +1054,11 @@ function PaymentPage() {
 
 
                             setErrorMessage(
-                                "Payment was received but payment details could not be verified. Please contact support."
+                                "Payment was received but payment details could not be verified. Please wait while we check the payment status."
                             );
+
+
+                            startPaymentStatusPolling();
 
 
                             return;
@@ -752,9 +1077,9 @@ function PaymentPage() {
                     },
 
 
-                    // ------------------------------------------------
+                    // =================================================
                     // RAZORPAY MODAL
-                    // ------------------------------------------------
+                    // =================================================
 
                     modal: {
 
@@ -777,113 +1102,50 @@ function PaymentPage() {
                                 /*
                                  * IMPORTANT:
                                  *
-                                 * The customer may have successfully
-                                 * paid and then closed Razorpay.
+                                 * Closing Razorpay does NOT automatically
+                                 * mean payment failed.
                                  *
-                                 * Therefore DO NOT immediately
-                                 * cancel the payment.
-                                 *
-                                 * First ask the backend to check
-                                 * Razorpay's real payment status.
+                                 * First check the actual Razorpay status.
                                  */
 
-                                try {
-
-                                    const token =
-                                        localStorage.getItem(
-                                            "token"
-                                        );
+                                const confirmed =
+                                    await checkPaymentStatus();
 
 
-                                    const statusResponse =
-                                        await axios.get(
-                                            `${API_URL}/payment/status/${bookingId}`,
-                                            {
-                                                headers: {
-                                                    Authorization:
-                                                        `Bearer ${token}`
-                                                }
-                                            }
-                                        );
+                                if (
+                                    confirmed
+                                ) {
 
-
-                                    console.log(
-                                        "PAYMENT STATUS AFTER RAZORPAY CLOSED:",
-                                        statusResponse.data
-                                    );
-
-
-                                    // ------------------------------------------------
-                                    // PAYMENT SUCCESS
-                                    // ------------------------------------------------
-
-                                    if (
-                                        statusResponse.data &&
-                                        statusResponse.data.paymentStatus &&
-                                        statusResponse.data.paymentStatus
-                                            .toUpperCase() ===
-                                            "PAID"
-                                    ) {
-
-                                        setPaymentCompleted(
-                                            true
-                                        );
-
-
-                                        setPaymentOpening(
-                                            false
-                                        );
-
-
-                                        alert(
-                                            "Payment successful! Your booking is confirmed."
-                                        );
-
-
-                                        goToBookings();
-
-
-                                        return;
-                                    }
-
-
-                                    // ------------------------------------------------
-                                    // PAYMENT NOT CONFIRMED YET
-                                    // ------------------------------------------------
-
-                                    setPaymentOpening(
-                                        false
-                                    );
-
-
-                                    setErrorMessage(
-                                        "Payment status is being checked. Please check My Bookings shortly."
-                                    );
-
-                                } catch (error) {
-
-                                    console.error(
-                                        "PAYMENT STATUS CHECK ERROR:",
-                                        error
-                                    );
-
-
-                                    setPaymentOpening(
-                                        false
-                                    );
-
-
-                                    setErrorMessage(
-                                        "We could not confirm the payment status. Please check My Bookings."
-                                    );
+                                    return;
                                 }
+
+
+                                /*
+                                 * Start polling after checkout closes.
+                                 *
+                                 * This protects the customer if the
+                                 * payment succeeded but Razorpay's
+                                 * confirmation arrived slightly later.
+                                 */
+
+                                startPaymentStatusPolling();
+
+
+                                setPaymentOpening(
+                                    false
+                                );
+
+
+                                setErrorMessage(
+                                    "Payment status is being checked. Please do not make another payment."
+                                );
                             }
                     },
 
 
-                    // ------------------------------------------------
+                    // =================================================
                     // THEME
-                    // ------------------------------------------------
+                    // =================================================
 
                     theme: {
 
@@ -892,10 +1154,6 @@ function PaymentPage() {
                     }
                 };
 
-
-                // ------------------------------------------------
-                // CREATE RAZORPAY INSTANCE
-                // ------------------------------------------------
 
                 const razorpay =
                     new window.Razorpay(
@@ -907,9 +1165,9 @@ function PaymentPage() {
                     razorpay;
 
 
-                // ------------------------------------------------
+                // =================================================
                 // PAYMENT FAILED EVENT
-                // ------------------------------------------------
+                // =================================================
 
                 razorpay.on(
                     "payment.failed",
@@ -968,6 +1226,9 @@ function PaymentPage() {
                         );
 
 
+                        stopPaymentPolling();
+
+
                         setPaymentOpening(
                             false
                         );
@@ -980,11 +1241,23 @@ function PaymentPage() {
                 );
 
 
-                // ------------------------------------------------
+                // =================================================
                 // OPEN CHECKOUT
-                // ------------------------------------------------
+                // =================================================
 
                 razorpay.open();
+
+
+                /*
+                 * IMPORTANT:
+                 *
+                 * Start polling immediately while Razorpay
+                 * checkout is open.
+                 *
+                 * This is the main fix for your QR problem.
+                 */
+
+                startPaymentStatusPolling();
 
 
             } catch (error) {
@@ -995,15 +1268,13 @@ function PaymentPage() {
                 );
 
 
+                stopPaymentPolling();
+
+
                 setPaymentOpening(
                     false
                 );
 
-
-                /*
-                 * Convert technical error into
-                 * customer-friendly message.
-                 */
 
                 const safeMessage =
                     getSafeErrorMessage(
@@ -1029,13 +1300,6 @@ function PaymentPage() {
     const createOrder =
         async () => {
 
-            /*
-             * IMPORTANT:
-             *
-             * Do not create another order if one is already
-             * being created or Razorpay is already open.
-             */
-
             if (
                 orderCreationStarted.current
             ) {
@@ -1056,10 +1320,6 @@ function PaymentPage() {
                 return;
             }
 
-
-            // ------------------------------------------------
-            // MARK AS STARTED
-            // ------------------------------------------------
 
             orderCreationStarted.current =
                 true;
@@ -1083,10 +1343,6 @@ function PaymentPage() {
                     );
 
 
-                // ------------------------------------------------
-                // LOGIN CHECK
-                // ------------------------------------------------
-
                 if (
                     !token
                 ) {
@@ -1105,10 +1361,6 @@ function PaymentPage() {
                 }
 
 
-                // ------------------------------------------------
-                // BOOKING ID CHECK
-                // ------------------------------------------------
-
                 if (
                     !bookingId
                 ) {
@@ -1124,10 +1376,6 @@ function PaymentPage() {
                     bookingId
                 );
 
-
-                // ------------------------------------------------
-                // CREATE ORDER
-                // ------------------------------------------------
 
                 const response =
                     await axios.post(
@@ -1155,10 +1403,6 @@ function PaymentPage() {
                     response.data;
 
 
-                // ------------------------------------------------
-                // VALIDATE RESPONSE
-                // ------------------------------------------------
-
                 if (
                     !data ||
                     !data.razorpayOrderId ||
@@ -1172,18 +1416,10 @@ function PaymentPage() {
                 }
 
 
-                // ------------------------------------------------
-                // SAVE ORDER DATA
-                // ------------------------------------------------
-
                 setOrderData(
                     data
                 );
 
-
-                // ------------------------------------------------
-                // OPEN RAZORPAY
-                // ------------------------------------------------
 
                 await openRazorpay(
                     data
@@ -1197,12 +1433,6 @@ function PaymentPage() {
                     error
                 );
 
-
-                /*
-                 * IMPORTANT:
-                 *
-                 * Never display raw SQL/database errors.
-                 */
 
                 const message =
                     getSafeErrorMessage(
@@ -1250,14 +1480,8 @@ function PaymentPage() {
             }
 
 
-            /*
-             * IMPORTANT:
-             *
-             * orderCreationStarted prevents React StrictMode
-             * from creating two payment orders.
-             */
-
             createOrder();
+
 
         },
 
@@ -1266,6 +1490,30 @@ function PaymentPage() {
         [
             bookingId
         ]
+    );
+
+
+    // ========================================================
+    // CLEANUP
+    // ========================================================
+
+    useEffect(
+        () => {
+
+            return () => {
+
+                console.log(
+                    "PAYMENT PAGE UNMOUNTED - CLEANING POLLING"
+                );
+
+
+                stopPaymentPolling();
+
+            };
+
+        },
+
+        []
     );
 
 
@@ -1522,6 +1770,25 @@ function PaymentPage() {
 
                             🔐 Razorpay checkout is opening...
 
+                            <div
+                                style={{
+
+                                    fontSize:
+                                        "12px",
+
+                                    marginTop:
+                                        "8px",
+
+                                    fontWeight:
+                                        "500"
+                                }}
+                            >
+
+                                After completing UPI/QR payment,
+                                please wait for Razorpay to confirm it.
+
+                            </div>
+
                         </div>
                     )
                 }
@@ -1575,18 +1842,14 @@ function PaymentPage() {
                 ================================================= */}
 
                 {
-                    errorMessage && (
+                    errorMessage &&
+                    !paymentPollingActive.current && (
 
                         <button
                             type="button"
 
                             onClick={
                                 () => {
-
-                                    /*
-                                     * Allow another order attempt
-                                     * after a genuine error.
-                                     */
 
                                     orderCreationStarted.current =
                                         false;
@@ -1595,6 +1858,9 @@ function PaymentPage() {
                                         false;
 
                                     navigationStarted.current =
+                                        false;
+
+                                    paymentSuccessStarted.current =
                                         false;
 
                                     setErrorMessage(
@@ -1667,6 +1933,24 @@ function PaymentPage() {
                     onClick={
                         async () => {
 
+                            /*
+                             * If payment is being checked,
+                             * do NOT cancel it.
+                             */
+
+                            if (
+                                paymentPollingActive.current
+                            ) {
+
+                                setErrorMessage(
+                                    "Payment status is still being checked. Please wait before leaving this page."
+                                );
+
+
+                                return;
+                            }
+
+
                             await cancelPayment();
 
 
@@ -1675,7 +1959,8 @@ function PaymentPage() {
                     }
 
                     disabled={
-                        paymentOpening
+                        paymentOpening ||
+                        paymentPollingActive.current
                     }
 
                     style={{
@@ -1702,7 +1987,8 @@ function PaymentPage() {
                             "800",
 
                         cursor:
-                            paymentOpening
+                            paymentOpening ||
+                            paymentPollingActive.current
                                 ? "not-allowed"
                                 : "pointer"
                     }}
