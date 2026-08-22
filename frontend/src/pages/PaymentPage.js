@@ -96,16 +96,14 @@ function PaymentPage() {
     /*
      * Store Razorpay instance.
      */
-    const razorpayInstance =
-        useRef(null);
+   const razorpayInstance =
+    useRef(null);
 
+const paymentSuccessStarted =
+    useRef(false);
 
-    /*
-     * Prevent multiple navigation calls.
-     */
-    const navigationStarted =
-        useRef(false);
-
+const navigationStarted =
+    useRef(false);
 
     // ========================================================
     // CLEAN USER-FRIENDLY ERROR MESSAGE
@@ -445,6 +443,8 @@ const verifyPayment =
         razorpayResponse
     ) => {
 
+        paymentSuccessStarted.current = true;
+
         console.log(
             "========== VERIFY PAYMENT FUNCTION CALLED =========="
         );
@@ -689,7 +689,7 @@ const verifyPayment =
                     // PAYMENT SUCCESS
                     // ------------------------------------------------
 
-                   handler: async (response) => {
+handler: async (response) => {
 
     console.log(
         "========== RAZORPAY SUCCESS HANDLER FIRED =========="
@@ -698,6 +698,31 @@ const verifyPayment =
     console.log(
         "RAZORPAY SUCCESS RESPONSE:",
         response
+    );
+
+    if (
+        !response ||
+        !response.razorpay_payment_id ||
+        !response.razorpay_order_id ||
+        !response.razorpay_signature
+    ) {
+
+        console.error(
+            "RAZORPAY SUCCESS RESPONSE IS INCOMPLETE:",
+            response
+        );
+
+        setPaymentOpening(false);
+
+        setErrorMessage(
+            "Payment was received but payment details could not be verified. Please contact support."
+        );
+
+        return;
+    }
+
+    console.log(
+        "STARTING BACKEND PAYMENT VERIFICATION..."
     );
 
     await verifyPayment(response);
@@ -719,25 +744,23 @@ const verifyPayment =
                                 );
 
 
-                                if (
-                                    !paymentCompleted
-                                ) {
+if (
+    !paymentCompleted &&
+    !paymentSuccessStarted.current
+) {
 
-                                    await cancelPayment();
+    await cancelPayment();
 
+    setPaymentOpening(
+        false
+    );
 
-                                    setPaymentOpening(
-                                        false
-                                    );
+    alert(
+        "Payment cancelled. Your booking was not confirmed."
+    );
 
-
-                                    alert(
-                                        "Payment cancelled. Your booking was not confirmed."
-                                    );
-
-
-                                    goToBookings();
-                                }
+    goToBookings();
+}
                             }
                     },
 
