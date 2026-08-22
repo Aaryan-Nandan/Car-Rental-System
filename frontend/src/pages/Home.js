@@ -62,7 +62,7 @@ function Home() {
         loadCars();
     }, []);
 
-    const loadVariants = async () => {
+const loadVariants = async () => {
     try {
 
         const response = await getAllVariants();
@@ -72,6 +72,16 @@ function Home() {
         if (Array.isArray(response)) {
 
             setVariants(response);
+
+            console.log("VARIANT COUNT:", response.length);
+            console.log(
+                "VARIANT IDS:",
+                response.map(v => v.id)
+            );
+            console.log(
+                "VARIANT NAMES:",
+                response.map(v => v.variantName)
+            );
 
         } else {
 
