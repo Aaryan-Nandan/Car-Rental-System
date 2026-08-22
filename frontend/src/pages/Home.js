@@ -58,29 +58,36 @@ function Home() {
     }, []);
 
     const loadVariants = async () => {
-        try {
+    try {
 
-            const response = await getAllVariants();
+        const response = await getAllVariants();
 
-            if (
-                response &&
-                Array.isArray(response.data)
-            ) {
-                setVariants(response.data);
-            } else {
-                setVariants([]);
-            }
+        console.log("Cars received from backend:", response);
 
-        } catch (error) {
+        if (Array.isArray(response)) {
+
+            setVariants(response);
+
+        } else {
 
             console.error(
-                "Unable to load cars:",
-                error
+                "Invalid car data received:",
+                response
             );
 
             setVariants([]);
         }
-    };
+
+    } catch (error) {
+
+        console.error(
+            "Unable to load cars:",
+            error
+        );
+
+        setVariants([]);
+    }
+};
 
 
     // =========================================================
